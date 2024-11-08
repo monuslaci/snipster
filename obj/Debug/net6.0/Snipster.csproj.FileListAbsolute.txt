@@ -29,3 +29,11 @@ C:\Users\lamonus\source\repos\Snipster\obj\Debug\net6.0\refint\Snipster.dll
 C:\Users\lamonus\source\repos\Snipster\obj\Debug\net6.0\Snipster.pdb
 C:\Users\lamonus\source\repos\Snipster\obj\Debug\net6.0\Snipster.genruntimeconfig.cache
 C:\Users\lamonus\source\repos\Snipster\obj\Debug\net6.0\ref\Snipster.dll
+C:\Users\lamonus\source\repos\Snipster\bin\Debug\net6.0\DnsClient.dll
+C:\Users\lamonus\source\repos\Snipster\bin\Debug\net6.0\MongoDB.Bson.dll
+C:\Users\lamonus\source\repos\Snipster\bin\Debug\net6.0\MongoDB.Driver.dll
+C:\Users\lamonus\source\repos\Snipster\bin\Debug\net6.0\SharpCompress.dll
+C:\Users\lamonus\source\repos\Snipster\bin\Debug\net6.0\Snappier.dll
+C:\Users\lamonus\source\repos\Snipster\bin\Debug\net6.0\ZstdSharp.dll
+C:\Users\lamonus\source\repos\Snipster\obj\Debug\net6.0\Snipster.csproj.AssemblyReference.cache
+C:\Users\lamonus\source\repos\Snipster\obj\Debug\net6.0\Snipster.csproj.CopyComplete

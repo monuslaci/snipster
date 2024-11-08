@@ -1,0 +1,31 @@
+﻿@using Snipster.Data;
+@using Snipster.Services;
+
+@page "/add-snippet"
+
+@inject MongoDbService MongoDbService
+
+
+<h3>Add a New Snippet</h3>
+
+<EditForm Model="@newSnippet" OnValidSubmit="@HandleValidSubmit">
+    <InputText @bind-Value="newSnippet.Title" placeholder="Title" />
+    <InputText @bind-Value="newSnippet.Content" placeholder="Content" />
+    <button type="submit">Add Snippet</button>
+</EditForm>
+
+
+@code {
+
+
+}
+
+<style>
+   
+    .notification {
+        position: fixed;
+        margin-top: 50px;
+    }
+
+
+</style>
