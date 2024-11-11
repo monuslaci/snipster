@@ -18,7 +18,36 @@ namespace Snipster.Data
             public List<string> Tags { get; set; }  
             public string Language { get; set; }
         }
+        public class Collections
+        {
+            [BsonId]
+            [BsonRepresentation(BsonType.ObjectId)]
+            public string Id { get; set; }  
 
+            public string Title { get; set; }
+            public bool IsPublic { get; set; }  
+            public List<string> ListIds { get; set; }  
+        }
+
+        public class Lists
+        {
+            [BsonId]
+            [BsonRepresentation(BsonType.ObjectId)]
+            public string Id { get; set; }  
+
+            public string Title { get; set; }
+            public List<string> SnippetIds { get; set; }  
+        }
+
+        public class Users
+        {
+            [BsonId]
+            [BsonRepresentation(BsonType.ObjectId)]
+            public string Id { get; set; }
+
+            public string FirstName { get; set; }
+            public string LastName { get; set; }
+        }
 
     }
 }
