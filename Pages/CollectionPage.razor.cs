@@ -11,8 +11,8 @@ namespace Snipster.Pages
 {
     public partial class CollectionPage
     {
-        private List<Collections> collections = new List<Collections>();
-        private Collections newCollection = new Collections();
+        private List<Collection> collections = new List<Collection>();
+        private Collection newCollection = new Collection();
         private Modal createCollectionModal;
 
         protected override async Task OnInitializedAsync()
@@ -22,7 +22,7 @@ namespace Snipster.Pages
 
         private void ShowCreateCollectionModal()
         {
-            newCollection = new Collections(); // Reset the form model
+            newCollection = new Collection(); // Reset the form model
             createCollectionModal.ShowModal();
         }
 
@@ -33,5 +33,36 @@ namespace Snipster.Pages
             createCollectionModal.CloseModal();
         }
 
+        private async Task LoadSnippets(string collectionId)
+        {
+            // Get the snippet IDs for the given collection ID
+            var snippetIds = await _mongoDbService.GetSnippetIdsByCollectionAsync(collectionId);
+
+            List<Snippet> snippets = new List<Snippet>();
+
+            // Iterate over each snippet ID and fetch the corresponding snippet
+            foreach (var snippetId in snippetIds)
+            {
+                var snippet = await _mongoDbService.GetSnippetByIdAsync(snippetId);
+                if (snippet != null)
+                {
+                    snippets.Add(snippet);
+                }
+            }
+            Console.WriteLine($"Loaded {snippets.Count} snippets for collection {collectionId}");
+
+        }
+
+
+        private async Task EditCollection(string collectionId)
+        {
+            // Logic to edit collection (implement this as needed)
+        }
+
+        private async Task DeleteCollection(string collectionId)
+        {
+            // Logic to delete collection (implement this as needed)
+            collections = await _mongoDbService.GetCollectionsAsync(); // Refresh the list
+        }
     }
 }

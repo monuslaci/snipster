@@ -9,23 +9,35 @@
 <button @onclick="ShowCreateCollectionModal">Create New Collection</button>
 
 <!-- Table to display the list of collections -->
-<table>
-    <thead>
-        <tr>
-            <th>Title</th>
-            <th>Privacy</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var collection in collections)
-        {
+@if (collections != null && collections.Any())
+{
+    <table>
+        <thead>
             <tr>
-                <td>@collection.Title</td>
-                <td>@(collection.IsPublic ? "Public" : "Private")</td>
+                <th>Title</th>
+                <th>Privacy</th>
+                <th>Actions</th>
             </tr>
-        }
-    </tbody>
-</table>
+        </thead>
+        <tbody>
+            @foreach (var collection in collections)
+            {
+                <tr>
+                    <td><a @onclick="() => LoadSnippets(collection.Id)">@collection.Title</a></td>
+                    <td>@(collection.IsPublic ? "Public" : "Private")</td>
+                    <td>
+                        <button @onclick="() => EditCollection(collection.Id)">Edit</button>
+                        <button @onclick="() => DeleteCollection(collection.Id)">Delete</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+else
+{
+    <p>No collections found.</p>
+}
 
 <!-- Modal for creating a new collection -->
 <Modal @ref="createCollectionModal" Title="Create New Collection">
