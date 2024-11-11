@@ -1,0 +1,136 @@
+﻿@using Snipster.Data;
+@using Snipster.Services;
+@using Snipster.Components
+
+@page "/snippets"
+
+@inject MongoDbService MongoDbService
+
+
+<h3>Snippet Management</h3>
+
+
+
+<button class="create-snippet-btn" @onclick="ShowCreateSnippetModal">Create New Snippet</button>
+
+<div class="search-bar">
+    <input type="text" @bind="searchQuery" placeholder="Search snippets..." />
+</div>
+
+@if (filteredSnippets.Any())
+{
+    <table class="snippet-table">
+        <thead>
+            <tr>
+                <th>Title</th>
+                <th>Content</th>
+                <th>Collections</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var snippet in filteredSnippets)
+            {
+                <tr>
+                    <td>@snippet.Title</td>
+                    <td>@snippet.Content</td>
+                    <td>
+                        @if (relatedCollections.ContainsKey(snippet.Id))
+                        {
+                            @string.Join(", ", relatedCollections[snippet.Id])
+                        }
+                        else
+                        {
+                            <span>Not added to collection, yet..</span>
+                        }
+                    </td>
+                    <td>
+                        <button @onclick="() => EditSnippet(snippet)">Edit</button>
+                        <button @onclick="() => DeleteSnippet(snippet.Id)">Delete</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+else
+{
+    <p>No snippets found.</p>
+}
+
+<!-- Modal for creating snippet -->
+<Modal @ref="createSnippetModal" Title="Add New Snippet">
+    <EditForm Model="newSnippet" OnValidSubmit="HandleValidSubmit">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <div>
+            <label for="title">Title:</label>
+            <InputText id="title" @bind-Value="newSnippet.Title" placeholder="Enter Title" />
+        </div>
+
+        <div>
+            <label for="content">Content:</label>
+            <InputText id="content" @bind-Value="newSnippet.Content" placeholder="Enter Content" />
+        </div>
+
+        <button type="submit">Add Snippet</button>
+    </EditForm>
+</Modal>
+
+
+@code {
+
+
+}
+
+<style>
+
+    .search-bar {
+        margin-bottom: 10px;
+    }
+
+    .create-snippet-btn {
+        width: 5rem%;
+        display: block;
+        margin: 0 auto 1rem;
+        padding: 0.5rem;
+        font-size: 1rem;
+        background-color: #4a90e2; /* Adjust color as needed */
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        text-align: center;
+    }
+
+    .create-snippet-btn:hover {
+        background-color: #357ab8; /* Adjust hover color as needed */
+    }
+
+    .snippet-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .snippet-table th, .snippet-table td {
+        padding: 8px;
+        text-align: left;
+        border-bottom: 1px solid #ddd;
+    }
+
+    .snippet-table th {
+        background-color: #f2f2f2;
+    }
+
+    .snippet-table td button {
+        margin-right: 5px;
+    }
+
+    select[multiple] {
+        height: 200px;
+        width: 100%;
+    }
+
+
+</style>

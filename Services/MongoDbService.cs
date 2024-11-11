@@ -42,9 +42,20 @@ namespace Snipster.Services
             return new List<string>();
         }
 
-        public async Task UpdateSnippetAsync(string id, Snippet updatedSnippet)
+        public async Task<List<Collection>> GetCollectionsBySnippetId(string snippetId)
         {
-            await _snippetsCollection.ReplaceOneAsync(s => s.Id == id, updatedSnippet);
+            var filter = Builders<Collection>.Filter.AnyIn(c => c.SnippetIds, new[] { snippetId });
+            return await _collectionsCollection.Find(filter).ToListAsync();
+        }
+
+        public async Task UpdateSnippetAsync(Snippet snippet)
+        {
+            var filter = Builders<Snippet>.Filter.Eq(s => s.Id, snippet.Id);
+            var update = Builders<Snippet>.Update
+                .Set(s => s.Title, snippet.Title)
+                .Set(s => s.Content, snippet.Content);
+
+            await _snippetsCollection.UpdateOneAsync(filter, update);
         }
 
         public async Task DeleteSnippetAsync(string id)

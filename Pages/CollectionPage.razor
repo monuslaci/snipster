@@ -4,40 +4,61 @@
 @inject MongoDbService _mongoDbService
 @page "/collections"
 
-<h3>Collections</h3>
 
-<button @onclick="ShowCreateCollectionModal">Create New Collection</button>
+<div class="page-layout">
+    <!-- Left Section: Collection List with Create Button -->
+    <div class="collection-list">
 
-<!-- Table to display the list of collections -->
-@if (collections != null && collections.Any())
-{
-    <table>
-        <thead>
-            <tr>
-                <th>Title</th>
-                <th>Privacy</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
+        
+        <h4 class="collections-heading">Collections</h4>
+
+        <button class="create-collection-btn" @onclick="ShowCreateCollectionModal">+</button>
+
+        <ul>
             @foreach (var collection in collections)
             {
-                <tr>
-                    <td><a @onclick="() => LoadSnippets(collection.Id)">@collection.Title</a></td>
-                    <td>@(collection.IsPublic ? "Public" : "Private")</td>
-                    <td>
-                        <button @onclick="() => EditCollection(collection.Id)">Edit</button>
-                        <button @onclick="() => DeleteCollection(collection.Id)">Delete</button>
-                    </td>
-                </tr>
+                <li class="collection-item" @onclick="() => LoadSnippets(collection.Id)">
+                    @collection.Title
+                </li>
             }
-        </tbody>
-    </table>
-}
-else
-{
-    <p>No collections found.</p>
-}
+        </ul>
+    </div>
+
+    <!-- Middle Section: Snippet List -->
+    <div class="snippet-list">
+        <h4>Snippets</h4>
+        <ul>
+            @if (snippets != null && snippets.Any())
+            {
+                @foreach (var snippet in snippets)
+                {
+                    <li class="snippet-item" @onclick="() => LoadSnippetDetails(snippet.Id)">
+                        @snippet.Title
+                    </li>
+                }
+            }
+            else
+            {
+                <li>No snippets available</li>
+            }
+        </ul>
+    </div>
+
+    <!-- Right Section: Snippet Details/Editor -->
+    <div class="snippet-details">
+        @if (selectedSnippet != null)
+        {
+            <h4>@selectedSnippet.Title</h4>
+            <p>@selectedSnippet.Content</p>
+            <!-- Additional details and edit functionality can go here -->
+        }
+        else
+        {
+            <p>Select a snippet to view details.</p>
+        }
+    </div>
+</div>
+
 
 <!-- Modal for creating a new collection -->
 <Modal @ref="createCollectionModal" Title="Create New Collection">
@@ -64,81 +85,6 @@ else
 
 <style>
    
-    .modal-overlay {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0, 0, 0, 0.5); /* Semi-transparent background */
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        z-index: 1000;
-    }
-
-    .modal-content {
-        background: white;
-        padding: 20px;
-        border-radius: 8px;
-        width: 400px;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
-        position: relative;
-    }
-
-    .modal-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 10px;
-    }
-
-    .modal-header h3 {
-        margin: 0;
-        font-size: 1.25rem;
-    }
-
-    .modal-close-btn {
-        background: none;
-        border: none;
-        font-size: 1.25rem;
-        cursor: pointer;
-    }
-
-    table {
-        width: 100%;
-        border-collapse: collapse;
-        margin-top: 20px;
-    }
-
-    th, td {
-        border: 1px solid #ddd;
-        padding: 8px;
-    }
-
-    th {
-        background-color: #f4f4f4;
-        text-align: left;
-    }
-
-    button {
-        background-color: #007bff;
-        color: white;
-        padding: 8px 16px;
-        border: none;
-        border-radius: 4px;
-        cursor: pointer;
-    }
-
-        button:hover {
-            background-color: #0056b3;
-        }
-
-    .modal-footer {
-        display: flex;
-        justify-content: flex-end;
-        margin-top: 10px;
-    }
 
 
 </style>

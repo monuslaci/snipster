@@ -14,6 +14,8 @@ namespace Snipster.Pages
         private List<Collection> collections = new List<Collection>();
         private Collection newCollection = new Collection();
         private Modal createCollectionModal;
+        private List<Snippet> snippets = new List<Snippet>();
+        private Snippet selectedSnippet;
 
         protected override async Task OnInitializedAsync()
         {
@@ -40,19 +42,25 @@ namespace Snipster.Pages
 
             List<Snippet> snippets = new List<Snippet>();
 
-            // Iterate over each snippet ID and fetch the corresponding snippet
-            foreach (var snippetId in snippetIds)
+            if (snippetIds != null)
             {
-                var snippet = await _mongoDbService.GetSnippetByIdAsync(snippetId);
-                if (snippet != null)
+                foreach (var snippetId in snippetIds)
                 {
-                    snippets.Add(snippet);
+                    var snippet = await _mongoDbService.GetSnippetByIdAsync(snippetId);
+                    if (snippet != null)
+                    {
+                        snippets.Add(snippet);
+                    }
                 }
             }
+
             Console.WriteLine($"Loaded {snippets.Count} snippets for collection {collectionId}");
 
         }
-
+        private async Task LoadSnippetDetails(string snippetId)
+        {
+            selectedSnippet = await _mongoDbService.GetSnippetByIdAsync(snippetId);
+        }
 
         private async Task EditCollection(string collectionId)
         {

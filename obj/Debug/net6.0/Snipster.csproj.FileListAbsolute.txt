@@ -37,3 +37,4 @@ C:\Users\lamonus\source\repos\Snipster\bin\Debug\net6.0\Snappier.dll
 C:\Users\lamonus\source\repos\Snipster\bin\Debug\net6.0\ZstdSharp.dll
 C:\Users\lamonus\source\repos\Snipster\obj\Debug\net6.0\Snipster.csproj.AssemblyReference.cache
 C:\Users\lamonus\source\repos\Snipster\obj\Debug\net6.0\Snipster.csproj.CopyComplete
+C:\Users\lamonus\source\repos\Snipster\obj\Debug\net6.0\scopedcss\Pages\CollectionPage.razor.rz.scp.css
