@@ -26,7 +26,7 @@ namespace Snipster.Data
 
             public string Title { get; set; }
             public bool IsPublic { get; set; }
-            public List<string> SnippetIds { get; set; }  
+            public List<string> SnippetIds { get; set; } = new List<string>();
         }
 
         public class Lists

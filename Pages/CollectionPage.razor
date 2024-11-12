@@ -1,6 +1,7 @@
 ﻿@using Snipster.Data;
 @using Snipster.Services;
 @using Snipster.Components
+@inject IJSRuntime JSRuntime
 @inject MongoDbService _mongoDbService
 @page "/collections"
 
@@ -24,9 +25,9 @@
         </ul>
     </div>
 
-    <!-- Middle Section: Snippet List -->
     <div class="snippet-list">
         <h4>Snippets</h4>
+        <button class="create-snippet-btn" @onclick="ShowSnippetFields">+</button> <!-- Button to add new snippet -->
         <ul>
             @if (snippets != null && snippets.Any())
             {
@@ -46,11 +47,47 @@
 
     <!-- Right Section: Snippet Details/Editor -->
     <div class="snippet-details">
-        @if (selectedSnippet != null)
+        @if (isAddingSnippet)
         {
+            <!-- Fields for creating a new snippet -->
+            <h4>Create New Snippet</h4>
+
+            <EditForm Model="newSnippet" OnValidSubmit="HandleValidSubmitNew">
+                <DataAnnotationsValidator />
+                <ValidationSummary />
+
+                <div>
+                    <label for="title">Title:</label>
+                    <InputText id="title" @bind-Value="newSnippet.Title" placeholder="Enter Title" />
+                </div>
+
+                <div>
+                    <label for="content">Content:</label>
+                    <textarea id="createContentId"
+                    @bind="newSnippet.Content"
+                              placeholder="Enter Content"
+                              style="resize: none; width: 100%; min-height: 100px;"
+                    @oninput="AdjustTextAreaHeight"></textarea>
+                </div>
+
+                <div>
+                    <label for="collections">Collections:</label>
+                    <select id="collections" @bind="selectedCollectionId">
+                        @foreach (var collection in collections)
+                        {
+                            <option value="@collection.Id">@collection.Title</option>
+                        }
+                    </select>
+                </div>
+
+                <button type="submit">Add Snippet</button>
+            </EditForm>
+        }
+        else if (selectedSnippet != null)
+        {
+            <!-- Display details of the selected snippet -->
             <h4>@selectedSnippet.Title</h4>
             <p>@selectedSnippet.Content</p>
-            <!-- Additional details and edit functionality can go here -->
         }
         else
         {
@@ -58,6 +95,7 @@
         }
     </div>
 </div>
+
 
 
 <!-- Modal for creating a new collection -->
@@ -77,6 +115,8 @@
         <button type="submit">Create</button>
     </EditForm>
 </Modal>
+
+
 
 @code {
 

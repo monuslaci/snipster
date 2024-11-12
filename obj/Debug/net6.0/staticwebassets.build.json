@@ -1,6 +1,6 @@
 {
   "Version": 1,
-  "Hash": "xabgCweFfy2CFSQdOxEu3I/TQdZFMk3cixyTRunt13Q=",
+  "Hash": "bmQJqI+0Knx6QJiQAZQ+YWTuAfgIbU4481HuncD6738=",
   "Source": "Snipster",
   "BasePath": "_content/Snipster",
   "Mode": "Default",
@@ -270,6 +270,23 @@
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
       "OriginalItemSpec": "wwwroot\\favicon.ico"
+    },
+    {
+      "Identity": "C:\\Users\\lamonus\\source\\repos\\Snipster\\wwwroot\\js\\jsScripts.js",
+      "SourceId": "Snipster",
+      "SourceType": "Discovered",
+      "ContentRoot": "C:\\Users\\lamonus\\source\\repos\\Snipster\\wwwroot\\",
+      "BasePath": "_content/Snipster",
+      "RelativePath": "js/jsScripts.js",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\js\\jsScripts.js"
     }
   ]
 }

@@ -12,6 +12,7 @@
 
   <ItemGroup>
     <Folder Include="Components\" />
+    <Folder Include="wwwroot\css\js\" />
   </ItemGroup>
 
 </Project>

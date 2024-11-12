@@ -9,8 +9,6 @@
 
 <h3>Snippet Management</h3>
 
-
-
 <button class="create-snippet-btn" @onclick="ShowCreateSnippetModal">Create New Snippet</button>
 
 <div class="search-bar">
@@ -60,7 +58,7 @@ else
 
 <!-- Modal for creating snippet -->
 <Modal @ref="createSnippetModal" Title="Add New Snippet">
-    <EditForm Model="newSnippet" OnValidSubmit="HandleValidSubmit">
+    <EditForm Model="newSnippet" OnValidSubmit="HandleValidSubmitNew">
         <DataAnnotationsValidator />
         <ValidationSummary />
 
@@ -77,6 +75,68 @@ else
         <button type="submit">Add Snippet</button>
     </EditForm>
 </Modal>
+
+<!-- Modal for editing snippet -->
+<Modal @ref="createSnippetModal" Title="Edit Snippet">
+    <EditForm Model="newSnippet" OnValidSubmit="HandleValidSubmit">
+        <div>
+            <label for="title">Title:</label>
+            <InputText id="title" @bind-Value="newSnippet.Title" placeholder="Enter Title" />
+        </div>
+        <div>
+            <label>Content:</label>
+            <InputText @bind-Value="newSnippet.Content" />
+        </div>
+        <div>
+            <label>Collections:</label>
+            <select multiple @onchange="OnCollectionSelectionChanged">
+                @foreach (var collection in allCollections)
+                {
+                    <option value="@collection.Id" selected="@selectedCollectionIds.Contains(collection.Id)">
+                        @collection.Title
+                    </option>
+                }
+            </select>
+        </div>
+        <button type="submit">Save Snippet</button>
+    </EditForm>
+</Modal>
+
+<Modal @ref="editSnippetModal" Title="Edit Snippet">
+    <EditForm Model="newSnippet" OnValidSubmit="HandleValidSubmit">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <!-- Modal Body -->
+        <div class="modal-body-edit">
+            <div class="form-group">
+                <label for="title">Title:</label>
+                <InputText id="title" class="form-input" @bind-Value="newSnippet.Title" placeholder="Enter Title" />
+            </div>
+
+            <div class="form-group">
+                <label for="content">Content:</label>
+                <InputTextArea id="content" class="form-input content-area" @bind-Value="newSnippet.Content" placeholder="Enter Content" />
+            </div>
+
+            <div class="form-group">
+                <label for="collections">Collections:</label>
+                <select id="collections" multiple class="form-input" @bind="selectedCollectionIds">
+                    @foreach (var collection in allCollections)
+                    {
+                        <option value="@collection.Id">@collection.Title</option>
+                    }
+                </select>
+            </div>
+        </div>
+
+        <!-- Modal Footer -->
+        <div class="modal-footer">
+            <button type="submit" class="modal-btn save-btn">Save</button>
+        </div>
+    </EditForm>
+</Modal>
+
 
 
 @code {
@@ -132,5 +192,66 @@ else
         width: 100%;
     }
 
+    .modal-body-edit {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5em;
+    }
+
+    .form-group {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .form-group label {
+        font-weight: bold;
+        margin-bottom: 0.3em;
+        color: #333;
+    }
+
+    .form-input {
+        padding: 0.8em;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        font-size: 1rem;
+    }
+    .content-area {
+        height: 200px;
+        resize: vertical;
+    }
+
+    .modal-footer {
+        display: flex;
+        justify-content: flex-end;
+        gap: 1em;
+        margin-top: 1.5em;
+    }
+
+    .modal-btn {
+        padding: 0.6em 1.2em;
+        font-size: 1rem;
+        border-radius: 5px;
+        cursor: pointer;
+        border: none;
+    }
+
+    .save-btn {
+        background-color: #4CAF50;
+        color: #fff;
+    }
+
+    .cancel-btn {
+        background-color: #f44336;
+        color: #fff;
+    }
+
+    .modal-content {
+        width: 600px;
+        max-width: 90%;
+        padding: 1.5em;
+        background-color: #fff;
+        border-radius: 8px;
+        box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.3);
+    }
 
 </style>

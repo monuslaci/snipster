@@ -5,7 +5,7 @@ using System.Net.NetworkInformation;
 using System.Reflection;
 using Snipster.Components;
 using static Snipster.Data.DBContext;
-
+using Microsoft.JSInterop;
 
 namespace Snipster.Pages
 {
@@ -13,9 +13,13 @@ namespace Snipster.Pages
     {
         private List<Collection> collections = new List<Collection>();
         private Collection newCollection = new Collection();
-        private Modal createCollectionModal;
+        private Snippet newSnippet = new Snippet();
         private List<Snippet> snippets = new List<Snippet>();
         private Snippet selectedSnippet;
+        private bool isAddingSnippet = false; // Control visibility of snippet creation fields
+        private string selectedCollectionId; // Store selected collection ID
+        private Modal createCollectionModal;
+
 
         protected override async Task OnInitializedAsync()
         {
@@ -37,10 +41,11 @@ namespace Snipster.Pages
 
         private async Task LoadSnippets(string collectionId)
         {
-            // Get the snippet IDs for the given collection ID
+            // Get the snippet IDs for the selected collection
             var snippetIds = await _mongoDbService.GetSnippetIdsByCollectionAsync(collectionId);
 
-            List<Snippet> snippets = new List<Snippet>();
+            // Clear the current snippets list and populate it with the new ones
+            snippets.Clear();
 
             if (snippetIds != null)
             {
@@ -54,12 +59,19 @@ namespace Snipster.Pages
                 }
             }
 
-            Console.WriteLine($"Loaded {snippets.Count} snippets for collection {collectionId}");
-
+            // Trigger a UI refresh
+            StateHasChanged();
         }
+  
         private async Task LoadSnippetDetails(string snippetId)
         {
             selectedSnippet = await _mongoDbService.GetSnippetByIdAsync(snippetId);
+        }
+        private void ShowSnippetFields()
+        {
+            // Reset the form model and show the new snippet fields
+            newSnippet = new Snippet();
+            isAddingSnippet = true;
         }
 
         private async Task EditCollection(string collectionId)
@@ -72,5 +84,36 @@ namespace Snipster.Pages
             // Logic to delete collection (implement this as needed)
             collections = await _mongoDbService.GetCollectionsAsync(); // Refresh the list
         }
+
+        private async Task HandleValidSubmitNew()
+        {
+            // Save the new snippet and get the generated snippet ID
+            var snippetId = await _mongoDbService.AddSnippetAsync(newSnippet);
+
+            // Update the selected collection to include this new snippet ID
+            var selectedCollection = collections.FirstOrDefault(c => c.Id == selectedCollectionId);
+            if (selectedCollection != null)
+            {
+                // Add the new snippet ID to the collection's SnippetIds list
+                selectedCollection.SnippetIds.Add(snippetId);
+
+                // Update the collection in the database
+                await _mongoDbService.UpdateCollectionAsync(selectedCollection);
+            }
+
+            // Refresh the snippets list for the selected collection
+            snippets = await _mongoDbService.GetSnippetsByCollectionAsync(selectedCollectionId);
+
+            // Reset the form
+            newSnippet = new Snippet();
+            isAddingSnippet = false;
+        }
+
+        private async Task AdjustTextAreaHeight(ChangeEventArgs args)
+        {
+            await JSRuntime.InvokeVoidAsync("adjustTextAreaHeight", "createContentId");
+        }
+
+
     }
 }
