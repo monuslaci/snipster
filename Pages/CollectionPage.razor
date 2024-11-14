@@ -6,95 +6,115 @@
 @page "/collections"
 
 
-<div class="page-layout">
-    <!-- Left Section: Collection List with Create Button -->
-    <div class="collection-list">
-
-        
-        <h4 class="collections-heading">Collections</h4>
-
-        <button class="create-collection-btn" @onclick="ShowCreateCollectionModal">+</button>
-
-        <ul>
-            @foreach (var collection in collections)
-            {
-                <li class="collection-item" @onclick="() => LoadSnippets(collection.Id)">
-                    @collection.Title
-                </li>
-            }
-        </ul>
-    </div>
-
-    <div class="snippet-list">
-        <h4>Snippets</h4>
-        <button class="create-snippet-btn" @onclick="ShowSnippetFields">+</button> <!-- Button to add new snippet -->
-        <ul>
-            @if (snippets != null && snippets.Any())
-            {
-                @foreach (var snippet in snippets)
+    <div class="page-layout">
+        <!-- Left Section: Collection List with Create Button -->
+        <div class="collection-list">
+            <h4 class="collections-heading">Collections</h4>
+            <button class="create-collection-btn" @onclick="ShowCreateCollectionModal">+</button>
+            <ul>
+                @foreach (var collection in collections)
                 {
-                    <li class="snippet-item" @onclick="() => LoadSnippetDetails(snippet.Id)">
-                        @snippet.Title
+                    <li class="collection-item @(selectedCollectionId != null && selectedCollectionId == collection.Id ? "active" : "")"
+                    @onclick="() => LoadSnippets(collection.Id)">
+                        @collection.Title
                     </li>
                 }
+            </ul>
+        </div>
+
+        <div class="snippet-list">
+            <h4 class="snippets-heading">Snippets</h4>
+            <button class="create-snippet-btn" @onclick="ShowSnippetFields">+</button>
+            <ul>
+                @if (snippets != null && snippets.Any())
+                {
+                    @foreach (var snippet in snippets)
+                    {
+                        <li class="snippet-item @(selectedSnippet != null && selectedSnippet.Id == snippet.Id ? "active" : "")"
+                        @onclick="() => LoadSnippetDetails(snippet.Id)">
+                            @snippet.Title
+                        </li>
+                    }
+                }
+                else
+                {
+                    <li>No snippets available</li>
+                }
+            </ul>
+        </div>
+
+        <!-- Right Section: Snippet Details/Editor -->
+        <div class="snippet-details">
+            @if (isAddingSnippet)
+            {
+                <!-- Fields for creating a new snippet -->
+                <h4>Create New Snippet</h4>
+                <EditForm Model="newSnippet" OnValidSubmit="HandleValidSubmitNew">
+                    <DataAnnotationsValidator />
+                    <ValidationSummary />
+
+                    <div class="form-group">
+                        <label for="title">Title</label>
+                        <input type="text" id="title" class="input-element" @bind="newSnippet.Title" placeholder="Enter Title" />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="collections">Collection</label>
+                        <select id="collections" class="dropdown" @bind="selectedCollectionIdCreate">
+                            @foreach (var collection in collections)
+                            {
+                                <option value="@collection.Id">@collection.Title</option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="content">Content</label>
+                        <textarea id="createContentId" class="textarea" @bind="newSnippet.Content" placeholder="Enter Content" @oninput="AdjustTextAreaHeight"></textarea>
+                    </div>
+
+                    <button type="submit" class="btn-submit">Add Snippet</button>
+                </EditForm>
+            }
+            else if (selectedSnippet != null && selectedSnippet != null)
+            {
+                <!-- Editable form for an existing snippet -->
+                <h4>Edit Snippet</h4>
+                <EditForm Model="selectedSnippet" OnValidSubmit="HandleValidSubmitEdit">
+                    <DataAnnotationsValidator />
+                    <ValidationSummary />
+
+                    <div class="form-group">
+                        <label for="title">Title</label>
+                        <input type="text" id="title" class="input-element" @bind="selectedSnippet.Title" placeholder="Enter Title" />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="collections">Collection</label>
+                        <select id="collections" class="dropdown" @bind="selectedCollectionId">
+                            @foreach (var collection in collections)
+                            {
+                                <option value="@collection.Id">@collection.Title</option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="content">Content</label>
+                        <textarea id="editContentId" class="textarea" @bind="selectedSnippet.Content" placeholder="Edit Content" @oninput="AdjustTextAreaHeightEdit"></textarea>
+                    </div>
+                    <button type="submit" class="btn-submit">Save</button>
+                    <button type="button" class="btn-delete" @onclick="() => DeleteSnippet(selectedSnippet.Id)">Delete</button>
+                </EditForm>
             }
             else
             {
-                <li>No snippets available</li>
+                <p>Select a snippet to view details.</p>
             }
-        </ul>
+        </div>
     </div>
 
-    <!-- Right Section: Snippet Details/Editor -->
-    <div class="snippet-details">
-        @if (isAddingSnippet)
-        {
-            <!-- Fields for creating a new snippet -->
-            <h4>Create New Snippet</h4>
 
-            <EditForm Model="newSnippet" OnValidSubmit="HandleValidSubmitNew">
-                <DataAnnotationsValidator />
-                <ValidationSummary />
-
-                <div>
-                    <label for="title">Title:</label>
-                    <InputText id="title" @bind-Value="newSnippet.Title" placeholder="Enter Title" />
-                </div>
-
-                <div>
-                    <label for="content">Content:</label>
-                    <textarea id="createContentId"
-                    @bind="newSnippet.Content"
-                              placeholder="Enter Content"
-                              style="resize: none; width: 100%; min-height: 100px;"
-                    @oninput="AdjustTextAreaHeight"></textarea>
-                </div>
-
-                <div>
-                    <label for="collections">Collections:</label>
-                    <select id="collections" @bind="selectedCollectionId">
-                        @foreach (var collection in collections)
-                        {
-                            <option value="@collection.Id">@collection.Title</option>
-                        }
-                    </select>
-                </div>
-
-                <button type="submit">Add Snippet</button>
-            </EditForm>
-        }
-        else if (selectedSnippet != null)
-        {
-            <!-- Display details of the selected snippet -->
-            <h4>@selectedSnippet.Title</h4>
-            <p>@selectedSnippet.Content</p>
-        }
-        else
-        {
-            <p>Select a snippet to view details.</p>
-        }
-    </div>
-</div>
 
 
 
@@ -106,14 +126,18 @@
 
         <div>
             <label>Title:</label>
-            <InputText @bind-Value="newCollection.Title" />
+            <input type="text" class="input-element" @bind="newCollection.Title" />
         </div>
         <div>
             <label>Public:</label>
-            <InputCheckbox @bind-Value="newCollection.IsPublic" />
+            <InputCheckbox class="input-element" @bind-Value="newCollection.IsPublic" />
         </div>
-        <button type="submit">Create</button>
+        <button class="btn-submit" type="submit">Create</button>
     </EditForm>
+</Modal>
+
+<Modal @ref="spinnerModal" >
+
 </Modal>
 
 

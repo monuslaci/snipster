@@ -12,6 +12,7 @@ namespace Snipster.Components
         [Parameter] public string Title { get; set; } = "Modal Title";
         [Parameter] public RenderFragment ChildContent { get; set; }
         private bool IsVisible;
+        public bool IsSpinner { get; set; } = false;
 
         public void ShowModal()
         {

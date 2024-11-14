@@ -2,20 +2,29 @@
 
 @if (IsVisible)
 {
-    <div class="modal-overlay" @onclick="CloseModal">
-        <div class="modal-content" @onclick:stopPropagation>
-            <div class="modal-header">
-                <h3>@Title</h3>
-                <button @onclick="CloseModal" class="modal-close-btn">X</button>
-            </div>
-            <div class="modal-body">
-                @ChildContent
-            </div>
-            <div class="modal-footer">
-                <button @onclick="CloseModal">Close</button>
+    @if (!IsSpinner)
+    {
+        <div class="modal-overlay" @onclick="CloseModal">
+            <div class="modal-content" @onclick:stopPropagation>
+                <div class="modal-header">
+                    <h3>@Title</h3>
+                    <button @onclick="CloseModal" class="modal-close-btn">X</button>
+                </div>
+                <div class="modal-body">
+                    @ChildContent
+                </div>
+                <div class="modal-footer">
+                    <button class="modal-footer-close-btn" @onclick="CloseModal">Close</button>
+                </div>
             </div>
         </div>
-    </div>
+    }
+    else
+    {
+        <div class="loading-overlay">
+            <div class="spinner"></div>
+        </div>
+    }
 }
 
 <style>
@@ -50,6 +59,24 @@
         font-size: 1.5em;
         cursor: pointer;
     }
+
+    .modal-footer-close-btn {
+        padding: 10px;
+        font-size: 14px;
+        background-color: rgba(233, 168, 73);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+        width: 100%;
+        max-width: 200px;
+        align-self: flex-start;
+    }
+
+    .modal-footer-close-btn:hover {
+        background-color: rgba(233, 168, 73, 0.5);
+}
 </style>
 
 @code {

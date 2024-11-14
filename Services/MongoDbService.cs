@@ -128,6 +128,11 @@ namespace Snipster.Services
             await _collectionsCollection.InsertOneAsync(collection);
         }
 
+        public async Task DeleteCollectionAsync(string id)
+        {
+            await _collectionsCollection.DeleteOneAsync(c => c.Id == id);
+        }
+
         //public async Task CreateListAsync(Lists list)
         //{
         //    await _lists.InsertOneAsync(list);
