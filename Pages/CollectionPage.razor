@@ -8,19 +8,26 @@
 
     <div class="page-layout">
         <!-- Left Section: Collection List with Create Button -->
-        <div class="collection-list">
-            <h4 class="collections-heading">Collections</h4>
-            <button class="create-collection-btn" @onclick="ShowCreateCollectionModal">+</button>
-            <ul>
-                @foreach (var collection in collections)
-                {
-                    <li class="collection-item @(selectedCollectionId != null && selectedCollectionId == collection.Id ? "active" : "")"
-                    @onclick="() => LoadSnippets(collection.Id)">
+    <div class="collection-list">
+        <h4 class="collections-heading">Collections</h4>
+        <button class="create-collection-btn" @onclick="ShowCreateCollectionModal">+</button>
+        <ul>
+            @foreach (var collection in collections)
+            {
+                <li class="collection-item @(selectedCollectionId != null && selectedCollectionId == collection.Id ? "active" : "")">
+                    <span @onclick="() => LoadSnippets(collection.Id)">
                         @collection.Title
-                    </li>
-                }
-            </ul>
-        </div>
+                    </span>
+                    <button class="icon-btn edit-btn" @onclick="() => EditCollection(collection)">
+                        <i class="fa fa-edit"></i> 
+                    </button>
+                    <button class="icon-btn delete-btn" @onclick="() => DeleteCollection(collection.Id)">
+                        <i class="fa fa-trash"></i> 
+                    </button>
+                </li>
+            }
+        </ul>
+    </div>
 
         <div class="snippet-list">
             <h4 class="snippets-heading">Snippets</h4>
@@ -133,6 +140,24 @@
             <InputCheckbox class="input-element" @bind-Value="newCollection.IsPublic" />
         </div>
         <button class="btn-submit" type="submit">Create</button>
+    </EditForm>
+</Modal>
+
+<!-- Modal for editing a collection -->
+<Modal @ref="editCollectionModal" Title="EditCollection">
+    <EditForm Model="editCollection" OnValidSubmit="async () => await HandleEditCollection()">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <div>
+            <label>Title:</label>
+            <input type="text" class="input-element" @bind="editCollection.Title" />
+        </div>
+        <div>
+            <label>Public:</label>
+            <InputCheckbox class="input-element" @bind-Value="editCollection.IsPublic" />
+        </div>
+        <button class="btn-submit" type="submit">Save</button>
     </EditForm>
 </Modal>
 

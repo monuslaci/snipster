@@ -94,7 +94,9 @@ namespace Snipster.Services
         public async Task UpdateCollectionAsync(Collection collection)
         {
                 var filter = Builders<Collection>.Filter.Eq(c => c.Id, collection.Id);
-                var update = Builders<Collection>.Update.Set(c => c.SnippetIds, collection.SnippetIds);
+            var update = Builders<Collection>.Update.Set(c => c.SnippetIds, collection.SnippetIds)
+                                                            .Set(c => c.Title, collection.Title)
+                                                            .Set(c => c.IsPublic, collection.IsPublic);
                 await _collectionsCollection.UpdateOneAsync(filter, update);
         }
 

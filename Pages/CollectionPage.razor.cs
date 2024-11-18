@@ -14,13 +14,16 @@ namespace Snipster.Pages
     {
         private List<Collection> collections = new List<Collection>();
         private Collection newCollection = new Collection();
+        private Collection editCollection = new Collection();
         private Snippet newSnippet = new Snippet();
         private List<Snippet> snippets = new List<Snippet>();
         private Snippet selectedSnippet;
         private bool isAddingSnippet = false; 
         private string selectedCollectionId; 
         private string selectedCollectionIdCreate; 
+        private string selectedCollectionIdEdit; 
         private Modal createCollectionModal;
+        private Modal editCollectionModal;
         private Modal spinnerModal = new Modal();
         private bool adjustHeightNeeded;
 
@@ -103,9 +106,21 @@ namespace Snipster.Pages
             isAddingSnippet = true;
         }
 
-        private async Task EditCollection(string collectionId)
+
+        private async Task HandleEditCollection()
         {
-            // Logic to edit collection (implement this as needed)
+            spinnerModal.ShowModal();
+            await _mongoDbService.UpdateCollectionAsync(editCollection);
+            editCollectionModal.CloseModal();
+            collections = await _mongoDbService.GetCollectionsAsync();
+            spinnerModal.CloseModal();
+        }
+
+        private async Task EditCollection(Collection collection)
+        {
+            editCollectionModal.ShowModal();
+            editCollectionModal.Title = $"Edit - {collection.Title}";
+            editCollection = collection;
         }
 
         private async Task DeleteCollection(string collectionId)
@@ -165,6 +180,11 @@ namespace Snipster.Pages
             spinnerModal.ShowModal();
             await _mongoDbService.DeleteSnippetAsync(id);
             await LoadSnippets(selectedCollectionId);
+
+            var snippetIds = await _mongoDbService.GetSnippetIdsByCollectionAsync(selectedCollectionId);
+            var snippetid = snippetIds.FirstOrDefault();
+
+            await LoadSnippetDetails(snippetid);
             spinnerModal.CloseModal();
         }
 
