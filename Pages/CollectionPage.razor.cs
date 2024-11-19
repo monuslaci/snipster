@@ -84,7 +84,7 @@ namespace Snipster.Pages
                     }
                 }
             }
-
+            selectedCollectionIdCreate = selectedCollectionId;
             StateHasChanged();
             spinnerModal.CloseModal();
         }
@@ -136,7 +136,8 @@ namespace Snipster.Pages
             spinnerModal.ShowModal();
             // Save the new snippet and get the generated snippet ID
             var snippetId = await _mongoDbService.AddSnippetAsync(newSnippet);
-
+            if (selectedCollectionIdCreate == null)
+                selectedCollectionIdCreate = selectedCollectionId;
             var selectedCollection = collections.FirstOrDefault(c => c.Id == selectedCollectionIdCreate);
             if (selectedCollection != null)
             {
