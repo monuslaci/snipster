@@ -12,6 +12,7 @@ namespace Snipster.Pages
 {
     public partial class CollectionPage
     {
+        [Inject] NavigationManager Navigation { get; set; }
         private List<Collection> collections = new List<Collection>();
         private Collection newCollection = new Collection();
         private Collection editCollection = new Collection();
@@ -30,6 +31,18 @@ namespace Snipster.Pages
         protected override async Task OnInitializedAsync()
         {
             collections = await _mongoDbService.GetCollectionsAsync();
+
+            var uri = Navigation.ToAbsoluteUri(Navigation.Uri);
+            var query = Microsoft.AspNetCore.WebUtilities.QueryHelpers.ParseQuery(uri.Query);
+
+            if (query != null && query.TryGetValue("selectedCollectionId", out var id))
+            {
+                selectedCollectionId = id;
+                await LoadSnippets(selectedCollectionId);
+
+                // Remove query parameter from the URL using JavaScript
+                await JSRuntime.InvokeVoidAsync("updateUrlWithoutQueryParam", "/collections");
+            }
         }
 
         protected override async Task OnAfterRenderAsync(bool firstRender)

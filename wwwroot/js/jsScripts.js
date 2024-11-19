@@ -15,3 +15,7 @@ window.adjustTextAreaHeight = function (elementId) {
     }
 };
 
+
+function updateUrlWithoutQueryParam(url) {
+    window.history.replaceState({}, document.title, url);
+}
