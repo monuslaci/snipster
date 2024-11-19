@@ -11,9 +11,10 @@ namespace Snipster.Data
         {
             [BsonId]
             [BsonRepresentation(BsonType.ObjectId)]
-            public string Id { get; set; }  // MongoDB ID
+            public string Id { get; set; }  
             public string Title { get; set; }
             public DateTime CreatedDate { get; set; }
+            public DateTime LastModifiedDate { get; set; }
             public string Content { get; set; }
             public List<string> Tags { get; set; }  
             public string Language { get; set; }
@@ -22,8 +23,8 @@ namespace Snipster.Data
         {
             [BsonId]
             [BsonRepresentation(BsonType.ObjectId)]
-            public string Id { get; set; }  
-
+            public string Id { get; set; }
+            public DateTime LastModifiedDate { get; set; }
             public string Title { get; set; }
             public bool IsPublic { get; set; }
             public List<string> SnippetIds { get; set; } = new List<string>();

@@ -75,7 +75,10 @@ namespace Snipster.Services
                 var filter = Builders<Snippet>.Filter.Eq(s => s.Id, snippet.Id);
                 var update = Builders<Snippet>.Update
                     .Set(s => s.Title, snippet.Title)
-                    .Set(s => s.Content, snippet.Content);
+                    .Set(s => s.Content, snippet.Content)
+                    .Set(s => s.Tags, snippet.Tags)
+                    .Set(s => s.LastModifiedDate, snippet.LastModifiedDate)
+                    .Set(s => s.CreatedDate, snippet.CreatedDate);
                 await _snippetsCollection.UpdateOneAsync(filter, update);  // Update if exists
             }
         }
@@ -96,8 +99,9 @@ namespace Snipster.Services
                 var filter = Builders<Collection>.Filter.Eq(c => c.Id, collection.Id);
             var update = Builders<Collection>.Update.Set(c => c.SnippetIds, collection.SnippetIds)
                                                             .Set(c => c.Title, collection.Title)
-                                                            .Set(c => c.IsPublic, collection.IsPublic);
-                await _collectionsCollection.UpdateOneAsync(filter, update);
+                                                            .Set(c => c.IsPublic, collection.IsPublic)
+                                                            .Set(c => c.LastModifiedDate, collection.LastModifiedDate);
+            await _collectionsCollection.UpdateOneAsync(filter, update);
         }
 
         public async Task UpdateSnippetAsync(Snippet snippet)
@@ -105,7 +109,10 @@ namespace Snipster.Services
             var filter = Builders<Snippet>.Filter.Eq(s => s.Id, snippet.Id);
             var update = Builders<Snippet>.Update
                 .Set(s => s.Title, snippet.Title)
-                .Set(s => s.Content, snippet.Content);
+                .Set(s => s.Content, snippet.Content)
+                .Set(s => s.Tags, snippet.Tags)
+                .Set(s => s.LastModifiedDate, snippet.LastModifiedDate)
+                .Set(s => s.CreatedDate, snippet.CreatedDate);
 
             await _snippetsCollection.UpdateOneAsync(filter, update);
         }
@@ -123,6 +130,16 @@ namespace Snipster.Services
         public async Task<List<Collection>> GetCollectionsAsync()
         {
             return await _collectionsCollection.Find(_ => true).ToListAsync();
+        }
+
+        public async Task<List<Collection>> GetLast5CollectionsAsync()
+        {
+            var collections = await _collectionsCollection
+                .Find(FilterDefinition<Collection>.Empty)
+                .Sort(Builders<Collection>.Sort.Descending(c => c.LastModifiedDate))
+                .Limit(5)
+                .ToListAsync();
+            return collections;
         }
 
         public async Task AddCollectionAsync(Collection collection)

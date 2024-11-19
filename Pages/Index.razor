@@ -62,7 +62,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        collections = await _mongoDbService.GetCollectionsAsync();
+        collections = await _mongoDbService.GetLast5CollectionsAsync();
     }
 
 

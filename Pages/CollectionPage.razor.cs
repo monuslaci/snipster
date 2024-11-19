@@ -70,6 +70,7 @@ namespace Snipster.Pages
         private async Task HandleCreateCollection()
         {
             spinnerModal.ShowModal();
+            newCollection.LastModifiedDate = DateTime.Now;
             await _mongoDbService.AddCollectionAsync(newCollection);
             collections = await _mongoDbService.GetCollectionsAsync(); 
             createCollectionModal.CloseModal();
@@ -123,6 +124,7 @@ namespace Snipster.Pages
         private async Task HandleEditCollection()
         {
             spinnerModal.ShowModal();
+            editCollection.LastModifiedDate = DateTime.Now;
             await _mongoDbService.UpdateCollectionAsync(editCollection);
             editCollectionModal.CloseModal();
             collections = await _mongoDbService.GetCollectionsAsync();
@@ -132,7 +134,6 @@ namespace Snipster.Pages
         private async Task EditCollection(Collection collection)
         {
             editCollectionModal.ShowModal();
-            editCollectionModal.Title = $"Edit - {collection.Title}";
             editCollection = collection;
         }
 
@@ -156,10 +157,11 @@ namespace Snipster.Pages
             {
                 // Add the new snippet ID to the collection's SnippetIds list
                 selectedCollection.SnippetIds.Add(snippetId);
-
+                selectedCollection.LastModifiedDate = DateTime.Now;
                 await _mongoDbService.UpdateCollectionAsync(selectedCollection);
             }
-
+            newSnippet.CreatedDate = DateTime.Now;
+            newSnippet.LastModifiedDate = DateTime.Now;
             await _mongoDbService.SaveSnippetAsync(newSnippet);
             isAddingSnippet = false;
             await LoadSnippets(selectedCollectionId);
@@ -178,12 +180,13 @@ namespace Snipster.Pages
                 if (!selectedCollection.SnippetIds.Contains(selectedSnippet.Id))
                 {
                     selectedCollection.SnippetIds.Add(snippetId);
+                    selectedCollection.LastModifiedDate = DateTime.Now;
                     await _mongoDbService.UpdateCollectionAsync(selectedCollection);
                 }
 
             }
-
-            await _mongoDbService.SaveSnippetAsync(newSnippet);
+            selectedSnippet.LastModifiedDate = DateTime.Now;
+            await _mongoDbService.SaveSnippetAsync(selectedSnippet);
             isAddingSnippet = false;
             await LoadSnippets(selectedCollectionId);
             spinnerModal.CloseModal();
