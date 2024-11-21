@@ -252,6 +252,13 @@
     background-color: #397a3a;
 }
 
+.btn-submit:disabled {
+    background-color: #ccc; 
+    color: #666; 
+    cursor: not-allowed; 
+    opacity: 0.6; 
+}
+
 .btn-delete {
     padding: 8px 25px;
     font-size: 16px;
@@ -266,6 +273,11 @@
     align-self: flex-start;
 }
 
+.error-message {
+    color: red;
+    font-size: 14px;
+    margin-top: 5px;
+}
 
 .btn-delete:hover {
     background-color: rgba(233, 32, 73, 0.5);

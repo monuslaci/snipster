@@ -27,7 +27,11 @@ namespace Snipster.Pages
         private Modal editCollectionModal;
         private Modal spinnerModal = new Modal();
         private bool adjustHeightNeeded;
-
+        private string HashtagsInput { get; set; }
+        private List<string> ValidHashtags { get; set; } = new List<string>();
+        private string buttonEnabled { get; set; } = "";
+        private bool AreHashtagsValid { get; set; } = true;
+        private Dictionary<string, object> ButtonAttributes { get; set; }
         protected override async Task OnInitializedAsync()
         {
             collections = await _mongoDbService.GetCollectionsAsync();
@@ -63,7 +67,8 @@ namespace Snipster.Pages
 
         private void ShowCreateCollectionModal()
         {
-            newCollection = new Collection(); 
+            newCollection = new Collection();
+            ValidHashtags.Clear();
             createCollectionModal.ShowModal();
         }
 
@@ -99,6 +104,10 @@ namespace Snipster.Pages
                 }
             }
             selectedCollectionIdCreate = selectedCollectionId;
+            string firstSnippetId = snippetIds != null ? snippetIds.FirstOrDefault() : "";
+            await LoadSnippetDetails(firstSnippetId);
+
+
             StateHasChanged();
             spinnerModal.CloseModal();
         }
@@ -123,6 +132,7 @@ namespace Snipster.Pages
 
         private async Task HandleEditCollection()
         {
+            ValidHashtags.Clear();
             spinnerModal.ShowModal();
             editCollection.LastModifiedDate = DateTime.Now;
             await _mongoDbService.UpdateCollectionAsync(editCollection);
@@ -214,5 +224,47 @@ namespace Snipster.Pages
             await JSRuntime.InvokeVoidAsync("adjustTextAreaHeight", "editContentId");
         }
 
+        private void ValidateAndSaveHashtags()
+        {
+            if (string.IsNullOrWhiteSpace(HashtagsInput))
+            {
+                ValidHashtags.Clear();
+                return;
+            }
+
+            // Split by spaces
+            var hashtags = HashtagsInput.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+
+            // Regex to validate hashtag format
+            var regex = new System.Text.RegularExpressions.Regex(@"^#[^\s#]+$");
+
+            ValidHashtags = hashtags
+                .Where(tag => regex.IsMatch(tag))
+                .Distinct()
+                .ToList();
+
+            // Optional: Show a validation error if there are invalid hashtags
+            if (ValidHashtags.Count != HashtagsInput.Split(' ').Length)
+            {
+                AreHashtagsValid = false;
+            } else
+                AreHashtagsValid = true;
+            StateHasChanged();
+        }
+
+        private Dictionary<string, object> GetButtonAttributes()
+        {
+            var attributes = new Dictionary<string, object>();
+
+            // If hashtags are not valid, add the 'disabled' attribute without a value
+            if (!AreHashtagsValid)
+            {
+                attributes.Add("disabled", ""); // Add 'disabled' attribute without a value
+            }
+
+            return attributes;
+        }
+
     }
+
 }
