@@ -56,19 +56,17 @@
         {
             <!-- Fields for creating a new snippet -->
             <h4>Create New Snippet</h4>
-            <EditForm Model="newSnippet" OnValidSubmit="HandleValidSubmitNew">
+            <EditForm Model="newSnippet" OnValidSubmit="HandleValidSubmitNew" >
                 <DataAnnotationsValidator />
                 <ValidationSummary />
-
                 <div class="form-group">
                     <input type="text" id="title" class="input-element" @bind="newSnippet.Title" placeholder="Title" />
-                    <ValidationMessage For="@(() => newSnippet.Title)" />
+@*                     <ValidationMessage For="@(() => newSnippet.Title)" /> *@
                 </div>
 
                 <div class="form-group">
-                    <input type="text" id="hashtags" class="input-element" @bind="@HashtagsInput" @oninput="@ValidateAndSaveHashtags" placeholder="Enter hashtags separated by spaces" />
-                     <ValidationMessage For="@(() => newSnippet.Tags)" />
-
+                    <input type="text" id="hashtags" class="input-element" @bind="@newSnippet.HashtagsInput" placeholder="Enter hashtags separated by spaces" />
+@*                     <ValidationMessage For="@(() => newSnippet.HashtagsInput)" /> *@
                 </div>
 
                 <div class="form-group">
@@ -82,10 +80,10 @@
 
                 <div class="form-group">
                     <textarea id="createContentId" class="textarea" @bind="newSnippet.Content" placeholder="Enter Snippet" @oninput="AdjustTextAreaHeight"></textarea>
-                    <ValidationMessage For="@(() => newSnippet.Content)" />
+     @*                <ValidationMessage For="@(() => newSnippet.Content)" /> *@
                 </div>
 
-                @if (AreHashtagsValid)
+                @if (isFormValid)
                 {
                     <button type="submit" class="btn-submit">Add Snippet </button>
                 }
@@ -109,7 +107,7 @@
                 </div>
 
                 <div class="form-group">
-                    <input type="text" id="hashtags" class="input-element" @bind="@HashtagsInput" @oninput="@ValidateAndSaveHashtags" placeholder="Enter hashtags separated by spaces" />
+                    <input type="text" id="hashtags" class="input-element" @bind="@selectedSnippet.HashtagsInput" placeholder="Enter hashtags separated by spaces" />
 
                     @if (HashtagsInput != null && ValidHashtags.Count != HashtagsInput.Split(' ').Length)
                     {
@@ -129,7 +127,7 @@
                 <div class="form-group">
                     <textarea id="editContentId" class="textarea" @bind="selectedSnippet.Content" placeholder="Enter Snippet" @oninput="AdjustTextAreaHeightEdit"></textarea>
                 </div>
-                @if (AreHashtagsValid)
+                @if (isFormValid)
                 {
                     <button type="submit" class="btn-submit">Save</button>
                 }

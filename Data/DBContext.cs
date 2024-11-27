@@ -21,24 +21,36 @@ namespace Snipster.Data
 
             [Required(ErrorMessage = "Content  is required.")]
             public string Content { get; set; }
+
             [CustomValidation(typeof(Snippet), nameof(ValidateHashtags))]
-            public List<string> Tags { get; set; }
+            public string HashtagsInput { get; set; }
+
             public string Language { get; set; }
 
-            public static ValidationResult ValidateHashtags(string hashtags, ValidationContext context)
+            public static ValidationResult ValidateHashtags(string hashtagsInput, ValidationContext context)
             {
-                if (string.IsNullOrWhiteSpace(hashtags))
+                if (hashtagsInput == null )
                 {
-                    return ValidationResult.Success; // Hashtags are optional.
+                    return ValidationResult.Success; // Tags are optional.
                 }
 
-                var tags = hashtags.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-                foreach (var tag in tags)
+                List<string> hashtags = hashtagsInput
+                    .Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries)
+                    .Select(tag => tag.Trim())
+                    .ToList();
+
+                if (hashtags.Count == 0)
+                {
+                    return ValidationResult.Success; // Tags are optional.
+                }
+
+                foreach (var tag in hashtags)
                 {
                     if (!tag.StartsWith("#"))
                     {
                         return new ValidationResult("Each hashtag must start with '#'.");
                     }
+
                     if (tag.Contains(" "))
                     {
                         return new ValidationResult("Hashtags cannot contain spaces.");

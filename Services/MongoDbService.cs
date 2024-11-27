@@ -76,7 +76,7 @@ namespace Snipster.Services
                 var update = Builders<Snippet>.Update
                     .Set(s => s.Title, snippet.Title)
                     .Set(s => s.Content, snippet.Content)
-                    .Set(s => s.Tags, snippet.Tags)
+                    .Set(s => s.HashtagsInput, snippet.HashtagsInput)
                     .Set(s => s.LastModifiedDate, snippet.LastModifiedDate)
                     .Set(s => s.CreatedDate, snippet.CreatedDate);
                 await _snippetsCollection.UpdateOneAsync(filter, update);  // Update if exists
@@ -110,7 +110,7 @@ namespace Snipster.Services
             var update = Builders<Snippet>.Update
                 .Set(s => s.Title, snippet.Title)
                 .Set(s => s.Content, snippet.Content)
-                .Set(s => s.Tags, snippet.Tags)
+                .Set(s => s.HashtagsInput, snippet.HashtagsInput)
                 .Set(s => s.LastModifiedDate, snippet.LastModifiedDate)
                 .Set(s => s.CreatedDate, snippet.CreatedDate);
 
