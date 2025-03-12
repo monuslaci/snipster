@@ -9,12 +9,14 @@ using Microsoft.JSInterop;
 using System.Linq;
 using Microsoft.AspNetCore.Components.Forms;
 using MongoDB.Driver;
+using Microsoft.AspNetCore.Components.Authorization;
 
 namespace Snipster.Pages
 {
     public partial class CollectionPage
     {
         [Inject] NavigationManager Navigation { get; set; }
+        [Inject] private AuthenticationStateProvider AuthStateProvider { get; set; }
         private List<Collection> collections = new List<Collection>();
         private Collection newCollection = new Collection();
         private Collection editCollection = new Collection();
@@ -31,11 +33,15 @@ namespace Snipster.Pages
         private bool adjustHeightNeeded;
         private string HashtagsInput { get; set; }
         private List<string> ValidHashtags { get; set; } = new List<string>();
+        private string userEmail { get; set; }
 
         private bool isFormValid = true;
         protected override async Task OnInitializedAsync()
         {
-            collections = await _mongoDbService.GetCollectionsAsync();
+            var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+            userEmail = authState.User.Identity?.Name;
+
+            collections = await _mongoDbService.GetCollectionsForUserAsync(userEmail);
 
             var uri = Navigation.ToAbsoluteUri(Navigation.Uri);
             var query = Microsoft.AspNetCore.WebUtilities.QueryHelpers.ParseQuery(uri.Query);
@@ -71,6 +77,7 @@ namespace Snipster.Pages
         private void ShowCreateCollectionModal()
         {
             newCollection = new Collection();
+            newCollection.CreatedBy = userEmail;
             ValidHashtags.Clear();
             createCollectionModal.ShowModal();
         }
@@ -140,6 +147,7 @@ namespace Snipster.Pages
             ValidHashtags.Clear();
             spinnerModal.ShowModal();
             editCollection.LastModifiedDate = DateTime.Now;
+            editCollection.CreatedBy = userEmail;
             await _mongoDbService.UpdateCollectionAsync(editCollection);
             editCollectionModal.CloseModal();
             collections = await _mongoDbService.GetCollectionsAsync();

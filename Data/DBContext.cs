@@ -77,6 +77,7 @@ namespace Snipster.Data
             public DateTime LastModifiedDate { get; set; }
             public string Title { get; set; }
             public bool IsPublic { get; set; }
+            public string CreatedBy { get; set; }
             public List<string> SnippetIds { get; set; } = new List<string>();
             public string IdString => string.Join(",", Id); // Convert list to string
         }

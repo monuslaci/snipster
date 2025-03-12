@@ -107,6 +107,7 @@ namespace Snipster.Services
             var update = Builders<Collection>.Update.Set(c => c.SnippetIds, collection.SnippetIds)
                                                             .Set(c => c.Title, collection.Title)
                                                             .Set(c => c.IsPublic, collection.IsPublic)
+                                                            .Set(c => c.CreatedBy, collection.CreatedBy)
                                                             .Set(c => c.LastModifiedDate, collection.LastModifiedDate);
             await _collectionsCollection.UpdateOneAsync(filter, update);
         }
@@ -137,6 +138,11 @@ namespace Snipster.Services
         public async Task<List<Collection>> GetCollectionsAsync()
         {
             return await _collectionsCollection.Find(_ => true).ToListAsync();
+        }
+
+        public async Task<List<Collection>> GetCollectionsForUserAsync(string email)
+        {
+            return await _collectionsCollection.Find(c => c.CreatedBy == email).ToListAsync();
         }
 
         public async Task<List<Collection>> GetLast5CollectionsAsync()
