@@ -112,6 +112,7 @@ builder.Services.AddSingleton<IMongoDbContext>(sp =>
 
 
 builder.Services.AddScoped<AuthenticationStateProvider, CustomAuthenticationStateProvider>();
+builder.Services.AddScoped<CustomAuthenticationStateProvider>();
 
 builder.Services.AddAuthorizationCore(); // Add authorization service for Blazor
 builder.Services.AddControllersWithViews();

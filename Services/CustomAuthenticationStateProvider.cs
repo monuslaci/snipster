@@ -32,6 +32,12 @@ namespace Snipster.Services
             NotifyAuthenticationStateChanged(Task.FromResult(new AuthenticationState(_currentUser)));
             await Task.CompletedTask;
         }
+
+        public async Task LogoutAsync()
+        {
+            var authState = Task.FromResult(new AuthenticationState(new ClaimsPrincipal(new ClaimsIdentity())));
+            NotifyAuthenticationStateChanged(authState);
+        }
     }
 }
 

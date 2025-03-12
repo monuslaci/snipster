@@ -1,4 +1,8 @@
-﻿@inject NavigationManager Navigation
+﻿@using Snipster.Services;
+
+@inject NavigationManager Navigation
+@inject AuthenticationStateProvider AuthStateProvider 
+@inject CustomAuthenticationStateProvider CustomAuthProvider
 
 @inherits LayoutComponentBase
 
@@ -11,10 +15,20 @@
             <NavMenu />
         </div>
     }
-
     <main>
         <div class="top-row px-4">
-            <a href="https://docs.microsoft.com/aspnet/" target="_blank">About</a>
+            <div class="top-links">
+                <a href="https://docs.microsoft.com/aspnet/" target="_blank">About</a>
+
+                <AuthorizeView>
+                    <Authorized>
+                        <div class="logout-container" @onclick="Logout">
+                            <i class="fas fa-sign-out-alt logout-icon"></i>
+                            <span class="tooltip">Logout</span>
+                        </div>
+                    </Authorized>
+                </AuthorizeView>
+            </div>
         </div>
 
         <article class="content px-4">
@@ -27,4 +41,53 @@
     private bool IsAuthPage => Navigation.Uri.Contains("login", StringComparison.OrdinalIgnoreCase)
                          || Navigation.Uri.Contains("register", StringComparison.OrdinalIgnoreCase);
 
- }
+    private async Task Logout()
+    {
+        await CustomAuthProvider.LogoutAsync();
+        Navigation.NavigateTo("/login", true);
+    }
+}
+
+<style>
+    .top-links {
+        display: flex;
+        align-items: center;
+        gap: 20px; /* Space between About and Logout */
+    }
+
+    .logout-container {
+        position: relative;
+        cursor: pointer;
+    }
+
+    .logout-icon {
+        font-size: 20px;
+        color: #555;
+        transition: color 0.3s ease-in-out;
+    }
+
+        .logout-icon:hover {
+            color: red;
+        }
+
+    .tooltip {
+        position: absolute;
+        bottom: -25px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: black;
+        color: white;
+        padding: 5px 10px;
+        border-radius: 5px;
+        font-size: 12px;
+        white-space: nowrap;
+        opacity: 0;
+        transition: opacity 0.3s ease-in-out;
+        pointer-events: none;
+    }
+
+    .logout-container:hover .tooltip {
+        opacity: 1;
+    }
+
+</style>
