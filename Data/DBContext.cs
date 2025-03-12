@@ -105,6 +105,29 @@ namespace Snipster.Data
             //public string Email { get; set; }     
             //public string PasswordHash { get; set; }
         }
+        public class RegisterUserDTO
+        {
+            [Required(ErrorMessage = "First name is required")]
+            [StringLength(50, ErrorMessage = "First name cannot be longer than 50 characters")]
+            public string FirstName { get; set; }
+
+            [Required(ErrorMessage = "Last name is required")]
+            [StringLength(50, ErrorMessage = "Last name cannot be longer than 50 characters")]
+            public string LastName { get; set; }
+
+            [Required(ErrorMessage = "Email is required")]
+            [EmailAddress(ErrorMessage = "Invalid email format")]
+            public string Email { get; set; }
+
+            [Required(ErrorMessage = "Username is required")]
+            [StringLength(20, MinimumLength = 5, ErrorMessage = "Username must be between 5 and 20 characters")]
+            public string UserName { get; set; }
+
+            [Required(ErrorMessage = "Password is required")]
+            [MinLength(8, ErrorMessage = "Password must be at least 8 characters")]
+            [RegularExpression(@"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$",  ErrorMessage = "Password must contain at least one uppercase letter, one lowercase letter and one number.")]
+            public string Password { get; set; }
+        }
 
         [CollectionName("Roles")] // Defines the MongoDB collection name
         public class ApplicationRole : MongoIdentityRole<string>

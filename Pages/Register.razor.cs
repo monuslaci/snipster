@@ -15,13 +15,22 @@ namespace Snipster.Pages
     public partial class Register
     {
 
-        private Users newUser = new();
+        private RegisterUserDTO newUser = new();
         private string Password { get; set; }
         private string Message { get; set; }
 
         private async Task HandleRegister()
         {
-             var result = await MongoDbService.RegisterUserAsync(newUser, Password);
+            var user = new Users
+            {
+                FirstName = newUser.FirstName,
+                LastName = newUser.LastName,
+                //UserName = newUser.UserName,
+                Email = newUser.Email,
+                
+            };
+
+            var result = await MongoDbService.RegisterUserAsync(user, newUser.Password);
 
             if (result)
             {
