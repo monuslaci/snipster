@@ -1,11 +1,14 @@
 ﻿@using Snipster.Data;
 @using Snipster.Services;
 @using Snipster.Components
+@using System.Security.Claims;
 @using static Snipster.Data.DBContext;
 @inject IJSRuntime JSRuntime
 @inject MongoDbService _mongoDbService
-@page "/"
+@inject AuthenticationStateProvider AuthenticationStateProvider
 
+@page "/"
+@attribute [Authorize]
 
 
 <PageTitle>Snipster</PageTitle>
@@ -54,6 +57,7 @@
     [Inject] NavigationManager Navigation { get; set; }
     private List<Collection> collections = new List<Collection>();
     private Modal spinnerModal = new Modal();
+    private ClaimsPrincipal user;
 
     private void NavigateToCollections()
     {
@@ -62,12 +66,26 @@
 
     protected override async Task OnInitializedAsync()
     {
+        // Get the authentication state from the AuthenticationStateProvider
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+
+        // Get the user from the authentication state
+        var user = authState.User;
+
+        // You can check if the user is authenticated here
+        if (!user.Identity.IsAuthenticated)
+        {
+            // Optionally redirect to login or show a message
+            Navigation.NavigateTo("/login");
+        }
+
         collections = await _mongoDbService.GetLast5CollectionsAsync();
     }
 
 
     private void NavigateToCollection(string collectionId)
     {
+        
         Navigation.NavigateTo($"/collections?selectedCollectionId={collectionId}");
     }
 }

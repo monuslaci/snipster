@@ -1,5 +1,7 @@
-﻿using MongoDB.Driver;
+﻿using Microsoft.AspNetCore.Identity;
+using MongoDB.Driver;
 using static Snipster.Data.DBContext;
+using BCrypt.Net;
 
 namespace Snipster.Services
 {
@@ -8,19 +10,24 @@ namespace Snipster.Services
         private readonly IMongoCollection<Snippet> _snippetsCollection;
         private readonly IMongoCollection<Collection> _collectionsCollection;
         private readonly IMongoCollection<Users> _usersCollection;
+        private readonly IPasswordHasher<Users> _passwordHasher;
 
-        public MongoDbService(string connectionString, string databaseName)
+        public MongoDbService(string connectionString, string databaseName, IPasswordHasher<Users> passwordHasher)
         {
             var client = new MongoClient(connectionString);
             var database = client.GetDatabase(databaseName);
+
+            //initialize the collections
             _snippetsCollection = database.GetCollection<Snippet>("Snippets");
             _collectionsCollection = database.GetCollection<Collection>("Collections");
+            _usersCollection = database.GetCollection<Users>("Users");
+            _passwordHasher = passwordHasher;
         }
 
         public async Task<string> AddSnippetAsync(Snippet snippet)
         {
             await _snippetsCollection.InsertOneAsync(snippet);
-            return snippet.Id; 
+            return snippet.Id;
         }
 
         public async Task<List<Snippet>> GetAllSnippetsAsync()
@@ -96,7 +103,7 @@ namespace Snipster.Services
 
         public async Task UpdateCollectionAsync(Collection collection)
         {
-                var filter = Builders<Collection>.Filter.Eq(c => c.Id, collection.Id);
+            var filter = Builders<Collection>.Filter.Eq(c => c.Id, collection.Id);
             var update = Builders<Collection>.Update.Set(c => c.SnippetIds, collection.SnippetIds)
                                                             .Set(c => c.Title, collection.Title)
                                                             .Set(c => c.IsPublic, collection.IsPublic)
@@ -156,5 +163,35 @@ namespace Snipster.Services
         //{
         //    await _lists.InsertOneAsync(list);
         //}
+        public async Task<bool> RegisterUserAsync(Users newUser, string password)
+        {
+            // Hash the password before storing (similar to Identity)
+            newUser.PasswordHash = BCrypt.Net.BCrypt.HashPassword(password);
+
+            // Check if the user already exists
+            var existingUser = await _usersCollection.Find(u => u.Email == newUser.Email).FirstOrDefaultAsync();
+            if (existingUser != null)
+            {
+                return false; // User already exists
+            }
+
+            // Insert the new user into the database
+            await _usersCollection.InsertOneAsync(newUser);
+            return true; // Registration successful
+        }
+
+
+        public async Task<bool> ValidateUserAsync(string email, string password)
+        {
+            var user = await _usersCollection.Find(u => u.Email == email).FirstOrDefaultAsync();
+            if (user == null)
+            {
+                return false; // User not found
+            }
+
+            return BCrypt.Net.BCrypt.Verify(password, user.PasswordHash);
+
+
+        }
     }
 }

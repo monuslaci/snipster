@@ -1,11 +1,16 @@
-﻿@inherits LayoutComponentBase
+﻿@inject NavigationManager Navigation
+
+@inherits LayoutComponentBase
 
 <PageTitle>Snipster</PageTitle>
 
 <div class="page">
-    <div class="sidebar">
-        <NavMenu />
-    </div>
+    @if (!IsAuthPage)
+    {
+        <div class="sidebar">
+            <NavMenu />
+        </div>
+    }
 
     <main>
         <div class="top-row px-4">
@@ -17,3 +22,9 @@
         </article>
     </main>
 </div>
+
+@code {
+    private bool IsAuthPage => Navigation.Uri.Contains("login", StringComparison.OrdinalIgnoreCase)
+                         || Navigation.Uri.Contains("register", StringComparison.OrdinalIgnoreCase);
+
+ }

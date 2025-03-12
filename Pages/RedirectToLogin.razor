@@ -1,0 +1,43 @@
+﻿@using Snipster.Data;
+@using Snipster.Services;
+@using Snipster.Components
+@inject IJSRuntime JSRuntime
+@inject MongoDbService _mongoDbService
+@inject MongoDbService MongoDbService
+@inject NavigationManager Navigation
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.AspNetCore.Components.Forms
+@using static Snipster.Data.DBContext;
+@inject NavigationManager Navigation
+@inject SignInManager<Users> SignInManager
+@inject UserManager<Users> UserManager
+@inject NavigationManager Navigation
+@inject AuthenticationStateProvider AuthStateProvider
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        if (user.Identity is null || !user.Identity.IsAuthenticated)
+        {
+            Navigation.NavigateTo("/login", true);
+        }
+    }
+}
+
+
+
+
+
+
+
+@code {
+
+
+}
+
+<style>
+
+</style>
