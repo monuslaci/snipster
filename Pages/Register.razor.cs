@@ -9,6 +9,7 @@ using Microsoft.JSInterop;
 using System.Linq;
 using Microsoft.AspNetCore.Components.Forms;
 using MongoDB.Driver;
+using static Snipster.Data.CommonClasses;
 
 namespace Snipster.Pages
 {

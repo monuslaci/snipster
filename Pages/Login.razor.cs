@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Components.Forms;
 using MongoDB.Driver;
 using Microsoft.AspNetCore.Components.Authorization;
 using System.Security.Claims;
+using static Snipster.Data.CommonClasses;
 
 namespace Snipster.Pages
 {
@@ -44,11 +45,7 @@ namespace Snipster.Pages
 
     }
 
-    public class LoginModel
-        {
-            public string Email { get; set; }
-            public string Password { get; set; }
-        }
+
 
 
 }
