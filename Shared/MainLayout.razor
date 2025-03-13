@@ -1,12 +1,16 @@
 ﻿@using Snipster.Services;
+@using Blazored.Toast
 
 @inject NavigationManager Navigation
 @inject AuthenticationStateProvider AuthStateProvider 
 @inject CustomAuthenticationStateProvider CustomAuthProvider
-
+@* @inject Blazored.Toast.Services.IToastService ToastService *@
+@inject IToastService ToastService
 @inherits LayoutComponentBase
 
 <PageTitle>Snipster</PageTitle>
+
+
 
 <div class="page">
     @if (!IsAuthPage)
@@ -32,10 +36,12 @@
         </div>
 
         <article class="content px-4">
-            @Body
+            @Body   
+            <BlazoredToasts />
         </article>
     </main>
 </div>
+
 
 @code {
     private bool IsAuthPage => Navigation.Uri.Contains("login", StringComparison.OrdinalIgnoreCase)

@@ -9,6 +9,7 @@
   <ItemGroup>
     <PackageReference Include="AspNetCore.Identity.MongoDbCore" Version="6.0.0" />
     <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
+    <PackageReference Include="Blazored.Toast" Version="4.2.1" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="6.0.36" />
     <PackageReference Include="MongoDB.Driver" Version="2.30.0" />
     <PackageReference Include="MongoDbGenericRepository" Version="1.6.3" />
@@ -16,6 +17,7 @@
 
   <ItemGroup>
     <Folder Include="Components\" />
+    <Folder Include="Helpers\" />
     <Folder Include="wwwroot\css\js\" />
   </ItemGroup>
 

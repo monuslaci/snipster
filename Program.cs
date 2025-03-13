@@ -15,6 +15,7 @@ using AspNetCore.Identity.MongoDbCore.Infrastructure;
 using AspNetCore.Identity.MongoDbCore.Models;
 using MongoDbGenericRepository.Attributes;
 using Microsoft.AspNetCore.Components.Authorization;
+using Blazored.Toast;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -116,6 +117,10 @@ builder.Services.AddScoped<CustomAuthenticationStateProvider>();
 
 builder.Services.AddAuthorizationCore(); // Add authorization service for Blazor
 builder.Services.AddControllersWithViews();
+
+
+builder.Services.AddScoped<Blazored.Toast.Services.IToastService, Blazored.Toast.Services.ToastService>();
+//builder.Services.AddBlazoredToast();
 
 var app = builder.Build();
 

@@ -10,6 +10,7 @@ using System.Linq;
 using Microsoft.AspNetCore.Components.Forms;
 using MongoDB.Driver;
 using static Snipster.Data.CommonClasses;
+using Blazored.Toast.Services;
 
 namespace Snipster.Pages
 {
@@ -19,6 +20,7 @@ namespace Snipster.Pages
         private RegisterUserDTO newUser = new();
         private string Password { get; set; }
         private string Message { get; set; }
+        [Inject] Blazored.Toast.Services.IToastService ToastService { get; set; }
 
         private async Task HandleRegister()
         {
@@ -36,6 +38,7 @@ namespace Snipster.Pages
             if (result)
             {
                 Message = "Registration successful! Redirecting to login...";
+                ToastService.ShowSuccess("Registration successful! Redirecting to login...");
                 await Task.Delay(2000);
                 Navigation.NavigateTo("/login");
             }
@@ -43,7 +46,13 @@ namespace Snipster.Pages
             {
                 //Message = string.Join(" ", result.Errors.Select(e => e.Description));
                 Message = "Registration in not successful!";
+                ToastService.ShowError("Registration in not successful!");
             }
+        }
+
+        private void ShowToast()
+        {
+            ToastService.ShowSuccess("Operation completed successfully!");
         }
 
     }
