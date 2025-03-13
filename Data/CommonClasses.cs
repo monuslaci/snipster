@@ -27,6 +27,13 @@ namespace Snipster.Data
             [Required(ErrorMessage = "Password is required")]
             public string Password { get; set; }
         }
+
+        public class LoginReturn
+        {
+            public bool Result { get; set; }
+
+            public string Description { get; set; }
+        }
     }
 
 

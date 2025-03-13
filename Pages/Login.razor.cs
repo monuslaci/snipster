@@ -12,6 +12,7 @@ using MongoDB.Driver;
 using Microsoft.AspNetCore.Components.Authorization;
 using System.Security.Claims;
 using static Snipster.Data.CommonClasses;
+using Blazored.Toast.Services;
 
 namespace Snipster.Pages
 {
@@ -20,12 +21,13 @@ namespace Snipster.Pages
 
         private LoginModel loginModel = new LoginModel();
         [Inject] private AuthenticationStateProvider AuthStateProvider { get; set; }
+        [Inject] Blazored.Toast.Services.IToastService ToastService { get; set; }
 
         private async Task HandleLogin()
         {
-            var result = await MongoDbService.ValidateUserAsync(loginModel.Email, loginModel.Password);
+            var loginResult = await MongoDbService.ValidateUserAsync(loginModel.Email, loginModel.Password);
 
-            if (result)
+            if (loginResult.Result)
             {
                 // Ensure we cast to CustomAuthenticationStateProvider
                 if (AuthStateProvider is CustomAuthenticationStateProvider customAuthStateProvider)
@@ -39,7 +41,7 @@ namespace Snipster.Pages
             }
             else
             {
-                // Handle login failure (e.g., show error message)
+                ToastService.ShowError($"{loginResult.Description}");
             }
         }
 

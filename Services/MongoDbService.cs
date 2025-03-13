@@ -2,6 +2,7 @@
 using MongoDB.Driver;
 using static Snipster.Data.DBContext;
 using BCrypt.Net;
+using static Snipster.Data.CommonClasses;
 
 namespace Snipster.Services
 {
@@ -187,15 +188,31 @@ namespace Snipster.Services
         }
 
 
-        public async Task<bool> ValidateUserAsync(string email, string password)
+        public async Task<LoginReturn> ValidateUserAsync(string email, string password)
         {
             var user = await _usersCollection.Find(u => u.Email == email).FirstOrDefaultAsync();
+            LoginReturn returnValue = new LoginReturn();
+
             if (user == null)
             {
-                return false; // User not found
+                returnValue.Result = false;
+                returnValue.Description = "Email address is not registered";
+                return returnValue; 
             }
 
-            return BCrypt.Net.BCrypt.Verify(password, user.PasswordHash);
+            bool pwHashResult = BCrypt.Net.BCrypt.Verify(password, user.PasswordHash);
+
+            if (!pwHashResult)
+            {
+                returnValue.Result = false;
+                returnValue.Description = "Email and password does not match";
+            }
+            else
+            {
+                returnValue.Result = true;
+            }
+
+            return returnValue;
 
 
         }

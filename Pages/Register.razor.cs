@@ -46,13 +46,8 @@ namespace Snipster.Pages
             {
                 //Message = string.Join(" ", result.Errors.Select(e => e.Description));
                 Message = "Registration in not successful!";
-                ToastService.ShowError("Registration in not successful!");
+                ToastService.ShowError("Registration in not successful, this email address is already registered");
             }
-        }
-
-        private void ShowToast()
-        {
-            ToastService.ShowSuccess("Operation completed successfully!");
         }
 
     }
