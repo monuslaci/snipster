@@ -12,13 +12,16 @@ using static Snipster.Data.DBContext;
 using Microsoft.Win32;
 using AspNetCore.Identity.MongoDbCore.Models;
 using MongoDbGenericRepository.Attributes;
+using SendGrid.Helpers.Mail;
+using SendGrid;
+using Snipster.Data;
+using System.Security.Cryptography;
 
 namespace Snipster.Helpers
 {
     public class GeneralHelpers
     {
-  
-        
+
 
     }
 

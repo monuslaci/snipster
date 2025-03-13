@@ -45,7 +45,8 @@
 
 @code {
     private bool IsAuthPage => Navigation.Uri.Contains("login", StringComparison.OrdinalIgnoreCase)
-                         || Navigation.Uri.Contains("register", StringComparison.OrdinalIgnoreCase);
+                         || Navigation.Uri.Contains("register", StringComparison.OrdinalIgnoreCase)
+                         || Navigation.Uri.Contains("reset", StringComparison.OrdinalIgnoreCase);
 
     private async Task Logout()
     {

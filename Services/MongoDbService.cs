@@ -3,6 +3,7 @@ using MongoDB.Driver;
 using static Snipster.Data.DBContext;
 using BCrypt.Net;
 using static Snipster.Data.CommonClasses;
+using System.Security.Cryptography;
 
 namespace Snipster.Services
 {
@@ -12,6 +13,7 @@ namespace Snipster.Services
         private readonly IMongoCollection<Collection> _collectionsCollection;
         private readonly IMongoCollection<Users> _usersCollection;
         private readonly IPasswordHasher<Users> _passwordHasher;
+        private readonly IMongoCollection<PasswordResetToken> _tokensCollection;
 
         public MongoDbService(string connectionString, string databaseName, IPasswordHasher<Users> passwordHasher)
         {
@@ -22,9 +24,11 @@ namespace Snipster.Services
             _snippetsCollection = database.GetCollection<Snippet>("Snippets");
             _collectionsCollection = database.GetCollection<Collection>("Collections");
             _usersCollection = database.GetCollection<Users>("Users");
+            _tokensCollection = database.GetCollection<PasswordResetToken>("PasswordResetTokens");
             _passwordHasher = passwordHasher;
         }
 
+        #region Snippets
         public async Task<string> AddSnippetAsync(Snippet snippet)
         {
             await _snippetsCollection.InsertOneAsync(snippet);
@@ -64,11 +68,6 @@ namespace Snipster.Services
             return new List<Snippet>();
         }
 
-        public async Task<List<Collection>> GetCollectionsBySnippetId(string snippetId)
-        {
-            var filter = Builders<Collection>.Filter.AnyIn(c => c.SnippetIds, new[] { snippetId });
-            return await _collectionsCollection.Find(filter).ToListAsync();
-        }
 
         public async Task SaveSnippetAsync(Snippet snippet)
         {
@@ -89,6 +88,33 @@ namespace Snipster.Services
                     .Set(s => s.CreatedDate, snippet.CreatedDate);
                 await _snippetsCollection.UpdateOneAsync(filter, update);  // Update if exists
             }
+        }
+
+        public async Task UpdateSnippetAsync(Snippet snippet)
+        {
+            var filter = Builders<Snippet>.Filter.Eq(s => s.Id, snippet.Id);
+            var update = Builders<Snippet>.Update
+                .Set(s => s.Title, snippet.Title)
+                .Set(s => s.Content, snippet.Content)
+                .Set(s => s.HashtagsInput, snippet.HashtagsInput)
+                .Set(s => s.LastModifiedDate, snippet.LastModifiedDate)
+                .Set(s => s.CreatedDate, snippet.CreatedDate);
+
+            await _snippetsCollection.UpdateOneAsync(filter, update);
+        }
+
+        public async Task DeleteSnippetAsync(string id)
+        {
+            await _snippetsCollection.DeleteOneAsync(s => s.Id == id);
+        }
+        #endregion
+
+
+        #region Collections
+        public async Task<List<Collection>> GetCollectionsBySnippetId(string snippetId)
+        {
+            var filter = Builders<Collection>.Filter.AnyIn(c => c.SnippetIds, new[] { snippetId });
+            return await _collectionsCollection.Find(filter).ToListAsync();
         }
 
         public async Task UpdateCollectionsAsync(List<Collection> collections)
@@ -112,25 +138,6 @@ namespace Snipster.Services
                                                             .Set(c => c.LastModifiedDate, collection.LastModifiedDate);
             await _collectionsCollection.UpdateOneAsync(filter, update);
         }
-
-        public async Task UpdateSnippetAsync(Snippet snippet)
-        {
-            var filter = Builders<Snippet>.Filter.Eq(s => s.Id, snippet.Id);
-            var update = Builders<Snippet>.Update
-                .Set(s => s.Title, snippet.Title)
-                .Set(s => s.Content, snippet.Content)
-                .Set(s => s.HashtagsInput, snippet.HashtagsInput)
-                .Set(s => s.LastModifiedDate, snippet.LastModifiedDate)
-                .Set(s => s.CreatedDate, snippet.CreatedDate);
-
-            await _snippetsCollection.UpdateOneAsync(filter, update);
-        }
-
-        public async Task DeleteSnippetAsync(string id)
-        {
-            await _snippetsCollection.DeleteOneAsync(s => s.Id == id);
-        }
-
         public async Task CreateCollectionAsync(Collection collection)
         {
             await _collectionsCollection.InsertOneAsync(collection);
@@ -170,6 +177,11 @@ namespace Snipster.Services
         //{
         //    await _lists.InsertOneAsync(list);
         //}
+
+        #endregion  
+
+
+        #region Users
         public async Task<bool> RegisterUserAsync(Users newUser, string password)
         {
             // Hash the password before storing (similar to Identity)
@@ -216,5 +228,49 @@ namespace Snipster.Services
 
 
         }
+
+        public async Task<Users> GetUser(string email)
+        {
+            var user = await _usersCollection.Find(u => u.Email == email).FirstOrDefaultAsync();
+
+            return user;
+        }
+        #endregion
+
+
+        #region Token
+        public async Task<string> GenerateResetTokenAsync(string email)
+        {
+            var token = Convert.ToBase64String(RandomNumberGenerator.GetBytes(32)); // Secure random token
+            var expiry = DateTime.UtcNow.AddHours(1); // 1-hour expiration
+
+            var resetToken = new PasswordResetToken
+            {
+                Email = email,
+                Token = token,
+                Expiry = expiry
+            };
+
+            await _tokensCollection.InsertOneAsync(resetToken);
+            return token;
+        }
+
+        // Validate the token and reset the password
+        public async Task<bool> ResetPasswordAsync(string token, string newPassword)
+        {
+            var tokenRecord = await _tokensCollection.Find(t => t.Token == token).FirstOrDefaultAsync();
+
+            if (tokenRecord == null || tokenRecord.Expiry < DateTime.UtcNow)
+                return false; // Invalid or expired token
+
+            var update = Builders<Users>.Update.Set(u => u.PasswordHash, BCrypt.Net.BCrypt.HashPassword(newPassword));
+            await _usersCollection.UpdateOneAsync(u => u.Email == tokenRecord.Email, update);
+
+            // Remove the used token
+            await _tokensCollection.DeleteOneAsync(t => t.Token == token);
+            return true;
+        }
     }
+    #endregion
 }
+

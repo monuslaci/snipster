@@ -1,4 +1,5 @@
 appsettings.json
+appsettings.Development.json
 /.vs/
 /bin/
 /.vs/Snipster/v17/.futdcache.v2

@@ -1,0 +1,107 @@
+﻿@page "/reset-password"
+
+@using Snipster.Data;
+@using Snipster.Services;
+@using Snipster.Components
+@using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.AspNetCore.Identity
+@using static Snipster.Data.DBContext;
+@inject IJSRuntime JSRuntime
+@inject MongoDbService MongoDbService
+@inject NavigationManager Navigation
+@inject EmailService EmailService
+@inject HttpClient Http
+
+<h3 class="login-title">Reset Email Address</h3>
+
+@if (!emailSent)
+{
+    <div class="login-container">
+        <EditForm Model="resetEmailModel" OnValidSubmit="HandleResetEmail">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+
+            <div class="form-group">
+                <label for="email">Enter your registered email</label>
+                <InputText id="email" class="form-control input-short" @bind-Value="resetEmailModel.Email" />
+            </div>
+
+            <button type="submit" class="btn btn-primary">Send Reset Email</button>
+
+            <div class="back-to-login">
+                <a href="/login">Back to Login</a>
+            </div>
+        </EditForm>
+    </div>
+}
+else
+{
+    <p>An email has been sent with your registered email address.</p>
+}
+
+
+@code {
+
+
+}
+
+<style>
+        .login-title {
+        text-align: center;
+        margin-bottom: 20px;
+        font-size: 1.5rem;
+        font-weight: bold;
+    }
+
+    .login-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+    }
+
+    .form-group {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: 100%;
+        margin-bottom: 15px;
+    }
+
+        .form-group label {
+            width: 100%;
+            max-width: 300px;
+            text-align: left;
+            margin-bottom: 5px;
+        }
+
+    .input-short {
+        width: 100%;
+        max-width: 300px;
+        text-align: left;
+    }
+
+    .btn-primary {
+        width: 100%;
+        max-width: 200px;
+        display: block;
+        margin: 20px auto;
+    }
+
+    .back-to-login {
+        text-align: center;
+        margin-top: 10px;
+        font-size: 0.9rem;
+    }
+
+        .back-to-login a {
+            color: #007bff;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+            .back-to-login a:hover {
+                text-decoration: underline;
+            }
+</style>

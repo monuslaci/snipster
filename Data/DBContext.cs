@@ -136,6 +136,21 @@ namespace Snipster.Data
 
             public ApplicationRole(string roleName) : base(roleName) { }
         }
+
+        public class PasswordResetToken
+        {
+            [BsonId]
+            public ObjectId Id { get; set; }
+
+            [BsonElement("email")]
+            public string Email { get; set; }
+
+            [BsonElement("token")]
+            public string Token { get; set; }
+
+            [BsonElement("expiry")]
+            public DateTime Expiry { get; set; }
+        }
     }
     public class MongoDbContext : Snipster.Data.IMongoDbContext, MongoDbGenericRepository.IMongoDbContext
     {

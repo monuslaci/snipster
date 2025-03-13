@@ -24,5 +24,10 @@
         "ASPNETCORE_ENVIRONMENT": "Development"
       }
     }
+  },
+  "environmentVariables": {
+    "ASPNETCORE_ENVIRONMENT": "Development",
+    "SENDGRID_API_KEY": "your-sendgrid-api-key",
+    "Environment": "Development"
   }
 }
