@@ -1,4 +1,4 @@
-appsettings.json
+/appsettings.json
 appsettings.Development.json
 /.vs/
 /bin/
@@ -6,3 +6,5 @@ appsettings.Development.json
 /.vs/ProjectEvaluation/snipster.metadata.v7.bin
 /.vs/ProjectEvaluation/snipster.projects.v7.bin
 /obj/
+/appsettings.Development.json
+/Properties/launchSettings.json
