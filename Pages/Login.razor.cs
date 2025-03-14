@@ -22,6 +22,40 @@ namespace Snipster.Pages
         private LoginModel loginModel = new LoginModel();
         [Inject] private AuthenticationStateProvider AuthStateProvider { get; set; }
         [Inject] Blazored.Toast.Services.IToastService ToastService { get; set; }
+        private bool _isInitialized = false;
+
+        protected override async Task OnAfterRenderAsync(bool firstRender)
+        {
+            if (firstRender && !_isInitialized)
+            {
+                var storedUser = await SessionStorage.GetAsync<string>("userEmail");
+                var storedExpiration = await SessionStorage.GetAsync<string>("sessionExpiration");
+
+                if (storedUser.Success && !string.IsNullOrEmpty(storedUser.Value) &&
+                    storedExpiration.Success && DateTime.TryParse(storedExpiration.Value, out var expirationTime))
+                {
+                    if (DateTime.UtcNow < expirationTime) // Check if session is still valid
+                    {
+                        if (AuthStateProvider is CustomAuthenticationStateProvider customAuthStateProvider)
+                        {
+                            await customAuthStateProvider.MarkUserAsAuthenticated(storedUser.Value);
+
+                            StateHasChanged();
+
+                            await Task.Delay(2000);
+                            Navigation.NavigateTo("/");  
+                        }
+                    }
+                    else
+                    {
+                        // Session expired, clear storage
+                        await SessionStorage.DeleteAsync("userEmail");
+                        await SessionStorage.DeleteAsync("sessionExpiration");
+                    }
+                }
+            }
+        }
+
 
         private async Task HandleLogin()
         {
@@ -37,7 +71,7 @@ namespace Snipster.Pages
 
                 // Redirect to internal page after login
                 await Task.Delay(2000);
-                Navigation.NavigateTo("/");  // Redirect to the home page or other internal pages
+                Navigation.NavigateTo("/");  // Redirect to the home page 
             }
             else
             {

@@ -4,9 +4,12 @@
 @inject NavigationManager Navigation
 @inject AuthenticationStateProvider AuthStateProvider 
 @inject CustomAuthenticationStateProvider CustomAuthProvider
-@* @inject Blazored.Toast.Services.IToastService ToastService *@
+@inject ProtectedLocalStorage ProtectedLocalStorage
 @inject IToastService ToastService
+
 @inherits LayoutComponentBase
+
+
 
 <PageTitle>Snipster</PageTitle>
 
@@ -51,6 +54,7 @@
     private async Task Logout()
     {
         await CustomAuthProvider.LogoutAsync();
+        await ProtectedLocalStorage.DeleteAsync("userLoginData"); //delete login data from local storage
         Navigation.NavigateTo("/login", true);
     }
 }

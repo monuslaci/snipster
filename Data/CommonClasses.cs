@@ -28,12 +28,28 @@ namespace Snipster.Data
             public string Password { get; set; }
         }
 
+        public class ResetModel
+        {
+            [Required(ErrorMessage = "Email is required")]
+            [EmailAddress(ErrorMessage = "Invalid email format")]
+            public string Email { get; set; }
+
+        }
+
         public class LoginReturn
         {
             public bool Result { get; set; }
 
             public string Description { get; set; }
         }
+
+        public class LoginStorageModel
+        {
+            public string Email { get; set; }
+            public DateTime Expiration { get; set; }
+        }
+
+
     }
 
 

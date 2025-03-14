@@ -62,12 +62,14 @@ try
 
     var connectionString = builder.Configuration.GetConnectionString("MongoDb");
     var databaseName = builder.Configuration["DatabaseName"];
-    var sendGridApiKey = builder.Configuration["SendGrid:ApiKey"];
+    //var sendGridApiKey = builder.Configuration["SendGrid:ApiKey"];
+    var sendGridApiKey = Environment.GetEnvironmentVariable("SENDGRID_API_KEY");
 
 
     // Register SendGridClient
     builder.Services.AddSingleton<ISendGridClient>(new SendGridClient(sendGridApiKey));
     builder.Services.AddScoped<EmailService>();
+
 
     var client = new MongoClient(connectionString);
     var database = client.GetDatabase(databaseName);

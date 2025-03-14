@@ -19,7 +19,7 @@ namespace Snipster.Pages
     public partial class ResetEmail
     {
         [Inject] Blazored.Toast.Services.IToastService ToastService { get; set; }
-        private LoginModel resetEmailModel = new LoginModel();
+        private ResetModel resetEmailModel = new ResetModel();
         private bool emailSent = false;
 
         private async Task HandleResetEmail()
@@ -31,8 +31,12 @@ namespace Snipster.Pages
             {
                 string token = await MongoDbService.GenerateResetTokenAsync(user.Email);
                 await EmailService.SendForgotEmailNotification(user.Email, token);
-                emailSent = true;
-                ToastService.ShowSuccess($"An email has been sent with your registered email address");
+                
+
+                ToastService.ShowSuccess($"An email has been sent to your registered email address");
+                await Task.Delay(2000);
+                Navigation.NavigateTo("/login");
+
             }
             else
             {
