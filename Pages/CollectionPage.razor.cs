@@ -55,7 +55,6 @@ namespace Snipster.Pages
                 await JSRuntime.InvokeVoidAsync("updateUrlWithoutQueryParam", "/collections");
             }
 
-
         }
 
         protected override async Task OnAfterRenderAsync(bool firstRender)
