@@ -20,7 +20,7 @@ namespace Snipster.Pages
     public partial class ResetPassword
     {
 
-        private LoginModel loginModel = new LoginModel();
+        private NewPwModel loginModel = new NewPwModel();
         [Parameter] public string Token { get; set; } // Extract token from URL
         [Inject] Blazored.Toast.Services.IToastService ToastService { get; set; }
 

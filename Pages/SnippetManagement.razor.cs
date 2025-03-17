@@ -25,7 +25,9 @@ namespace Snipster.Pages
 
         private async Task LoadSnippets()
         {
-            filteredSnippets = await MongoDbService.GetAllSnippetsAsync();
+            //filteredSnippets = await MongoDbService.GetAllSnippetsAsync();
+            var loggedInUser = await SessionStorage.GetAsync<string>("userEmail");
+            filteredSnippets = await MongoDbService.GetSnippetsByUserAsync(!string.IsNullOrEmpty(loggedInUser.Value) ? loggedInUser.ToString() : "");
             await LoadRelatedCollections();
         }
 

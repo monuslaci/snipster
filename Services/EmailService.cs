@@ -22,7 +22,7 @@ namespace Snipster.Services
 
         public async Task SendForgotEmailNotification(string userEmail, string token)
         {
-            var from = new EmailAddress("monuslaci@gmail.com", "Snipster team");
+            var from = new EmailAddress("laszlo.monus@gmail.com", "Snipster team");
             var subject = "Reset Your Password";
             var to = new EmailAddress(userEmail);
 

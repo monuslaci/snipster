@@ -40,6 +40,27 @@ namespace Snipster.Services
             return await _snippetsCollection.Find(_ => true).ToListAsync();
         }
 
+        public async Task<List<Snippet>> GetSnippetsByUserAsync(string email)
+        {
+            // Find collections where CreatedBy matches the actual user
+            var userCollections = await _collectionsCollection
+                .Find(collection => collection.CreatedBy == email)
+                .ToListAsync();
+
+            // Extract all snippet IDs from the user's collections
+            var snippetIds = userCollections.SelectMany(col => col.SnippetIds).Distinct().ToList();
+
+            if (!snippetIds.Any())
+            {
+                return new List<Snippet>(); // No snippets found
+            }
+
+            // Find snippets with the extracted IDs
+            return await _snippetsCollection
+                .Find(snippet => snippetIds.Contains(snippet.Id))
+                .ToListAsync();
+        }
+
         public async Task<Snippet> GetSnippetByIdAsync(string id)
         {
             return await _snippetsCollection.Find(s => s.Id == id).FirstOrDefaultAsync();
