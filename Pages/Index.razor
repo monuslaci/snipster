@@ -99,19 +99,24 @@
         padding: 20px;
         background: linear-gradient(180deg, #ffffff, #f3f4f6);
         min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
     }
 
-    header.welcome-section {
+    .welcome-section {
         text-align: center;
-        background: #4CAF50;
+        background: #0E4A8F;
         color: white;
-        padding: 30px 20px;
+        padding: 40px 20px;
         border-radius: 12px;
-        margin-bottom: 20px;
+        margin-bottom: 30px;
         box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        width: 90%;
+        max-width: 800px;
     }
 
-    header.welcome-section h1 {
+    .welcome-section h1 {
         font-size: 2.5rem;
         margin-bottom: 10px;
         text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
@@ -122,21 +127,21 @@
         margin-bottom: 20px;
     }
 
-    header.welcome-section .btn-primary,
-    header.welcome-section .btn-secondary {
-        padding: 10px 20px;
+    .btn-primary {
+        padding: 12px 24px;
         font-size: 1rem;
         color: white;
-        background: #008080;
+        background: #45a049;
         border: none;
         border-radius: 8px;
         cursor: pointer;
-        margin: 5px;
-        transition: background-color 0.3s ease;
+        margin-top: 15px;
+        transition: background-color 0.3s ease, transform 0.2s ease;
     }
 
-    header.welcome-section .btn-primary:hover {
+    .btn-primary:hover {
         background: #005f5f;
+        transform: translateY(-2px);
     }
 
     header.welcome-section .btn-secondary {
@@ -149,11 +154,13 @@
 
     .features-section {
         text-align: center;
-        padding: 20px;
-        background: rgba(255, 255, 255, 0.8);
+        background: white;
+        padding: 30px;
         border-radius: 12px;
-        margin-bottom: 20px;
+        margin-bottom: 30px;
         box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        width: 90%;
+        max-width: 800px;
     }
 
     .features-section h2 {
@@ -169,36 +176,39 @@
 
     .features-section li {
         margin: 10px 0;
-        font-size: 1rem;
+        font-size: 1.1rem;
         color: #333;
     }
 
     .features-section li strong {
-        color: #4CAF50;
+                color: #0A3D91;
     }
 
     .overview-section {
-        padding: 20px;
-        background: rgba(245, 245, 245, 0.9);
+        text-align: center;
+        background: #f9f9f9;
+        padding: 30px;
         border-radius: 12px;
+        margin-bottom: 30px;
         box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        width: 90%;
+        max-width: 800px;
     }
 
     .overview-section h2 {
         font-size: 2rem;
-        color: #4CAF50;
+            color: #0A3D91;
         margin-bottom: 15px;
-        text-align: center;
     }
 
     .overview-section ul {
         list-style: none;
         padding: 0;
-        text-align: center;
+        margin-top: 15px;
     }
 
     .overview-section li {
-        margin: 10px 0;
+        margin: 8px 0;
     }
 
     .overview-section a {
@@ -217,26 +227,25 @@
         padding: 15px;
         margin-top: 20px;
         font-size: 0.9rem;
-        background: #4CAF50;
+        background: #0A3D91;
         color: white;
         border-radius: 8px;
         box-shadow: 0 -2px 6px rgba(0, 0, 0, 0.1);
+        width: 90%;
+        max-width: 800px;
     }
 
     .link-button {
-        background-color: #4CAF50; 
-        color: white; 
-        border: none; 
-        padding: 8px 12px; 
-        margin: 8px 0; 
-        font-size: 16px; 
-        border-radius: 8px; 
-        cursor: pointer; 
-        transition: all 0.3s ease; 
-        display: inline-block; 
-        text-align: center;
+        background-color: #0A3D91;
+        color: white;
+        border: none;
+        padding: 10px 15px;
+        font-size: 1rem;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: inline-block;
     }
-
     .link-button:hover {
         background-color: #45a049; 
         box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.2); 
