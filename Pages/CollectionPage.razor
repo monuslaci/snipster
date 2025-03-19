@@ -9,7 +9,8 @@
 
 <div class="page-layout">
     <!-- Left Section: Collection List -->
-    <div class="collection-list">
+    <div class="panel collection-list" style="width: @(isLeftPanelOpen ? "20%" : "5%")">
+        <button class="toggle-btn left" @onclick="ToggleLeftPanel">⇆</button>
         <h4 class="collections-heading">Collections</h4>
         <button class="create-collection-btn" @onclick="ShowCreateCollectionModal">+</button>
         <ul>
@@ -30,7 +31,9 @@
         </ul>
     </div>
 
-    <div class="snippet-list">
+    <!-- Middle Section: Snippet List -->
+    <div class="panel snippet-list" style="width: @(isMiddlePanelOpen ? "30%" : "5%")">
+        <button class="toggle-btn middle" @onclick="ToggleMiddlePanel">⇆</button>
         <h4 class="snippets-heading">Snippets</h4>
         <button class="create-snippet-btn" @onclick="ShowSnippetFields">+</button>
         <ul>
@@ -52,7 +55,7 @@
     </div>
 
     <!-- Right Section: Snippet Details/Editor -->
-    <div class="snippet-details">
+    <div class="panel snippet-details" style="width: @(rightPanelWidth)">
         @if (isAddingSnippet)
         {
             <!-- Fields for creating a new snippet -->
@@ -95,7 +98,7 @@
 
             </EditForm>
         }
-        else if (selectedSnippet != null && selectedSnippet != null)
+        else if (selectedSnippet != null)
         {
             <!-- Editable form for an existing snippet -->
             <h4>Edit Snippet</h4>

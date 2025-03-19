@@ -36,6 +36,13 @@ namespace Snipster.Pages
         private string userEmail { get; set; }
 
         private bool isFormValid = true;
+        private bool isLeftPanelOpen = true;
+        private bool isMiddlePanelOpen = true;
+        private bool isRightPanelOpen = true;
+
+        private string selectedSnippetDetails = "Select a snippet to see details.";
+        private string rightPanelWidth = "50%";
+
         protected override async Task OnInitializedAsync()
         {
             var authState = await AuthStateProvider.GetAuthenticationStateAsync();
@@ -236,7 +243,25 @@ namespace Snipster.Pages
             await JSRuntime.InvokeVoidAsync("adjustTextAreaHeight", "editContentId");
         }
 
+        private void ToggleLeftPanel()
+        {
+            isLeftPanelOpen = !isLeftPanelOpen;
+            UpdateRightPanelWidth();
+        }
 
+        private void ToggleMiddlePanel()
+        {
+            isMiddlePanelOpen = !isMiddlePanelOpen;
+            UpdateRightPanelWidth();
+        }
+
+        private void UpdateRightPanelWidth()
+        {
+            int totalWidth = 100;
+            int leftWidth = isLeftPanelOpen ? 20 : 5;
+            int middleWidth = isMiddlePanelOpen ? 30 : 5;
+            rightPanelWidth = $"{totalWidth - (leftWidth + middleWidth)}%";
+        }
     }
 
 }
