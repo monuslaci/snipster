@@ -10,6 +10,8 @@ using System.Linq;
 using Microsoft.AspNetCore.Components.Forms;
 using MongoDB.Driver;
 using Microsoft.AspNetCore.Components.Authorization;
+using static Microsoft.Extensions.Logging.EventSource.LoggingEventSource;
+using System.Collections.Generic;
 
 namespace Snipster.Pages
 {
@@ -34,7 +36,8 @@ namespace Snipster.Pages
         private string HashtagsInput { get; set; }
         private List<string> ValidHashtags { get; set; } = new List<string>();
         private string userEmail { get; set; }
-
+        private string searchCollectionQuery = string.Empty;
+        private string searchSnippetQuery = string.Empty;
         private bool isFormValid = true;
         private bool isLeftPanelOpen = true;
         private bool isMiddlePanelOpen = true;
@@ -232,6 +235,71 @@ namespace Snipster.Pages
 
             await LoadSnippetDetails(snippetid);
             spinnerModal.CloseModal();
+        }
+
+        private async Task OnSearchCollection()
+        {
+            collections = await _mongoDbService.SearchCollectionAsync(searchCollectionQuery, userEmail);
+
+            if (collections != null)
+            {
+                selectedCollectionId = collections.FirstOrDefault().Id;
+                await LoadSnippets(selectedCollectionId);
+            }
+
+            StateHasChanged();
+        }
+
+        private async Task OnSearchSnippet()
+        {
+            spinnerModal.ShowModal();
+            //get the list of filtered snippets
+            List<Snippet> filteredSnippetlist = await _mongoDbService.SearchSnippetInSelectedCollectionAsync(searchSnippetQuery, selectedCollectionId);
+
+            // Clear the current snippets list and populate it with the new ones
+            snippets.Clear();
+
+
+            //betoltom az osszes szurt snppetet kozepre
+
+            snippets.AddRange(filteredSnippetlist);
+
+            //kivalsztom az elso snippetet a listarol
+            string firstSnippetId = snippets != null ? snippets.FirstOrDefault().Id : "";
+
+
+            //betoltom annak a collectionjet bal oldalra
+            await LoadSnippetDetails(firstSnippetId);
+
+
+
+            StateHasChanged();
+            spinnerModal.CloseModal();           
+        }
+
+        private async Task CancelSearchCollection()
+        {
+            spinnerModal.ShowModal();
+
+            collections = await _mongoDbService.GetCollectionsForUserAsync(userEmail);
+
+            if (collections != null)
+            {
+                selectedCollectionId = collections.FirstOrDefault().Id;
+                await LoadSnippets(selectedCollectionId);
+            }
+
+            StateHasChanged();
+            searchCollectionQuery = "";
+            spinnerModal.CloseModal();
+        }
+
+        private async Task CancelSearchSnippet()
+        {
+           await LoadSnippets(selectedCollectionId);
+
+            searchSnippetQuery = "";
+            StateHasChanged();
         }
 
         private async Task AdjustTextAreaHeight(ChangeEventArgs args)

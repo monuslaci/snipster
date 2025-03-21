@@ -4,6 +4,7 @@ using static Snipster.Data.DBContext;
 using BCrypt.Net;
 using static Snipster.Data.CommonClasses;
 using System.Security.Cryptography;
+using MongoDB.Bson;
 
 namespace Snipster.Services
 {
@@ -128,6 +129,83 @@ namespace Snipster.Services
         {
             await _snippetsCollection.DeleteOneAsync(s => s.Id == id);
         }
+
+
+        public async Task<List<Snippet>> SearchSnippetAsync(string keyword, string email)
+        {
+
+            var userCollections = await _collectionsCollection
+                .Find(collection => collection.CreatedBy == email)
+                .ToListAsync();
+
+            // Extract all snippet IDs from the user's collections
+            var snippetIds = userCollections.SelectMany(col => col.SnippetIds)
+                .Distinct()
+                .ToList();
+
+            if (!snippetIds.Any())
+            {
+                return new List<Snippet>(); // No snippets found
+            }
+
+            // Find snippets belonging to the user's collections
+            var snippetsForUser = await _snippetsCollection
+                .Find(snippet => snippetIds.Contains(snippet.Id))
+                .ToListAsync();
+
+            var keywordFilter = Builders<Snippet>.Filter.Or(
+                Builders<Snippet>.Filter.Regex(s => s.Id, new BsonRegularExpression(keyword, "i")),
+                Builders<Snippet>.Filter.Regex(s => s.Title, new BsonRegularExpression(keyword, "i")),
+                Builders<Snippet>.Filter.Regex(s => s.Content, new BsonRegularExpression(keyword, "i")),
+                Builders<Snippet>.Filter.Regex(s => s.HashtagsInput, new BsonRegularExpression(keyword, "i"))
+            );
+
+
+            var finalFilteredSnippets = await _snippetsCollection
+                .Find(Builders<Snippet>.Filter.And(
+                    Builders<Snippet>.Filter.In(s => s.Id, snippetIds), // Ensure snippets belong to the user
+                    keywordFilter // Apply keyword filter
+                ))
+                .ToListAsync();
+
+            return finalFilteredSnippets;
+        }
+
+
+        public async Task<List<Snippet>> SearchSnippetInSelectedCollectionAsync(string keyword, string collectionId)
+        {
+
+            if (string.IsNullOrEmpty(collectionId))
+            {
+                return new List<Snippet>(); // No collection ID provided
+            }
+
+            // Retrieve the collection by ID
+            var collection = await _collectionsCollection
+                .Find(c => c.Id == collectionId)
+                .FirstOrDefaultAsync();
+
+            if (collection == null || collection.SnippetIds == null || !collection.SnippetIds.Any())
+            {
+                return new List<Snippet>(); // No collection found or no snippets in collection
+            }
+
+            // Retrieve snippets that belong to the collection
+            var snippetFilter = Builders<Snippet>.Filter.In(s => s.Id, collection.SnippetIds);
+
+            var keywordFilter = Builders<Snippet>.Filter.Or(
+                Builders<Snippet>.Filter.Regex(s => s.Title, new BsonRegularExpression(keyword, "i")),
+                Builders<Snippet>.Filter.Regex(s => s.Content, new BsonRegularExpression(keyword, "i")),
+                Builders<Snippet>.Filter.Regex(s => s.HashtagsInput, new BsonRegularExpression(keyword, "i"))
+            );
+
+
+            // Combine filters (ensure snippet belongs to the collection and matches the keyword)
+            var finalFilter = Builders<Snippet>.Filter.And(snippetFilter, keywordFilter);
+
+
+            return await _snippetsCollection.Find(finalFilter).ToListAsync();
+        }
         #endregion
 
 
@@ -192,6 +270,20 @@ namespace Snipster.Services
         public async Task DeleteCollectionAsync(string id)
         {
             await _collectionsCollection.DeleteOneAsync(c => c.Id == id);
+        }
+
+        public async Task<List<Collection>> SearchCollectionAsync(string keyword, string email)
+        {
+            var keywordFilter = Builders<Collection>.Filter.Or(
+                Builders<Collection>.Filter.Regex(c => c.Id, new BsonRegularExpression(keyword, "i")),
+                Builders<Collection>.Filter.Regex(c => c.Title, new BsonRegularExpression(keyword, "i"))
+            );
+
+            var emailFilter = Builders<Collection>.Filter.Eq(c => c.CreatedBy, email);
+
+            var filter = Builders<Collection>.Filter.And(keywordFilter, emailFilter);
+
+            return await _collectionsCollection.Find(filter).ToListAsync();
         }
 
         //public async Task CreateListAsync(Lists list)
