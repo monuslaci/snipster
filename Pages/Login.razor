@@ -11,9 +11,18 @@
 @inject NavigationManager Navigation
 @inject ProtectedSessionStorage SessionStorage
 
-<h3 class="login-title">Login</h3>
+
 
 <div class="login-container">
+
+
+    <div class="logo-container">
+        <img src="/images/logo.jpg" alt="Logo" class="login-logo" />
+    </div>
+
+    <h3 class="login-title">Login</h3>
+
+
     <EditForm Model="loginModel" OnValidSubmit="HandleLogin">
         <DataAnnotationsValidator />
         <ValidationSummary />
@@ -61,8 +70,16 @@
         align-items: center;
         justify-content: center;
         width: 100%;
+        text-align: center;
+        margin-bottom: 20px;
     }
 
+    .login-logo {
+        max-width: 250px;
+        height: auto;
+        margin-bottom: 25px;
+        margin-top: 25px;
+    }
     .form-group {
         display: flex;
         flex-direction: column;

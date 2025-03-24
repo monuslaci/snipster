@@ -1,15 +1,21 @@
 .navbar-toggler {
-    background-color: rgba(255, 255, 255, 0.1);
+    background-color: rgba(255, 255, 5, 5);
 }
 
 .top-row {
     height: 3.5rem;
-    background-color: rgba(0,0,0,0.4);
+    background-color: rgba(0,0,64,64);
 }
 
 .navbar-brand {
     font-size: 1.1rem;
 }
+
+.top-row {
+    height: 3.5rem;
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
 
 .oi {
     width: 2rem;
