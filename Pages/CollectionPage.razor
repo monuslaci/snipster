@@ -13,7 +13,7 @@
         <button class="toggle-btn left" @onclick="ToggleLeftPanel">⇆</button>
         <h4 class="collections-heading">Collections</h4>
         <div class="search-bar">
-            <input type="text" @bind="searchCollectionQuery" placeholder="Search collections..." />
+            <input class="searchbar" type="text" @bind="searchCollectionQuery" placeholder="Search collections..." />
             <div class="search-buttons">
                 <button class="create-collection-btn search" @onclick="OnSearchCollection">Search</button>
                 <button class="create-collection-btn cancel" @onclick="CancelSearchCollection">Clear</button>
@@ -43,7 +43,7 @@
         <button class="toggle-btn middle" @onclick="ToggleMiddlePanel">⇆</button>
         <h4 class="snippets-heading">Snippets</h4>
         <div class="search-bar">
-            <input type="text" @bind="searchSnippetQuery" placeholder="Search snippets in selected collection..." />
+            <input class="searchbar" type="text" @bind="searchSnippetQuery" placeholder="Search snippets in selected collection..." />
             <div class="search-buttons">
                 <button class="create-collection-btn search" @onclick="OnSearchSnippet">Search</button>
                 <button class="create-collection-btn cancel" @onclick="CancelSearchSnippet">Clear</button>

@@ -97,8 +97,21 @@
     padding-left: 0; 
 }
 
+.panel[style*="5%"] .searchbar {
+    display: none;
+}
 
+.panel[style*="5%"] .collections-heading {
+    margin-left: -12px;
+    margin-top: 20px;
+    font-size: 12px;
+}
 
+.panel[style*="5%"] .snippets-heading {
+    margin-left: -12px;
+    margin-top: 20px;
+    font-size: 12px;
+}
 
 .panel {
     border: 1px solid #bbb;

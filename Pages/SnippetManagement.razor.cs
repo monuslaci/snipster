@@ -32,7 +32,7 @@ namespace Snipster.Pages
             //filteredSnippets = await MongoDbService.GetAllSnippetsAsync();
             var loggedInUser = await SessionStorage.GetAsync<string>("userEmail");
             var loggedInUservalue = !string.IsNullOrEmpty(loggedInUser.Value) ? loggedInUser.Value.ToString() : "";
-            filteredSnippets = await MongoDbService.GetSnippetsByUserAsync(!string.IsNullOrEmpty(loggedInUser.Value) ? loggedInUser.ToString() : "");
+            filteredSnippets = await MongoDbService.GetSnippetsByUserAsync(!string.IsNullOrEmpty(loggedInUser.Value) ? loggedInUser.Value.ToString() : "");
             await LoadRelatedCollections();
         }
 
