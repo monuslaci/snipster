@@ -17,12 +17,16 @@ using static Snipster.Helpers.GeneralHelpers;
 using System.Text.RegularExpressions;
 using AspNetCore.Identity.MongoDbCore.Models;
 using System.Xml.Linq;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace Snipster.Pages
 {
     public partial class ResetEmail
     {
         [Inject] Blazored.Toast.Services.IToastService ToastService { get; set; }
+        [Inject] MongoDbService MongoDbService { get; set; }
+        [Inject] NavigationManager Navigation { get; set; }
+        [Inject] EmailService EmailService { get; set; }
 
         private ResetModel resetEmailModel = new ResetModel();
         private bool emailSent = false;

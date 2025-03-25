@@ -8,25 +8,33 @@ using MongoDB.Bson;
 
 namespace Snipster.Services
 {
-    public class MongoDbService
+
+    public class MongoDbService 
     {
         private readonly IMongoCollection<Snippet> _snippetsCollection;
         private readonly IMongoCollection<Collection> _collectionsCollection;
         private readonly IMongoCollection<Users> _usersCollection;
-        private readonly IPasswordHasher<Users> _passwordHasher;
         private readonly IMongoCollection<PasswordResetToken> _tokensCollection;
+
+        private readonly string _connectionString;
+        private readonly string _databaseName;
+        private readonly IPasswordHasher<Users> _passwordHasher;
 
         public MongoDbService(string connectionString, string databaseName, IPasswordHasher<Users> passwordHasher)
         {
-            var client = new MongoClient(connectionString);
-            var database = client.GetDatabase(databaseName);
+            _connectionString = connectionString ?? throw new ArgumentNullException(nameof(connectionString));
+            _databaseName = databaseName ?? throw new ArgumentNullException(nameof(databaseName));
+            _passwordHasher = passwordHasher ?? throw new ArgumentNullException(nameof(passwordHasher));
+
+            var client = new MongoClient(_connectionString);
+            var database = client.GetDatabase(_databaseName);
 
             //initialize the collections
             _snippetsCollection = database.GetCollection<Snippet>("Snippets");
             _collectionsCollection = database.GetCollection<Collection>("Collections");
             _usersCollection = database.GetCollection<Users>("Users");
             _tokensCollection = database.GetCollection<PasswordResetToken>("PasswordResetTokens");
-            _passwordHasher = passwordHasher;
+
         }
 
         #region Snippets

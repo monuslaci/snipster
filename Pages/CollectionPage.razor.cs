@@ -12,6 +12,7 @@ using MongoDB.Driver;
 using Microsoft.AspNetCore.Components.Authorization;
 using static Microsoft.Extensions.Logging.EventSource.LoggingEventSource;
 using System.Collections.Generic;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace Snipster.Pages
 {
@@ -19,6 +20,8 @@ namespace Snipster.Pages
     {
         [Inject] NavigationManager Navigation { get; set; }
         [Inject] private AuthenticationStateProvider AuthStateProvider { get; set; }
+        [Inject] MongoDbService _mongoDbService { get; set; }
+
         private List<Collection> collections = new List<Collection>();
         private Collection newCollection = new Collection();
         private Collection editCollection = new Collection();

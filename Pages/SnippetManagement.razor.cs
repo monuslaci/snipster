@@ -1,11 +1,15 @@
 ﻿using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage;
 using Snipster.Components;
+using Snipster.Services;
 using static Snipster.Data.DBContext;
 
 namespace Snipster.Pages
 {
     public partial class SnippetManagement
     {
+        [Inject] MongoDbService MongoDbService { get; set; }
+        [Inject] ProtectedSessionStorage SessionStorage { get; set; }
         private string searchQuery = string.Empty;
         private List<Snippet> allSnippets = new List<Snippet>();
         private List<Snippet> filteredSnippets = new List<Snippet>();
