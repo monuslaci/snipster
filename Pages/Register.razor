@@ -10,54 +10,54 @@
 @inject MongoDbService MongoDbService
 @inject NavigationManager Navigation
 
+<div class="register-card">
+    <h3 class="register-title">Register</h3>
 
-<h3 class="register-title">Register</h3>
+    @if (!string.IsNullOrEmpty(Message))
+    {
+        <div class="alert alert-info">@Message</div>
+    }
 
-@if (!string.IsNullOrEmpty(Message))
-{
-    <div class="alert alert-info">@Message</div>
-}
+    <div class="register-container">
+        <EditForm Model="newUser" OnValidSubmit="HandleRegister">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
 
-<div class="register-container">
-    <EditForm Model="newUser" OnValidSubmit="HandleRegister">
-        <DataAnnotationsValidator />
-        <ValidationSummary />
+            <div class="form-group">
+                <label for="firstName">First Name</label>
+                <InputText id="firstName" class="form-control input-short" @bind-Value="newUser.FirstName" />
+            </div>
 
-        <div class="form-group">
-            <label for="firstName">First Name</label>
-            <InputText id="firstName" class="form-control input-short" @bind-Value="newUser.FirstName" />
-        </div>
+            <div class="form-group">
+                <label for="lastName">Last Name</label>
+                <InputText id="lastName" class="form-control input-short" @bind-Value="newUser.LastName" />
+            </div>
 
-        <div class="form-group">
-            <label for="lastName">Last Name</label>
-            <InputText id="lastName" class="form-control input-short" @bind-Value="newUser.LastName" />
-        </div>
+            <div class="form-group">
+                <label for="email">Email</label>
+                <InputText id="email" class="form-control input-short" @bind-Value="newUser.Email" type="email" />
+            </div>
 
-        <div class="form-group">
-            <label for="email">Email</label>
-            <InputText id="email" class="form-control input-short" @bind-Value="newUser.Email" type="email" />
-        </div>
+    @*         <div class="form-group">
+                <label for="username">Username</label>
+                <InputText id="username" class="form-control input-short" @bind-Value="newUser.UserName" />
+            </div>
+     *@
+            <div class="form-group">
+                <label for="password">Password</label>
+                <InputText id="password" class="form-control input-short" type="password" @bind-Value="newUser.Password" />
+            </div>
 
-@*         <div class="form-group">
-            <label for="username">Username</label>
-            <InputText id="username" class="form-control input-short" @bind-Value="newUser.UserName" />
-        </div>
- *@
-        <div class="form-group">
-            <label for="password">Password</label>
-            <InputText id="password" class="form-control input-short" type="password" @bind-Value="newUser.Password" />
-        </div>
+            <button type="submit" class="btn btn-primary">Register</button>
 
-        <button type="submit" class="btn btn-primary">Register</button>
-
-        <div class="register-link">
-            <span>Already have an account?</span> <a href="/login">Login here</a>
-        </div>
-    </EditForm>
+            <div class="register-link">
+                <span>Already have an account?</span> <a href="/login">Login here</a>
+            </div>
+        </EditForm>
 
 
+    </div>
 </div>
-
 
 
 
@@ -67,6 +67,19 @@
 }
 
 <style>
+
+    .register-card {
+        width: 100%;
+        max-width: 400px;
+        background: #091E5D;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+        margin: 50px auto;
+        text-align: center;
+        color: #F0F2EA;
+    }
+
     .register-title {
         text-align: center;
         margin-bottom: 20px;
