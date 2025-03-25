@@ -21,7 +21,12 @@ namespace Snipster.Helpers
 {
     public class GeneralHelpers
     {
-
+        public class EmailSendingClass
+        {
+            public string To { get; set; }
+            public string Subject { get; set; }
+            public string htmlContent { get; set; }
+        }
 
     }
 

@@ -7,39 +7,38 @@ using SendGrid;
 using SendGrid.Helpers.Mail;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.Configuration;
+using static Snipster.Helpers.GeneralHelpers;
 
 namespace Snipster.Services
 {
-    public class EmailService
+    public interface IEmailService
+    {
+        public Task SendEmailNotification(EmailSendingClass emailDetails);
+    }
+    public class EmailService : IEmailService
     {
         private readonly ISendGridClient _sendGridClient;
         [Inject] IConfiguration _configuration { get; set; }
+
         public EmailService(ISendGridClient sendGridClient, IConfiguration configuration)
         {
             _sendGridClient = sendGridClient;
             _configuration = configuration;
         }
 
-        public async Task SendForgotEmailNotification(string userEmail, string token)
+        public async Task SendEmailNotification(EmailSendingClass emailDetails)
         {
             var from = new EmailAddress("laszlo.monus@gmail.com", "Snipster team");
-            var subject = "Reset Your Password";
-            var to = new EmailAddress(userEmail);
+            var subject = emailDetails.Subject;
+            var to = new EmailAddress(emailDetails.To);
 
             var test = Environment.GetEnvironmentVariable("Environment");
-            var environment = _configuration["Environment"];
 
-            // Create the reset link
-            var resetUrl = "";
-            if (Environment.GetEnvironmentVariable("Environment") == "Development")
-                resetUrl = $"https://localhost:7225/pw-reset?token={token}";
-            else if (Environment.GetEnvironmentVariable("Environment") == "Production")
-                resetUrl = $"https://yourapp.com/pw-reset?token={token}";
 
-            var plainTextContent = $"Click the link to reset your password: {resetUrl}";
-            var htmlContent = $"<p>Click <a href='{resetUrl}'>here</a> to reset your password.</p>";
+            //var plainTextContent = $"Click the link to reset your password: {resetUrl}";
 
-            var msg = MailHelper.CreateSingleEmail(from, to, subject, plainTextContent, htmlContent);
+
+            var msg = MailHelper.CreateSingleEmail(from, to, subject, "", emailDetails.htmlContent);
             var response = await _sendGridClient.SendEmailAsync(msg);
             var res = await response.Body.ReadAsStringAsync();
         }

@@ -13,6 +13,10 @@ using Microsoft.AspNetCore.Components.Authorization;
 using System.Security.Claims;
 using static Snipster.Data.CommonClasses;
 using Blazored.Toast.Services;
+using static Snipster.Helpers.GeneralHelpers;
+using System.Text.RegularExpressions;
+using AspNetCore.Identity.MongoDbCore.Models;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace Snipster.Pages
 {
@@ -22,7 +26,11 @@ namespace Snipster.Pages
         private LoginModel loginModel = new LoginModel();
         [Inject] private AuthenticationStateProvider AuthStateProvider { get; set; }
         [Inject] Blazored.Toast.Services.IToastService ToastService { get; set; }
-        private bool _isInitialized = false;
+        [Inject] MongoDbService MongoDbService { get; set; }
+        [Inject] NavigationManager Navigation { get; set; }
+        [Inject] EmailService EmailService { get; set; }
+
+    private bool _isInitialized = false;
 
         protected override async Task OnAfterRenderAsync(bool firstRender)
         {
@@ -30,6 +38,8 @@ namespace Snipster.Pages
             {
                 var storedUser = await SessionStorage.GetAsync<string>("userEmail");
                 var storedExpiration = await SessionStorage.GetAsync<string>("sessionExpiration");
+
+
 
                 if (storedUser.Success && !string.IsNullOrEmpty(storedUser.Value) &&
                     storedExpiration.Success && DateTime.TryParse(storedExpiration.Value, out var expirationTime))
@@ -69,6 +79,9 @@ namespace Snipster.Pages
                     await customAuthStateProvider.MarkUserAsAuthenticated(loginModel.Email);
                 }
 
+                //var user = await MongoDbService.GetUser(loginModel.Email);
+                //await EmailService.SendEmailNotification(CreateRegisterEmailTemplate(user.Email, $"{user.FirstName} {user.LastName}"));
+
                 // Redirect to internal page after login
                 await Task.Delay(2000);
                 Navigation.NavigateTo("/");  // Redirect to the home page 
@@ -79,10 +92,41 @@ namespace Snipster.Pages
             }
         }
 
-    }
+        private EmailSendingClass CreateRegisterEmailTemplate(string email, string name)
+        {
+            EmailSendingClass emailDetails = new EmailSendingClass();
 
+            var url = "";
+            if (Environment.GetEnvironmentVariable("Environment") == "Development")
+                url = $"https://localhost:7225";
+            else if (Environment.GetEnvironmentVariable("Environment") == "Production")
+                url = $"https://yourapp.com";
 
+            RegistrationEmailTemplate = Regex.Replace(RegistrationEmailTemplate, "<url>", url);
+            RegistrationEmailTemplate = Regex.Replace(RegistrationEmailTemplate, "<Name>", name);
 
+            emailDetails.htmlContent = RegistrationEmailTemplate;
+            emailDetails.To = email;
+            emailDetails.Subject = "Test email at login from Snipster.com";
+
+            return emailDetails;
+        }
+        public string RegistrationEmailTemplate = @"
+                <!DOCTYPE html> <html> <head> <style> p { margin: 0;} OL { list-style-type: decimal; } OL OL  {list-style-type: upper-roman;} UL  {list-style-type: disc;} UL UL  {list-style-type: square;} .cal {font: 15px Calibri;} </style> </head><body>
+                <body>
+                <div><p>Dear <Name>, </p> <p> <o:p>&nbsp;</o:p></p>
+                <p>You received this email because you logged in from this URL: <url>.</p> <p><o:p>&nbsp;</o:p></p>
+
+                <p>Best regards,</p> 
+                <p>Snipster Team</p><p><o:p>&nbsp;</o:p></p>
+                </body>
+                ";
+         }
 
 }
+
+
+
+
+
 

@@ -131,6 +131,7 @@ try
 
 
     builder.Services.AddScoped<Blazored.Toast.Services.IToastService, Blazored.Toast.Services.ToastService>();
+    builder.Services.AddScoped<IEmailService, EmailService>();
 }
 //builder.Services.AddBlazoredToast();
 catch (Exception ex)
