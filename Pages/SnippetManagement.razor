@@ -5,13 +5,17 @@
 
 @page "/snippets"
 
-
+<div class="page-container">
 <h3>Snippet Management</h3>
 
-<button class="create-snippet-btn" @onclick="ShowCreateSnippetModal">Create New Snippet</button>
+@* <button class="create-snippet-btn" @onclick="ShowCreateSnippetModal">Create New Snippet</button> *@
 
 <div class="search-bar">
-    <input type="text" @bind="searchQuery" placeholder="Search snippets..." />
+    <input class="searchbar" type="text" @bind="searchSnippetQuery" placeholder="Search collections..." />
+    <div class="search-buttons">
+        <button class="create-collection-btn search" @onclick="OnSearchSnippet">Search</button>
+        <button class="create-collection-btn cancel" @onclick="CancelSearchSnippet">Clear</button>
+    </div>
 </div>
 
 @if (filteredSnippets.Any())
@@ -38,8 +42,9 @@
                     }
                 </div>
                 <div class="snippet-actions">
-                    <button class="edit-btn" @onclick="() => EditSnippet(snippet)">Edit</button>
-                    <button class="delete-btn" @onclick="() => DeleteSnippet(snippet.Id)">Delete</button>
+@*                     <button class="edit-btn" @onclick="() => EditSnippet(snippet)">Edit</button>
+                    <button class="delete-btn" @onclick="() => DeleteSnippet(snippet.Id)">Delete</button> *@
+                    <button class="delete-btn" @onclick="() => OpenSnippet(snippet.Id)">Open</button>
                 </div>
             </div>
         }
@@ -49,6 +54,7 @@ else
 {
     <p class="no-snippets">No snippets found.</p>
 }
+</div>
 
 <!-- Modal for creating snippet -->
 <Modal @ref="createSnippetModal" Title="Add New Snippet">
@@ -131,6 +137,9 @@ else
     </EditForm>
 </Modal>
 
+<Modal @ref="spinnerModal">
+
+</Modal>
 
 
 @code {
@@ -139,27 +148,46 @@ else
 }
 
 <style>
-
-    .search-bar {
-        margin-bottom: 10px;
+    body {
+        background: #f4f4f7 !important;
     }
 
-    .create-snippet-btn {
-        width: 5rem%;
+    .page-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+
+        min-height: 100vh; /* Ensure full-page height */
+        padding: 20px;
+    }
+    .snippet-container {
+        display: flex;
+        flex-direction: column; 
+        align-items: center; 
+        justify-content: center; 
+        margin: 0 auto; 
+    }
+
+    .create-collection-btn, .create-snippet-btn {
         display: block;
-        margin: 0 auto 1rem;
-        padding: 0.5rem;
-        font-size: 1rem;
-        background-color: #4a90e2; /* Adjust color as needed */
+        margin-bottom: 15px;
+        padding: 10px;
+        background-color: rgb(83, 114, 201);
         color: white;
         border: none;
-        border-radius: 4px;
+        border-radius: 5px;
         cursor: pointer;
-        text-align: center;
     }
 
-    .create-snippet-btn:hover {
-        background-color: #357ab8; /* Adjust hover color as needed */
+    .create-collection-btn:hover, .create-snippet-btn:hover {
+        display: block;
+        margin-bottom: 15px;
+        padding: 10px;
+        background-color: rgb(83, 114, 201, 0.4);
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
     }
 
     .snippet-table {
@@ -248,28 +276,26 @@ else
         box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.3);
     }
 
-    .snippet-container {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 20px;
-        justify-content: center;
-    }
+
 
     .snippet-card {
         background: #ffffff;
         border-radius: 12px;
         box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
         padding: 20px;
-        width: 300px;
+        width: 100%; 
+        min-width: 600px;
+        max-width: 600px; 
         display: flex;
         flex-direction: column;
         justify-content: space-between;
         transition: transform 0.2s ease-in-out;
+        margin-top: 20px;
     }
 
-        .snippet-card:hover {
-            transform: scale(1.05);
-        }
+    .snippet-card:hover {
+        transform: scale(1.05);
+    }
 
     .snippet-header h3 {
         margin: 0;
@@ -281,7 +307,11 @@ else
         font-size: 14px;
         color: #555;
         overflow: hidden;
-        text-overflow: ellipsis;
+
+        word-wrap: break-word; /* Break long words */
+        overflow-wrap: break-word; /* Ensure it works in all browsers */
+        white-space: pre-wrap; /* Preserve line breaks and wrap text */
+        max-width: 100%; /* Prevent overflowing the card */
         white-space: nowrap;
     }
 
@@ -322,4 +352,58 @@ else
         margin-top: 20px;
     }
 
+
+    .search-bar {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-direction: column; /* Stack elements vertically */
+        gap: 8px;
+        padding: 10px;
+        background-color: var(--background-color);
+        border-radius: 8px;
+        width: 55vh;
+        margin-bottom: 15px;
+    }
+
+    .search-bar input {
+        padding: 8px;
+        border: 1px solid var(--primary-color);
+        border-radius: 6px;
+        font-size: 14px;
+        width: 55vh;
+        box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+    }
+
+
+    .search-buttons {
+        display: flex; /* Ensure buttons are in the same row */
+        gap: 10px; /* Add space between buttons */
+        justify-content: center; /* Center the buttons */
+    }
+
+    .search-buttons .create-collection-btn {
+        flex: 1; /* Make buttons equal width */
+        padding: 8px 12px;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 14px;
+        transition: background 0.3s ease;
+        text-align: center;
+    }
+
+    .search-buttons .create-collection-btn.search {
+        background-color: #004080; /* Deep blue */
+        color: white;
+    }
+
+    .search-buttons .create-collection-btn.search:hover {
+        background-color: #003366; /* Darker blue */
+    }
+
+    .search-buttons .create-collection-btn.cancel {
+        background-color: #D9534F; /* Soft red */
+        color: white;
+    }
 </style>

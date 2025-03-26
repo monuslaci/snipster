@@ -44,9 +44,7 @@ namespace Snipster.Pages
         private bool isFormValid = true;
         private bool isLeftPanelOpen = true;
         private bool isMiddlePanelOpen = true;
-        private bool isRightPanelOpen = true;
 
-        private string selectedSnippetDetails = "Select a snippet to see details.";
         private string rightPanelWidth = "50%";
 
         protected override async Task OnInitializedAsync()
@@ -62,7 +60,23 @@ namespace Snipster.Pages
             if (query != null && query.TryGetValue("selectedCollectionId", out var id))
             {
                 selectedCollectionId = id;
+                //await LoadSnippets(selectedCollectionId);
+
+                //// Remove query parameter from the URL using JavaScript
+                //await JSRuntime.InvokeVoidAsync("updateUrlWithoutQueryParam", "/collections");
+            }
+
+            if (query != null && query.TryGetValue("selectedSnippetId", out var sid))
+            {
+                var selectedSnippetId = sid;
                 await LoadSnippets(selectedCollectionId);
+
+               
+                
+                if (collections != null && !string.IsNullOrEmpty(selectedSnippetId))
+                {
+                    await LoadSnippetDetails(selectedSnippetId);
+                }
 
                 // Remove query parameter from the URL using JavaScript
                 await JSRuntime.InvokeVoidAsync("updateUrlWithoutQueryParam", "/collections");

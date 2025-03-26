@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Snipster.Components;
 using Snipster.Services;
 using static Snipster.Data.DBContext;
@@ -10,6 +11,7 @@ namespace Snipster.Pages
     {
         [Inject] MongoDbService MongoDbService { get; set; }
         [Inject] ProtectedSessionStorage SessionStorage { get; set; }
+        [Inject] NavigationManager Navigation { get; set; }
         private string searchQuery = string.Empty;
         private List<Snippet> allSnippets = new List<Snippet>();
         private List<Snippet> filteredSnippets = new List<Snippet>();
@@ -19,18 +21,36 @@ namespace Snipster.Pages
         private Modal editSnippetModal;
         private List<Collection> allCollections = new List<Collection>(); // List of all available collections
         private List<string> selectedCollectionIds = new List<string>(); // Stores selected collection IDs
+        private string searchSnippetQuery = string.Empty;
+        private Modal spinnerModal = new Modal();
+        private Snippet selectedSnippet;
+        ProtectedBrowserStorageResult<string> loggedInUser { get; set; }
 
         protected override async Task OnInitializedAsync()
         {
-            // Load snippets and collections
-            await LoadSnippets();
-            await LoadCollections(); // Load all collections
-        }
 
+            // Load snippets and collections
+            //await LoadSnippets();
+            //await LoadCollections(); // Load all collections
+
+        }
+        protected override async Task OnAfterRenderAsync(bool firstRender)
+        {
+            if (firstRender)
+            {
+                spinnerModal.IsSpinner = true;
+                spinnerModal.ShowModal();
+                await LoadSnippets();
+                await LoadCollections(); // Load all collections
+                StateHasChanged();
+                spinnerModal.CloseModal();
+            }
+
+        }
         private async Task LoadSnippets()
         {
             //filteredSnippets = await MongoDbService.GetAllSnippetsAsync();
-            var loggedInUser = await SessionStorage.GetAsync<string>("userEmail");
+            loggedInUser = await SessionStorage.GetAsync<string>("userEmail");
             var loggedInUservalue = !string.IsNullOrEmpty(loggedInUser.Value) ? loggedInUser.Value.ToString() : "";
             filteredSnippets = await MongoDbService.GetSnippetsByUserAsync(!string.IsNullOrEmpty(loggedInUser.Value) ? loggedInUser.Value.ToString() : "");
             await LoadRelatedCollections();
@@ -58,7 +78,13 @@ namespace Snipster.Pages
             await MongoDbService.DeleteSnippetAsync(id);
             await LoadSnippets();
         }
-
+        private async Task OpenSnippet(string snippetId)
+        {
+            selectedSnippet = await MongoDbService.GetSnippetByIdAsync(snippetId);
+            var collection = await MongoDbService.GetCollectionsBySnippetId(selectedSnippet.Id);
+            var selectedCollectionId = collection != null && collection.Count()>0 ? collection.FirstOrDefault().Id : "";
+            Navigation.NavigateTo($"/collections?selectedCollectionId={selectedCollectionId}&selectedSnippetId={selectedSnippet.Id}");
+        }
         private async Task<IEnumerable<string>> GetRelatedCollections(string snippetId)
         {
             var collections = await MongoDbService.GetCollectionsBySnippetId(snippetId);
@@ -141,6 +167,28 @@ namespace Snipster.Pages
             selectedCollectionIds.Clear();
             createSnippetModal.CloseModal();  // Close the modal after submission
             await LoadSnippets();
+        }
+
+        private async Task OnSearchSnippet()
+        {
+            spinnerModal.ShowModal();
+
+            // Instead of clearing first, directly assign the new filtered list
+            var results = await MongoDbService.SearchSnippetAsync(searchSnippetQuery,
+                !string.IsNullOrEmpty(loggedInUser.Value) ? loggedInUser.Value.ToString() : "");
+
+            // Assign new results directly
+            filteredSnippets = results;
+
+            StateHasChanged();
+            spinnerModal.CloseModal();
+        }
+        private async Task CancelSearchSnippet()
+        {
+            filteredSnippets = await MongoDbService.GetSnippetsByUserAsync(!string.IsNullOrEmpty(loggedInUser.Value) ? loggedInUser.Value.ToString() : "");
+
+            searchSnippetQuery = "";
+            StateHasChanged();
         }
     }
 }
