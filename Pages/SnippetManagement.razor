@@ -285,7 +285,8 @@ else
         padding: 20px;
         width: 100%; 
         min-width: 600px;
-        max-width: 600px; 
+        max-width: 600px;
+        max-height: 300px;
         display: flex;
         flex-direction: column;
         justify-content: space-between;
@@ -307,12 +308,17 @@ else
         font-size: 14px;
         color: #555;
         overflow: hidden;
+        word-wrap: break-word; /* Ensures long words break */
+        overflow-wrap: break-word; /* Alternative for browser support */
+        white-space: pre-wrap; /* Ensures line breaks and text wrapping */
 
-        word-wrap: break-word; /* Break long words */
-        overflow-wrap: break-word; /* Ensure it works in all browsers */
-        white-space: pre-wrap; /* Preserve line breaks and wrap text */
-        max-width: 100%; /* Prevent overflowing the card */
-        white-space: nowrap;
+        max-width: 100%; /* Prevents horizontal overflow */
+        overflow: hidden; /* Prevents unintended overflow */
+
+        flex-grow: 1; /* Allows content to take available space */
+        overflow: auto; /* Enables scrollbar when needed */
+        max-height: 150px; /* Maximum content height before scrolling */
+        padding-right: 5px; /* Add space for scrollbar */
     }
 
     .snippet-collections {
