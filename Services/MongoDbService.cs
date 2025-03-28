@@ -368,6 +368,22 @@ namespace Snipster.Services
 
             await _usersCollection.UpdateOneAsync(filter, update);
         }
+
+        public async Task UpdateUserWithPassword(Users user, string password)
+        {
+
+            user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(password);
+
+            var filter = Builders<Users>.Filter.Eq(c => c.Email, user.Id);
+            var update = Builders<Users>.Update.Set(c => c.RegistrationConfirmed, user.RegistrationConfirmed)
+                                                            .Set(c => c.FirstName, user.FirstName)
+                                                            .Set(c => c.LastName, user.LastName)
+                                                            .Set(c => c.PasswordHash, user.PasswordHash);
+
+
+            var result = await _usersCollection.UpdateOneAsync(filter, update);
+
+        }
         #endregion
 
 

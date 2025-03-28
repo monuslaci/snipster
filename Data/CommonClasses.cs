@@ -44,6 +44,21 @@ namespace Snipster.Data
             public string Password { get; set; }
         }
 
+        public class ChangePwModel
+        {
+            [Required(ErrorMessage = "Old Password is required")]
+            public string OldPassword { get; set; }
+
+
+            [Required(ErrorMessage = "New Password is required")]
+            [MinLength(8, ErrorMessage = "New Password must be at least 8 characters")]
+            [RegularExpression(@"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$", ErrorMessage = "New Password must contain at least one uppercase letter, one lowercase letter and one number.")]
+            public string Password { get; set; }
+
+            [Required(ErrorMessage = "Please Type in the New Password again")]
+            public string PasswordRepeat { get; set; }
+        }
+
         public class LoginReturn
         {
             public bool Result { get; set; }

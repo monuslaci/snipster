@@ -25,10 +25,12 @@
     <main>
         <div class="top-row px-4">
             <div class="top-links">
-                <a href="https://docs.microsoft.com/aspnet/" target="_blank">About</a>
+               
 
                 <AuthorizeView>
                     <Authorized>
+                        <NavLink href="/user/edit"><i class="fas fa-user-edit"></i> <span class="tooltip">Edit User Details</span></NavLink>
+                        <NavLink href="/user/password"><i class="fas fa-key"></i></NavLink>
                         <div class="logout-container" @onclick="Logout">
                             <i class="fas fa-sign-out-alt logout-icon"></i>
                             <span class="tooltip">Logout</span>
