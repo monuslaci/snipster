@@ -27,32 +27,29 @@ namespace Snipster.Pages
         private Collection editCollection = new Collection();
         private Snippet newSnippet = new Snippet();
         private List<Snippet> snippets = new List<Snippet>();
-        private Snippet selectedSnippet;
-        private bool isAddingSnippet = false; 
-        private string selectedCollectionId; 
-        private string selectedCollectionIdCreate; 
-        private string selectedCollectionIdEdit; 
-        private Modal createCollectionModal;
-        private Modal editCollectionModal;
-        private Modal spinnerModal = new Modal();
-        private bool adjustHeightNeeded;
+        private Snippet selectedSnippet { get; set; }
+        private bool isAddingSnippet { get; set; } = false; 
+        private string? selectedCollectionId { get; set; }
+        private string? selectedSnippetId { get; set; }
+        private string? selectedCollectionIdCreate { get; set; }
+        private string selectedCollectionIdEdit { get; set; }
+        private Modal? createCollectionModal { get; set; }
+        private Modal? editCollectionModal { get; set; }
+        private Modal spinnerModal { get; set; }
+        private bool adjustHeightNeeded { get; set; }
         private string HashtagsInput { get; set; }
-        private List<string> ValidHashtags { get; set; } = new List<string>();
-        private string userEmail { get; set; }
-        private string searchCollectionQuery = string.Empty;
-        private string searchSnippetQuery = string.Empty;
-        private bool isFormValid = true;
-        private bool isLeftPanelOpen = true;
-        private bool isMiddlePanelOpen = true;
-
-        private string rightPanelWidth = "50%";
+        private List<string>? ValidHashtags { get; set; } 
+        private string? userEmail { get; set; }
+        private string? searchCollectionQuery { get; set; }
+        private string? searchSnippetQuery { get; set; }
+        private bool isFormValid { get; set; } = true;
+        private bool isLeftPanelOpen { get; set; } = true;
+        private bool isMiddlePanelOpen { get; set; } = true;
+        private string rightPanelWidth { get; set; } = "50%";
 
         protected override async Task OnInitializedAsync()
         {
-            var authState = await AuthStateProvider.GetAuthenticationStateAsync();
-            userEmail = authState.User.Identity?.Name;
 
-            collections = await _mongoDbService.GetCollectionsForUserAsync(userEmail);
 
             var uri = Navigation.ToAbsoluteUri(Navigation.Uri);
             var query = Microsoft.AspNetCore.WebUtilities.QueryHelpers.ParseQuery(uri.Query);
@@ -60,19 +57,29 @@ namespace Snipster.Pages
             if (query != null && query.TryGetValue("selectedCollectionId", out var id))
             {
                 selectedCollectionId = id;
-                //await LoadSnippets(selectedCollectionId);
-
-                //// Remove query parameter from the URL using JavaScript
-                //await JSRuntime.InvokeVoidAsync("updateUrlWithoutQueryParam", "/collections");
             }
 
             if (query != null && query.TryGetValue("selectedSnippetId", out var sid))
             {
-                var selectedSnippetId = sid;
-                await LoadSnippets(selectedCollectionId);
+                selectedSnippetId = sid;
+            }
+        }
 
-               
-                
+        protected override async Task OnAfterRenderAsync(bool firstRender)
+        {
+            if (firstRender)
+            {
+                var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+                userEmail = authState.User.Identity?.Name;
+
+                spinnerModal.IsSpinner = true;
+                spinnerModal.ShowModal();
+
+                collections = await _mongoDbService.GetCollectionsForUserAsync(userEmail);
+
+                if (!string.IsNullOrEmpty(selectedCollectionId))
+                    await LoadSnippets(selectedCollectionId);
+
                 if (collections != null && !string.IsNullOrEmpty(selectedSnippetId))
                 {
                     await LoadSnippetDetails(selectedSnippetId);
@@ -80,17 +87,7 @@ namespace Snipster.Pages
 
                 // Remove query parameter from the URL using JavaScript
                 await JSRuntime.InvokeVoidAsync("updateUrlWithoutQueryParam", "/collections");
-            }
-
-        }
-
-        protected override async Task OnAfterRenderAsync(bool firstRender)
-        {
-            if (firstRender)
-            {
-                spinnerModal.IsSpinner = true;
-                spinnerModal.ShowModal();
-
+                StateHasChanged();
                 spinnerModal.CloseModal();
             }
             if (adjustHeightNeeded)

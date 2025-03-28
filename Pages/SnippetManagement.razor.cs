@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Snipster.Components;
@@ -10,34 +11,35 @@ namespace Snipster.Pages
     public partial class SnippetManagement
     {
         [Inject] MongoDbService MongoDbService { get; set; }
-        [Inject] ProtectedSessionStorage SessionStorage { get; set; }
         [Inject] NavigationManager Navigation { get; set; }
-        private string searchQuery = string.Empty;
-        private List<Snippet> allSnippets = new List<Snippet>();
+        [Inject] private AuthenticationStateProvider AuthStateProvider { get; set; }
+        private string searchQuery { get; set; }
         private List<Snippet> filteredSnippets = new List<Snippet>();
         private Dictionary<string, IEnumerable<string>> relatedCollections = new Dictionary<string, IEnumerable<string>>();
         private Snippet newSnippet = new Snippet();
-        private Modal createSnippetModal;
-        private Modal editSnippetModal;
+        private Modal createSnippetModal { get; set; }
+        private Modal editSnippetModal { get; set; }
         private List<Collection> allCollections = new List<Collection>(); // List of all available collections
         private List<string> selectedCollectionIds = new List<string>(); // Stores selected collection IDs
-        private string searchSnippetQuery = string.Empty;
-        private Modal spinnerModal = new Modal();
-        private Snippet selectedSnippet;
-        ProtectedBrowserStorageResult<string> loggedInUser { get; set; }
+        private string searchSnippetQuery { get; set; }
+        private Modal spinnerModal { get; set; }
+        private Snippet selectedSnippet { get; set; }
+        private string userEmail { get; set; }
 
         protected override async Task OnInitializedAsync()
         {
+            //loggedInUser = await SessionStorage.GetAsync<string>("userEmail");
+            //var loggedInUserEmail = !string.IsNullOrEmpty(loggedInUser.Value) ? loggedInUser.Value.ToString() : "";
 
-            // Load snippets and collections
-            //await LoadSnippets();
-            //await LoadCollections(); // Load all collections
-
+     
         }
         protected override async Task OnAfterRenderAsync(bool firstRender)
         {
             if (firstRender)
             {
+                var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+                userEmail = authState.User.Identity?.Name;
+
                 spinnerModal.IsSpinner = true;
                 spinnerModal.ShowModal();
                 await LoadSnippets();
@@ -50,9 +52,8 @@ namespace Snipster.Pages
         private async Task LoadSnippets()
         {
             //filteredSnippets = await MongoDbService.GetAllSnippetsAsync();
-            loggedInUser = await SessionStorage.GetAsync<string>("userEmail");
-            var loggedInUservalue = !string.IsNullOrEmpty(loggedInUser.Value) ? loggedInUser.Value.ToString() : "";
-            filteredSnippets = await MongoDbService.GetSnippetsByUserAsync(!string.IsNullOrEmpty(loggedInUser.Value) ? loggedInUser.Value.ToString() : "");
+
+            filteredSnippets = await MongoDbService.GetSnippetsByUserAsync(userEmail);
             await LoadRelatedCollections();
         }
 
@@ -174,8 +175,7 @@ namespace Snipster.Pages
             spinnerModal.ShowModal();
 
             // Instead of clearing first, directly assign the new filtered list
-            var results = await MongoDbService.SearchSnippetAsync(searchSnippetQuery,
-                !string.IsNullOrEmpty(loggedInUser.Value) ? loggedInUser.Value.ToString() : "");
+            var results = await MongoDbService.SearchSnippetAsync(searchSnippetQuery, userEmail);
 
             // Assign new results directly
             filteredSnippets = results;
@@ -185,7 +185,7 @@ namespace Snipster.Pages
         }
         private async Task CancelSearchSnippet()
         {
-            filteredSnippets = await MongoDbService.GetSnippetsByUserAsync(!string.IsNullOrEmpty(loggedInUser.Value) ? loggedInUser.Value.ToString() : "");
+            filteredSnippets = await MongoDbService.GetSnippetsByUserAsync(!string.IsNullOrEmpty(userEmail) ? userEmail : "");
 
             searchSnippetQuery = "";
             StateHasChanged();

@@ -400,7 +400,12 @@
     background-color: #C9302C; /* Darker red */
 }
 
-
+.no-snippets {
+    text-align: center;
+    font-size: 16px;
+    color: #666;
+    margin-top: 20px;
+}
 
 @media (max-width: 768px) {
     form {

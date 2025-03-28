@@ -15,6 +15,7 @@ namespace Snipster.Services
         private readonly IMongoCollection<Collection> _collectionsCollection;
         private readonly IMongoCollection<Users> _usersCollection;
         private readonly IMongoCollection<PasswordResetToken> _tokensCollection;
+        private readonly IMongoCollection<RegistrationConfirmToken> _registrationTokensCollection;
 
         private readonly string _connectionString;
         private readonly string _databaseName;
@@ -34,7 +35,7 @@ namespace Snipster.Services
             _collectionsCollection = database.GetCollection<Collection>("Collections");
             _usersCollection = database.GetCollection<Users>("Users");
             _tokensCollection = database.GetCollection<PasswordResetToken>("PasswordResetTokens");
-
+            _registrationTokensCollection = database.GetCollection<RegistrationConfirmToken>("RegistrationConfirmTokens");
         }
 
         #region Snippets
@@ -260,13 +261,14 @@ namespace Snipster.Services
             return await _collectionsCollection.Find(c => c.CreatedBy == email).ToListAsync();
         }
 
-        public async Task<List<Collection>> GetLast5CollectionsAsync()
+        public async Task<List<Collection>> GetLast5CollectionsForUserAsync(string email)
         {
             var collections = await _collectionsCollection
-                .Find(FilterDefinition<Collection>.Empty)
+                .Find(Builders<Collection>.Filter.Eq(c => c.CreatedBy, email))
                 .Sort(Builders<Collection>.Sort.Descending(c => c.LastModifiedDate))
                 .Limit(5)
                 .ToListAsync();
+
             return collections;
         }
 
@@ -356,6 +358,16 @@ namespace Snipster.Services
 
             return user;
         }
+
+        public async Task UpdateUser(Users user)
+        {
+            var filter = Builders<Users>.Filter.Eq(c => c.Email, user.Id);
+            var update = Builders<Users>.Update.Set(c => c.RegistrationConfirmed, user.RegistrationConfirmed)
+                                                            .Set(c => c.FirstName, user.FirstName)
+                                                            .Set(c => c.LastName, user.LastName);
+
+            await _usersCollection.UpdateOneAsync(filter, update);
+        }
         #endregion
 
 
@@ -389,6 +401,33 @@ namespace Snipster.Services
 
             // Remove the used token
             await _tokensCollection.DeleteOneAsync(t => t.Token == token);
+            return true;
+        }
+
+        public async Task<string> GenerateRegisterTokenAsync(string email)
+        {
+            var token = Convert.ToBase64String(RandomNumberGenerator.GetBytes(32)); // Secure random token
+
+            var resetToken = new RegistrationConfirmToken
+            {
+                Email = email,
+                Token = token,
+            };
+
+            await _registrationTokensCollection.InsertOneAsync(resetToken);
+            return token;
+        }
+
+        // Validate the registration token
+        public async Task<bool> ValidateGeneratedRegisterTokenAsync(string token)
+        {
+            var tokenRecord = await _registrationTokensCollection.Find(t => t.Token == token).FirstOrDefaultAsync();
+
+            if (tokenRecord == null)
+                return false; // Invalid token
+
+            // Remove the used token
+            await _registrationTokensCollection.DeleteOneAsync(t => t.Token == token);
             return true;
         }
     }

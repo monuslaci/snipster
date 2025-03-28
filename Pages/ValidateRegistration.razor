@@ -1,0 +1,53 @@
+﻿@page "/validate-registration"
+@using Snipster.Data;
+@using Snipster.Services;
+@using Snipster.Components
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.AspNetCore.Components.Forms
+@using static Snipster.Data.DBContext;
+@inject MongoDbService _mongoDbService
+@inject NavigationManager Navigation
+
+
+<div class="reset-container">
+
+    @if (!isSuccess)
+    {
+        <div class="login-container">
+            <h1>Token is not valid, confirmation is not successful!</h1>
+        </div>
+    }
+
+    @if (!isSuccess)
+    {
+        <div class="login-container">
+            <h1>Registration is confirmed, you are now redirected to the login page..</h1>
+        </div>
+    }
+
+</div>
+
+
+
+
+@code {
+
+
+}
+<style>
+
+    .login-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+    }
+
+
+    .error {
+        color: red;
+        text-align: center;
+        margin-top: 10px;
+    }
+</style>

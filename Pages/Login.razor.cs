@@ -17,6 +17,7 @@ using static Snipster.Helpers.GeneralHelpers;
 using System.Text.RegularExpressions;
 using AspNetCore.Identity.MongoDbCore.Models;
 using static System.Runtime.InteropServices.JavaScript.JSType;
+using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage;
 
 namespace Snipster.Pages
 {
@@ -29,9 +30,12 @@ namespace Snipster.Pages
         [Inject] MongoDbService MongoDbService { get; set; }
         [Inject] NavigationManager Navigation { get; set; }
         [Inject] EmailService EmailService { get; set; }
+        [Inject] ProtectedSessionStorage SessionStorage { get; set; }
 
-    private bool _isInitialized = false;
+        private bool _isInitialized = false;
 
+        protected override async Task OnInitializedAsync()
+        { }
         protected override async Task OnAfterRenderAsync(bool firstRender)
         {
             if (firstRender && !_isInitialized)
@@ -102,16 +106,16 @@ namespace Snipster.Pages
             else if (Environment.GetEnvironmentVariable("Environment") == "Production")
                 url = $"https://yourapp.com";
 
-            RegistrationEmailTemplate = Regex.Replace(RegistrationEmailTemplate, "<url>", url);
-            RegistrationEmailTemplate = Regex.Replace(RegistrationEmailTemplate, "<Name>", name);
+            LoginEmailTemplate = Regex.Replace(LoginEmailTemplate, "<url>", url);
+            LoginEmailTemplate = Regex.Replace(LoginEmailTemplate, "<Name>", name);
 
-            emailDetails.htmlContent = RegistrationEmailTemplate;
+            emailDetails.htmlContent = LoginEmailTemplate;
             emailDetails.To = email;
             emailDetails.Subject = "Test email at login from Snipster.com";
 
             return emailDetails;
         }
-        public string RegistrationEmailTemplate = @"
+        public string LoginEmailTemplate = @"
                 <!DOCTYPE html> <html> <head> <style> p { margin: 0;} OL { list-style-type: decimal; } OL OL  {list-style-type: upper-roman;} UL  {list-style-type: disc;} UL UL  {list-style-type: square;} .cal {font: 15px Calibri;} </style> </head><body>
                 <body>
                 <div><p>Dear <Name>, </p> <p> <o:p>&nbsp;</o:p></p>

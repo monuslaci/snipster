@@ -104,6 +104,7 @@ namespace Snipster.Data
             public string LastName { get; set; }
             //public string Email { get; set; }     
             //public string PasswordHash { get; set; }
+            public bool RegistrationConfirmed { get; set; }
         }
         public class RegisterUserDTO
         {
@@ -151,7 +152,21 @@ namespace Snipster.Data
             [BsonElement("expiry")]
             public DateTime Expiry { get; set; }
         }
+
+        public class RegistrationConfirmToken
+        {
+            [BsonId]
+            public ObjectId Id { get; set; }
+
+            [BsonElement("email")]
+            public string Email { get; set; }
+
+            [BsonElement("token")]
+            public string Token { get; set; }
+
+        }
     }
+
     public class MongoDbContext : Snipster.Data.IMongoDbContext, MongoDbGenericRepository.IMongoDbContext
     {
         private readonly IMongoDatabase _database;
@@ -163,7 +178,6 @@ namespace Snipster.Data
             _database = _client.GetDatabase(databaseName); // Get the MongoDB database
         }
 
-        // Ensure this property is correctly implemented
         public IMongoClient Client => _client;
 
         public IMongoDatabase Database => _database;
@@ -174,7 +188,7 @@ namespace Snipster.Data
             return _database.GetCollection<TDocument>(name);
         }
 
-        // Additional MongoDbContext functionality (optional)
+        // Additional MongoDbContext functionality 
         public void DropCollection<TDocument>(string name)
         {
             _database.DropCollection(name);

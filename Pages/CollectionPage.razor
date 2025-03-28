@@ -1,9 +1,11 @@
-﻿@using Snipster.Data;
+﻿@page "/collections"
+
+@using Snipster.Data;
 @using Snipster.Services;
 @using Snipster.Components
 @inject IJSRuntime JSRuntime
 @attribute [Authorize]
-@page "/collections"
+
 
 
 <div class="page-layout">
@@ -20,22 +22,29 @@
             </div>
         </div>
         <button class="create-collection-btn" @onclick="ShowCreateCollectionModal">+</button>
-        <ul>
-            @foreach (var collection in collections)
-            {
-                <li class="collection-item @(selectedCollectionId != null && selectedCollectionId == collection.Id ? "active" : "")">
-                    <span @onclick="() => LoadSnippets(collection.Id)">
-                        @collection.Title
-                    </span>
-                    <button class="icon-btn edit-btn" @onclick="() => EditCollection(collection)">
-                        <i class="fa fa-edit"></i>
-                    </button>
-                    <button class="icon-btn delete-btn" @onclick="() => DeleteCollection(collection.Id)">
-                        <i class="fa fa-trash"></i>
-                    </button>
-                </li>
-            }
-        </ul>
+        @if (collections != null && collections.Any())
+        {
+            <ul>
+                @foreach (var collection in collections)
+                {
+                    <li class="collection-item @(selectedCollectionId != null && selectedCollectionId == collection.Id ? "active" : "")">
+                        <span @onclick="() => LoadSnippets(collection.Id)">
+                            @collection.Title
+                        </span>
+                        <button class="icon-btn edit-btn" @onclick="() => EditCollection(collection)">
+                            <i class="fa fa-edit"></i>
+                        </button>
+                        <button class="icon-btn delete-btn" @onclick="() => DeleteCollection(collection.Id)">
+                            <i class="fa fa-trash"></i>
+                        </button>
+                    </li>
+                }
+            </ul>
+        }
+        else
+        {
+            <p class="no-snippets">No collections found.</p>
+        }
     </div>
 
     <!-- Middle Section: Snippet List -->

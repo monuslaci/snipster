@@ -1,9 +1,11 @@
-﻿@using Snipster.Data;
+﻿@page "/snippets"
+
+@using Snipster.Data;
 @using Snipster.Services;
 @using Snipster.Components
 @attribute [Authorize]
 
-@page "/snippets"
+
 
 <div class="page-container">
 <h3>Snippet Management</h3>
@@ -18,7 +20,7 @@
     </div>
 </div>
 
-@if (filteredSnippets.Any())
+@if (filteredSnippets!= null &&  filteredSnippets.Any())
 {
     <div class="snippet-container">
         @foreach (var snippet in filteredSnippets)
@@ -52,7 +54,7 @@
 }
 else
 {
-    <p class="no-snippets">No snippets found.</p>
+    <p class="no-snippets">No snippets found..</p>
 }
 </div>
 

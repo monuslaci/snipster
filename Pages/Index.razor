@@ -34,16 +34,24 @@
         <div class="centered-content">
             <h2>Your Collections at a Glance</h2>
             <p>See your most recently updated collections or snippets.</p>
-            <ul>
-                @foreach (var collection in collections)
-                {
-                    <li>
-                        <button class="link-button" @onclick="() => NavigateToCollection(collection.Id)">
-                            @collection.Title
-                        </button>
-                    </li>
-                }
-            </ul>
+            @if (collections != null && collections.Count() > 0)
+            {
+                <ul>
+                    @foreach (var collection in collections)
+                    {
+                        <li>
+                            <button class="link-button" @onclick="() => NavigateToCollection(collection.Id)">
+                                @collection.Title
+                            </button>
+                        </li>
+                    }
+                </ul>
+
+            } else
+            {
+                <p>No collections created..</p>
+            }
+
         </div>
     </section>
 
@@ -55,9 +63,11 @@
 
 @code {
     [Inject] NavigationManager Navigation { get; set; }
-    private List<Collection> collections = new List<Collection>();
-    private Modal spinnerModal = new Modal();
-    private ClaimsPrincipal user;
+    [Inject] private AuthenticationStateProvider AuthStateProvider { get; set; }
+    private List<Collection> collections  = new List<Collection>();
+    private Modal spinnerModal { get; set; }
+    private ClaimsPrincipal user { get; set; }
+    private string? userEmail { get; set; }
 
     private void NavigateToCollections()
     {
@@ -72,14 +82,13 @@
         // Get the user from the authentication state
         var user = authState.User;
 
-        // You can check if the user is authenticated here
-        if (!user.Identity.IsAuthenticated)
+        if (user == null || !user.Identity.IsAuthenticated)
         {
-            // Optionally redirect to login or show a message
             Navigation.NavigateTo("/login");
-        }
+        }         
 
-        collections = await _mongoDbService.GetLast5CollectionsAsync();
+        userEmail = user.Identity?.Name;
+        collections = await _mongoDbService.GetLast5CollectionsForUserAsync(userEmail ?? "");
     }
 
 

@@ -27,9 +27,8 @@ namespace Snipster.Pages
         [Inject] MongoDbService MongoDbService { get; set; }
         [Inject] NavigationManager Navigation { get; set; }
         [Inject] EmailService EmailService { get; set; }
-
-        private ResetModel resetEmailModel = new ResetModel();
-        private bool emailSent = false;
+        private ResetModel resetEmailModel { get; set; }
+        private bool emailSent { get; set; } = false;
         
 
         private async Task HandleResetEmail()
