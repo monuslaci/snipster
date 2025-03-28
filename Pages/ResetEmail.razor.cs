@@ -27,7 +27,7 @@ namespace Snipster.Pages
         [Inject] MongoDbService MongoDbService { get; set; }
         [Inject] NavigationManager Navigation { get; set; }
         [Inject] EmailService EmailService { get; set; }
-        private ResetModel resetEmailModel { get; set; }
+        private ResetModel resetEmailModel = new ResetModel();
         private bool emailSent { get; set; } = false;
         
 
@@ -80,7 +80,7 @@ namespace Snipster.Pages
                 <body>
                 <div><p>Dear <Name>, </p> <p> <o:p>&nbsp;</o:p></p>
                 <p>You received this email because you requested a password reset.</p> <p><o:p>&nbsp;</o:p></p>
-                <p>Click <a href='<resetUrl>'>here</a> to reset your password.</p> <p><o:p>&nbsp;</o:p></p>
+                <p>Click <a href='<resetUrl>' here</a> to reset your password.</p> <p><o:p>&nbsp;</o:p></p>
                 <p>If you didn’t request this, please ignore this email. This link will expire in 24 hours.</p> <p><o:p>&nbsp;</o:p></p>
 
                 <p>Best regards,</p> 

@@ -11,23 +11,50 @@
 
 <div class="reset-container">
 
-    @if (!isSuccess)
+    @if (isProcessing)
     {
         <div class="login-container">
-            <h1>Token is not valid, confirmation is not successful!</h1>
+            <h1>Registration is being validated, please do not refresh page!</h1>
         </div>
     }
-
-    @if (!isSuccess)
+    @if (isSuccess && !isProcessing)
     {
         <div class="login-container">
             <h1>Registration is confirmed, you are now redirected to the login page..</h1>
         </div>
     }
 
+    @if (!isSuccess && !isProcessing)
+    {
+        <div class="login-container">
+            <h1>Token is not valid, confirmation is not successful!</h1>
+    
+                <EditForm Model="resetEmailModel" OnValidSubmit="HandleResetEmail">
+                    <DataAnnotationsValidator />
+                    <ValidationSummary />
+
+                    <div class="form-group">
+                        <label for="email">Enter your registered email to resend the validation email</label>
+                        <InputText id="email" class="form-control input-short" @bind-Value="resetEmailModel.Email" />
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">Send Validation Email</button>
+
+                    <div class="back-to-login">
+                        <a href="/login">Back to Login</a>
+                    </div>
+                </EditForm>
+        
+        </div>
+    }
+
+
+
 </div>
 
+<Modal @ref="spinnerModal">
 
+</Modal>
 
 
 @code {

@@ -38,7 +38,7 @@ namespace Snipster.Pages
         private Modal spinnerModal { get; set; }
         private bool adjustHeightNeeded { get; set; }
         private string HashtagsInput { get; set; }
-        private List<string>? ValidHashtags { get; set; } 
+        private List<string>? ValidHashtags = new List<string>();
         private string? userEmail { get; set; }
         private string? searchCollectionQuery { get; set; }
         private string? searchSnippetQuery { get; set; }

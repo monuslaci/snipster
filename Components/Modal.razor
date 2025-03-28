@@ -14,7 +14,7 @@
                     @ChildContent
                 </div>
                 <div class="modal-footer">
-                    <button class="modal-footer-close-btn" @onclick="CloseModal">Close</button>
+                    <button class="cancel-btn" @onclick="CloseModal">Cancel</button>
                 </div>
             </div>
         </div>
@@ -41,10 +41,15 @@
     }
 
     .modal-content {
-        background-color: #fff;
-        border-radius: 8px;
-        width: 400px;
-        padding: 20px;
+        width: 500px;
+        max-width: 90%;
+        padding: 1.5em;
+        background-color: #ffffff;
+        border-radius: 12px;
+        box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.15);
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
     }
 
     .modal-header {
@@ -53,11 +58,25 @@
         align-items: center;
     }
 
+        .modal-header h3 {
+            font-size: 20px;
+            color: #333;
+            margin-bottom: 1em;
+            text-align: center;
+        }
+
     .modal-close-btn {
         background: none;
         border: none;
         font-size: 1.5em;
         cursor: pointer;
+    }
+
+    .modal-footer {
+        display: flex;
+        justify-content: center;
+        gap: 15px;
+        margin-top: 1.5em;
     }
 
     .modal-footer-close-btn {
@@ -77,6 +96,20 @@
     .modal-footer-close-btn:hover {
         background-color: rgba(233, 168, 73, 0.5);
 }
+
+    .cancel-btn {
+        padding: 10px 20px;
+        background-color: #dc3545;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: background 0.3s ease;
+    }
+
+        .cancel-btn:hover {
+            background-color: #c82333;
+        }
 </style>
 
 @code {

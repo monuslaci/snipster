@@ -183,33 +183,51 @@
         <DataAnnotationsValidator />
         <ValidationSummary />
 
-        <div>
-            <label>Title:</label>
-            <input type="text" class="input-element" @bind="newCollection.Title" />
+        <div class="modal-body-edit">
+            <div class="form-group">
+                <label>Title:</label>
+                <InputText class="form-input" @bind-Value="editCollection.Title" />
+            </div>
+
+
+            <div class="form-group">
+                <label class="inline">
+                    Public:
+                    <InputCheckbox class="checkbox-element" @bind-Value="newCollection.IsPublic" />
+                </label>
+            </div>
+
+            <div class="form-group">
+                <button class="create-collection-btn" type="submit">Create</button>
+            </div>
+
         </div>
-        <div>
-            <label>Public:</label>
-            <InputCheckbox class="input-element" @bind-Value="newCollection.IsPublic" />
-        </div>
-        <button class="btn-submit" type="submit">Create</button>
     </EditForm>
 </Modal>
 
 <!-- Modal for editing a collection -->
-<Modal @ref="editCollectionModal" Title="EditCollection">
+<Modal @ref="editCollectionModal" Title="Edit Collection">
     <EditForm Model="editCollection" OnValidSubmit="async () => await HandleEditCollection()">
         <DataAnnotationsValidator />
         <ValidationSummary />
 
-        <div>
-            <label>Title:</label>
-            <input type="text" class="input-element" @bind="editCollection.Title" />
+        <div class="modal-body-edit">
+            <div class="form-group">
+                <label>Title:</label>
+                <InputText class="form-input" @bind-Value="editCollection.Title" />
+            </div>
+
+            <div class="form-group">
+                <label class="inline">
+                    Public:
+                    <InputCheckbox class="checkbox-element" @bind-Value="editCollection.IsPublic" />
+                </label>
+            </div>
+
+            <div class="form-group">
+                <button class="create-collection-btn" type="submit">Save</button>
+            </div>
         </div>
-        <div>
-            <label>Public:</label>
-            <InputCheckbox class="input-element" @bind-Value="editCollection.IsPublic" />
-        </div>
-        <button class="btn-submit" type="submit">Save</button>
     </EditForm>
 </Modal>
 

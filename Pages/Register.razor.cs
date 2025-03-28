@@ -46,9 +46,6 @@ namespace Snipster.Pages
                 string token = await MongoDbService.GenerateResetTokenAsync(user.Email);
                 await EmailService.SendEmailNotification(CreateRegisterEmailTemplate(user.Email, $"{user.FirstName} {user.LastName}", token));
 
-                user.RegistrationConfirmed = true;
-                await MongoDbService.UpdateUser(user);
-
                 await Task.Delay(2000);
                 Navigation.NavigateTo("/login");
             }
