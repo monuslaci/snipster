@@ -8,12 +8,12 @@
 
 
 <div class="page-container">
-<h3>Snippet Management</h3>
+@* <h2>Search Snippets</h2> *@
 
 @* <button class="create-snippet-btn" @onclick="ShowCreateSnippetModal">Create New Snippet</button> *@
 
 <div class="search-bar">
-    <input class="searchbar" type="text" @bind="searchSnippetQuery" placeholder="Search collections..." />
+    <input class="searchbar" type="text" @bind="searchSnippetQuery" placeholder="Search snippets..." />
     <div class="search-buttons">
         <button class="create-collection-btn search" @onclick="OnSearchSnippet">Search</button>
         <button class="create-collection-btn cancel" @onclick="CancelSearchSnippet">Clear</button>
@@ -46,10 +46,11 @@
                 <div class="snippet-actions">
 @*                     <button class="edit-btn" @onclick="() => EditSnippet(snippet)">Edit</button>
                     <button class="delete-btn" @onclick="() => DeleteSnippet(snippet.Id)">Delete</button> *@
-                    <button class="delete-btn" @onclick="() => OpenSnippet(snippet.Id)">Open</button>
+                        <button class="edit-btn" @onclick="() => OpenSnippet(snippet.Id)">Open</button>
                 </div>
             </div>
         }
+            <p class="result">@filteredSnippets.Count() results</p>
     </div>
 }
 else
@@ -413,5 +414,9 @@ else
     .search-buttons .create-collection-btn.cancel {
         background-color: #D9534F; /* Soft red */
         color: white;
+    }
+
+    .result{
+        margin-top: 20px;
     }
 </style>
