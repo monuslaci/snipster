@@ -25,15 +25,24 @@
     <main>
         <div class="top-row px-4">
             <div class="top-links">
-               
-
+                
                 <AuthorizeView>
                     <Authorized>
-                        <NavLink href="/user/edit"><i class="fas fa-user-edit"></i> <span class="tooltip">Edit User Details</span></NavLink>
-                        <NavLink href="/user/password"><i class="fas fa-key"></i></NavLink>
-                        <div class="logout-container" @onclick="Logout">
-                            <i class="fas fa-sign-out-alt logout-icon"></i>
-                            <span class="tooltip">Logout</span>
+                        <div class="icon-group">
+                            <NavLink href="/user/edit" class="icon-link">
+                                <i class="fas fa-user-edit"></i>
+                                <span class="tooltip">Edit User Details</span>
+                            </NavLink>
+
+                            <NavLink href="/user/password" class="icon-link password">
+                                <i class="fas fa-key"></i>
+                                <span class="tooltip password">Change Password</span>
+                            </NavLink>
+
+                            <div class="icon-link logout-container" @onclick="Logout">
+                                <i class="fas fa-sign-out-alt logout-icon"></i>
+                                <span class="tooltip">Logout</span>
+                            </div>
                         </div>
                     </Authorized>
                 </AuthorizeView>
@@ -64,32 +73,35 @@
 <style>
     .top-links {
         display: flex;
-        align-items: center;
-        gap: 20px; /* Space between About and Logout */
+        justify-content: center;
     }
 
-    .logout-container {
+    .icon-group {
+        display: flex;
+        align-items: center;
+        gap: 30px; /* Ensures equal spacing */
+    }
+
+    .icon-link {
+        display: flex;
+        align-items: center;
         position: relative;
         cursor: pointer;
     }
 
-    .logout-icon {
-        font-size: 20px;
-        color: #555;
-        transition: color 0.3s ease-in-out;
+    .logout-container {
+        cursor: pointer;
     }
 
-    .logout-icon:hover {
-        color: red;
-    }
-
+    /* Tooltip styling */
     .tooltip {
-        position: absolute;
+        position: absolute; /* Prevents tooltip from affecting spacing */
         bottom: -25px;
         left: 50%;
         transform: translateX(-50%);
-        background: black;
+        background-color: black;
         color: white;
+        text-align: center;
         padding: 5px 10px;
         border-radius: 5px;
         font-size: 12px;
@@ -99,8 +111,28 @@
         pointer-events: none;
     }
 
+    .icon-link:hover .tooltip,
     .logout-container:hover .tooltip {
         opacity: 1;
     }
 
+    /* Icon styling */
+    .fas {
+        font-size: 20px;
+        color: #555;
+        transition: color 0.3s ease-in-out;
+    }
+
+    .icon-link:hover .fas {
+        color: #007bff;
+    }
+
+    .logout-container:hover .fas {
+        color: red;
+    }
+
+    .password {
+        margin-left: -1px !important;
+        margin-right: 6px !important;
+    }
 </style>

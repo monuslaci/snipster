@@ -361,7 +361,7 @@ namespace Snipster.Services
 
         public async Task UpdateUser(Users user)
         {
-            var filter = Builders<Users>.Filter.Eq(c => c.Email, user.Id);
+            var filter = Builders<Users>.Filter.Eq(c => c.Email, user.Email);
             var update = Builders<Users>.Update.Set(c => c.RegistrationConfirmed, user.RegistrationConfirmed)
                                                             .Set(c => c.FirstName, user.FirstName)
                                                             .Set(c => c.LastName, user.LastName);
@@ -374,7 +374,7 @@ namespace Snipster.Services
 
             user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(password);
 
-            var filter = Builders<Users>.Filter.Eq(c => c.Email, user.Id);
+            var filter = Builders<Users>.Filter.Eq(c => c.Email, user.Email);
             var update = Builders<Users>.Update.Set(c => c.RegistrationConfirmed, user.RegistrationConfirmed)
                                                             .Set(c => c.FirstName, user.FirstName)
                                                             .Set(c => c.LastName, user.LastName)

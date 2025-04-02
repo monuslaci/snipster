@@ -17,6 +17,7 @@ using AspNetCore.Identity.MongoDbCore.Models;
 using static Snipster.Helpers.GeneralHelpers;
 using System.Text.RegularExpressions;
 using Amazon.Runtime.Internal.Endpoints.StandardLibrary;
+using BCrypt.Net;
 
 namespace Snipster.Pages
 {
@@ -53,10 +54,23 @@ namespace Snipster.Pages
         }
         private async Task HandleSave()
         {
+            var a = BCrypt.Net.BCrypt.HashPassword(editPassword.Password);
+            if (!BCrypt.Net.BCrypt.Verify(editPassword.OldPassword, user.PasswordHash))
+            {
+                ToastService.ShowError("Old password does not match the saved password");
+                return;
+            }
+
+            if (BCrypt.Net.BCrypt.Verify(editPassword.Password, user.PasswordHash))
+            {
+                ToastService.ShowError("New password must be different than the previous password.");
+                return;
+            }
+
             if (editPassword.Password != editPassword.PasswordRepeat)
             {
                 ToastService.ShowError("New password must match the repeated password.");
-                Cancel();
+                return;
             }
 
 
