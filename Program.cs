@@ -30,26 +30,30 @@ try
     builder.Services.AddRazorPages();
     builder.Services.AddServerSideBlazor();
 
+    var connectionString = Environment.GetEnvironmentVariable("MongoDb"); // Correct connection string key
+    var databaseName = Environment.GetEnvironmentVariable("DatabaseName"); // Read the database name from configuration
 
-    builder.Services.AddSingleton<IMongoDatabase>(sp =>
-    {
-        var connectionString = builder.Configuration.GetConnectionString("MongoDb"); // Correct connection string key
-        var databaseName = builder.Configuration["DatabaseName"]; // Read the database name from configuration
-        var client = new MongoClient(connectionString); // Create MongoClient with the connection string
-        return client.GetDatabase(databaseName); // Return the MongoDatabase instance
-    });
+    //builder.Services.AddSingleton<IMongoDatabase>(sp =>
+    //{
+    //    var connectionString = Environment.GetEnvironmentVariable("MongoDb"); // Correct connection string key
+    //    var databaseName = Environment.GetEnvironmentVariable("DatabaseName"); // Read the database name from configuration
+    //    var client = new MongoClient(connectionString); // Create MongoClient with the connection string
+    //    return client.GetDatabase(databaseName); // Return the MongoDatabase instance
+    //});
 
-    // Register the PasswordHasher service (if not registered already)
-    builder.Services.AddSingleton<IPasswordHasher<Users>, PasswordHasher<Users>>();
+
 
     // Register MongoDbService with IMongoDatabase and IPasswordHasher<Users>
     builder.Services.AddSingleton<MongoDbService>(sp =>
     {
-        var connectionString = builder.Configuration.GetConnectionString("MongoDb"); // Correct connection string key
-        var databaseName = builder.Configuration["DatabaseName"]; // Read the database name from configuration
+        var connectionString = Environment.GetEnvironmentVariable("MongoDb"); // Correct connection string key
+        var databaseName = Environment.GetEnvironmentVariable("DatabaseName"); // Read the database name from configuration
         var passwordHasher = sp.GetRequiredService<IPasswordHasher<Users>>(); // Get the password hasher from DI container
         return new MongoDbService(connectionString, databaseName, passwordHasher); // Create and return the MongoDbService instance
     });
+
+    // Register the PasswordHasher service (if not registered already)
+    builder.Services.AddSingleton<IPasswordHasher<Users>, PasswordHasher<Users>>();
 
     builder.Services.AddSingleton<IPasswordHasher<Users>, PasswordHasher<Users>>(); // Registers the built-in password hasher
 
@@ -60,8 +64,7 @@ try
             options.LogoutPath = "/logout"; // Specify logout page path
         });
 
-    var connectionString = builder.Configuration.GetConnectionString("MongoDb");
-    var databaseName = builder.Configuration["DatabaseName"];
+
     //var sendGridApiKey = builder.Configuration["SendGrid:ApiKey"];
     var sendGridApiKey = Environment.GetEnvironmentVariable("SENDGRID_API_KEY");
 
