@@ -130,16 +130,16 @@ try
     builder.Services.AddControllersWithViews();
 
 
-    builder.Services.AddScoped<Blazored.Toast.Services.IToastService, Blazored.Toast.Services.ToastService>();
+    //builder.Services.AddScoped<Blazored.Toast.Services.IToastService, Blazored.Toast.Services.ToastService>();
     builder.Services.AddScoped<IEmailService, EmailService>();
 
 
 
     //builder.Services.AddSingleton<IMongoDbService, MongoDbService>();
+    builder.Services.AddBlazoredToast();
 
 
 }
-//builder.Services.AddBlazoredToast();
 catch (Exception ex)
 {
     Console.WriteLine($"Error during startup: {ex.Message}");
