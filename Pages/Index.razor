@@ -8,57 +8,102 @@
 @inject AuthenticationStateProvider AuthenticationStateProvider
 
 @page "/"
-@attribute [Authorize]
+@* @attribute [Authorize] *@
 
 
 <PageTitle>Snipster</PageTitle>
 
-<div class="homepage">
-    <header class="welcome-section">
-        <h1>Welcome to Sniptster</h1>
-        <p>Your ultimate tool for organizing and managing code snippets effortlessly.</p
-        <button class="btn-primary" @onclick="NavigateToCollections">View Collections</button>
-    </header>
+@if (!isAuthenticated)
+{
+    <div class="public-homepage">
 
-    <section class="features-section">
-        <h2>Why Use Sniptster?</h2>
-        <ul>
-            <li><strong>Organize</strong> your code snippets into collections.</li>
-            <li><strong>Search</strong> and find snippets quickly.</li>
-            <li><strong>Collaborate</strong> with team members.</li>
-            <li><strong>Support</strong> for multiple languages and syntax highlighting.</li>
-        </ul>
-    </section>
 
-    <section class="overview-section">
-        <div class="centered-content">
-            <h2>Your Collections at a Glance</h2>
-            <p>See your most recently updated collections or snippets.</p>
-            @if (collections != null && collections.Count() > 0)
-            {
-                <ul>
-                    @foreach (var collection in collections)
-                    {
-                        <li>
-                            <button class="link-button" @onclick="() => NavigateToCollection(collection.Id)">
-                                @collection.Title
-                            </button>
-                        </li>
-                    }
-                </ul>
+        <header class="welcome-section">
+            <div class="logo-container">
+                <img src="/images/logo_only_small.png" alt="Logo" class="login-logo" />
+            </div>
 
-            } else
-            {
-                <p>No collections created..</p>
-            }
+            <h1>Welcome to <span class="brand">Snipster</span></h1>
 
-        </div>
-    </section>
+            <p class="tagline">
+                A lightweight, powerful, and elegant platform for organizing your code snippets.
+                <span class="free-indicator">It's completely free to use!</span>
+            </p>
+            <p class="description">
+                Snipster is designed for developers who need a simple yet flexible tool to manage and share reusable code.
+                Effortlessly organize your snippets into collections, search through them in seconds, and collaborate with your team or keep them private—it's up to you.
+            </p>
+            <div class="cta-buttons">
+@*                 <a href="/login" class="btn btn-primary">Log In</a> *@
+                <p class="form-hint">Already have an account? <a href="/login">Click here to log in.</a></p>
 
-    <footer>
-        <p>Start managing your snippets more effectively with Sniptster today!</p>
-    </footer>
-</div>
+@*                 <a href="/register" class="btn btn-secondary">Sign Up</a> *@
+                <p class="form-hint">New to Snipster? <a href="/register">Start for free!</a></p>
+            </div>
+        </header>
+
+        <section class="features-section">
+            <h2>What Makes Snipster Special?</h2>
+            <ul>
+                <li><strong>Lightweight & Fast:</strong> Optimized for speed with a clean, distraction-free interface.</li>
+                <li><strong>Organized Collections:</strong> Keep snippets neatly grouped by topic or project.</li>
+                <li><strong>Powerful Search:</strong> Instantly find what you need, even in large snippet libraries.</li>
+                <li><strong>Collaboration Ready:</strong> Invite teammates or keep your code private—your choice.</li>
+                <li><strong>Multi-language Support:</strong> Highlight syntax for dozens of programming languages.</li>
+            </ul>
+        </section>
+
+        <footer class="footer">
+            <p>&copy; @DateTime.Now.Year Snipster — Built for developers, by developers.</p>
+        </footer>
+    </div>
+}
+else
+{
+        <div class="homepage">
+
+        <header class="welcome-section">
+            <div class="logo-container">
+                <img src="/images/logo_small.png" alt="Logo" class="login-logo" />
+            </div>
+            <h1>Welcome back, @userName!</h1>
+            <p>Your ultimate tool for organizing and managing code snippets effortlessly.</p>
+            <div class="action-buttons">
+                <button class="btn-primary" @onclick="NavigateToCollections">View All Collections</button>
+            </div>
+        </header>
+        <section class="overview-section">
+            <div class="centered-content">
+                <h2>Your latest collections at a glance</h2>
+                <p>See your most recently updated collections</p>
+
+                @if (collections != null && collections.Any())
+                {
+                    <div class="collections-grid">
+                        @foreach (var collection in collections)
+                        {
+                            <div class="collection-card">
+                                <h3>@collection.Title</h3>
+                                <p class="last-updated">Updated @collection.LastModifiedDate.ToString("MMM dd, yyyy")</p>
+                                <button class="btn-primary" @onclick="() => NavigateToCollection(collection.Id)">
+                                    Open
+                                </button>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <p>No collections created..</p>
+@*                     <button class="btn-secondary" @onclick="NavigateToCreateCollection">+ Create Your First Collection</button> *@
+                }
+            </div>
+        </section>
+
+
+    </div>
+}
+
 
 
 @code {
@@ -68,6 +113,8 @@
     private Modal spinnerModal { get; set; }
     private ClaimsPrincipal user { get; set; }
     private string? userEmail { get; set; }
+    private string? userName { get; set; }
+    private bool isAuthenticated = false;
 
     private void NavigateToCollections()
     {
@@ -82,13 +129,14 @@
         // Get the user from the authentication state
         var user = authState.User;
 
-        if (user == null || !user.Identity.IsAuthenticated)
+        if (user != null && user.Identity!= null && user.Identity.IsAuthenticated)
         {
-            Navigation.NavigateTo("/login");
+            //Navigation.NavigateTo("/login");
+            isAuthenticated = true;
+            userEmail = user.Identity?.Name;
+            collections = await _mongoDbService.GetLast5CollectionsForUserAsync(userEmail ?? "");
+            userName = user.Identity?.Name;
         }         
-
-        userEmail = user.Identity?.Name;
-        collections = await _mongoDbService.GetLast5CollectionsForUserAsync(userEmail ?? "");
     }
 
 
@@ -101,28 +149,50 @@
 
 <style>
 
+    .public-homepage {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+@*         background: linear-gradient(to bottom, #FFFFFF 0%, #0A2C85 30%); *@
+        background: #F5F5F5;
+        color: white;
+        padding: 2rem;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
     .homepage {
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        color: #333;
+        color: white;
         line-height: 1.6;
-        padding: 20px;
-        background: linear-gradient(180deg, #ffffff, #f3f4f6);
+        padding: 2rem;
+        background: #F5F5F5;
         min-height: 100vh;
         display: flex;
         flex-direction: column;
         align-items: center;
+        text-align: center;
     }
-
+    .welcome-section, 
+    .welcome-section * {
+        color: white !important;
+    }
     .welcome-section {
         text-align: center;
-        background: #0A3D91;
+        background: #091E5D;
         color: white;
-        padding: 40px 20px;
-        border-radius: 12px;
+
         margin-bottom: 30px;
         box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         width: 90%;
         max-width: 800px;
+        text-align: center;
+
+ 
+        padding: 2rem 1rem;
+        border-radius: 16px;
+        color: #333;
     }
 
     .welcome-section h1 {
@@ -143,6 +213,10 @@
         margin-top: 25px;
     }
 
+    .brand {
+        color: #5A67D8;
+    }
+
     .btn-primary {
         padding: 12px 24px;
         font-size: 1rem;
@@ -161,11 +235,19 @@
     }
 
     header.welcome-section .btn-secondary {
-        background: #23297A;
+        background: #091E5D;
     }
 
     header.welcome-section .btn-secondary:hover {
-        background: #1a1e58;
+        background: #091E5D;
+    }
+
+    .free-indicator {
+        color: #28a745 !important; 
+        font-weight: bold;
+        font-size: 1.1rem;
+        margin-top: 0.5rem;
+        display: block;
     }
 
     .features-section {
@@ -197,7 +279,18 @@
     }
 
     .features-section li strong {
-                color: #0A3D91;
+        color: #091E5D;
+    }
+
+    .form-hint {
+        margin-top: 0.5rem;
+        font-size: 0.9rem;
+        color: #E2E8F0;
+    }
+
+    .form-hint a {
+        color: #ffffff;
+        text-decoration: underline;
     }
 
     .overview-section {
@@ -213,7 +306,7 @@
 
     .overview-section h2 {
         font-size: 2rem;
-            color: #0A3D91;
+        color: #091E5D;
         margin-bottom: 15px;
     }
 
@@ -227,15 +320,18 @@
         margin: 8px 0;
     }
 
-    .overview-section a {
-        color: #008080;
-        text-decoration: none;
-        font-weight: bold;
-        transition: color 0.3s ease;
+    .overview-section {
+        background-color: #f0f2f5;
+        padding: 2rem 1rem;
+        border-radius: 16px;
     }
 
     .overview-section a:hover {
         color: #005f5f;
+    }
+
+    .description {
+        color: white !important;
     }
 
     footer {
@@ -243,7 +339,7 @@
         padding: 15px;
         margin-top: 20px;
         font-size: 0.9rem;
-        background: #0A3D91;
+        background: #091E5D;
         color: white;
         border-radius: 8px;
         box-shadow: 0 -2px 6px rgba(0, 0, 0, 0.1);
@@ -294,4 +390,108 @@
     .centered-content li {
         margin: 5px 0;
     }
+
+    .centered-content h2,
+    .centered-content p {
+        color: #333; 
+}
+
+    .tagline {
+        font-size: 1.2rem;
+        font-weight: 500;
+        margin-top: 1rem;
+    }
+
+    .description {
+        max-width: 600px;
+        margin: 1rem auto;
+        font-size: 1rem;
+        color: #444;
+    }
+
+    .cta-buttons {
+        margin-top: 2rem;
+    }
+
+    .cta-buttons .btn {
+        margin: 0 0.5rem;
+        padding: 0.75rem 1.5rem;
+        border-radius: 0.5rem;
+        text-decoration: none;
+        font-weight: 600;
+    }
+
+    .btn-primary {
+        background-color: #007bff; /* Bootstrap blue or your theme */
+        color: white;
+        border: none;
+        padding: 0.5rem 1.2rem;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+    }
+
+    .btn-secondary {
+        background-color: #E2E8F0;
+        color: #2D3748;
+    }
+
+    .collections-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+
+    .collection-card h3 {
+        margin: 0 0 0.5rem;
+        font-size: 1.2rem;
+    }
+
+    .collection-card p {
+        margin: 0 0 0.5rem;
+        font-size: 0.9rem;
+        color: #091E5D;
+    }
+
+    .collection-card .last-updated {
+        font-size: 0.85rem;
+        color: #777;
+        margin-bottom: 0.75rem;
+    }
+
+    .collection-card .btn-primary {
+        margin-top: auto; 
+        align-self: center;
+    }
+
+    .collection-card button {
+        margin-top: auto; 
+        align-self: center; 
+    }
+
+    .collection-card {
+        background: #f5f5f5;
+        padding: 1.5rem;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        color: #333;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        justify-content: space-between;
+        min-height: 180px;
+    }
+
+    .cta-buttons a {
+        color: #007bff !important;
+        text-decoration: none;
+        font-weight: bold;
+    }
+
+    .cta-buttons a:hover {
+        text-decoration: underline;
+    }
+
 </style>

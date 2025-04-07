@@ -15,12 +15,16 @@
 
 
 <div class="page">
+        <AuthorizeView>
+                    <Authorized>
     @if (!IsAuthPage)
     {
         <div class="sidebar">
             <NavMenu />
         </div>
     }
+        </Authorized>
+    </AuthorizeView>
     <main>
         <div class="top-row px-4">
             <div class="top-links">
