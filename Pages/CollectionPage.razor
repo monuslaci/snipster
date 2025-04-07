@@ -14,7 +14,7 @@
 
         <button class="toggle-btn left" @onclick="ToggleLeftPanel">⇆</button>
         <h4 class="collections-heading">Collections</h4>
-        <div class="search-bar">
+        <div class="search-bar-coll">
             <input class="searchbar" type="text" @bind="searchCollectionQuery" placeholder="Search collections..." />
             <div class="search-buttons">
                 <button class="create-collection-btn search" @onclick="OnSearchCollection">Search</button>
@@ -52,7 +52,13 @@
         <button class="toggle-btn middle" @onclick="ToggleMiddlePanel">⇆</button>
         <h4 class="snippets-heading">Snippets</h4>
         <div class="search-bar">
-            <input class="searchbar" type="text" @bind="searchSnippetQuery" placeholder="Search snippets in selected collection..." />
+            <div class="search-top-row">
+                <input class="searchbar" type="text" @bind="searchSnippetQuery" placeholder="Search snippets in selected collection..." />
+                <button class="icon-btn favourite-btn" @onclick="() => SearchFavouriteSnippets()">
+                    <i class="fa fa-star @(IsFavouriteSearch ? "yellow" : "white")"></i>
+                </button>
+            </div>
+
             <div class="search-buttons">
                 <button class="create-collection-btn search" @onclick="OnSearchSnippet">Search</button>
                 <button class="create-collection-btn cancel" @onclick="CancelSearchSnippet">Clear</button>
@@ -64,9 +70,15 @@
             {
                 @foreach (var snippet in snippets)
                 {
-                    <li class="snippet-item @(selectedSnippet != null && selectedSnippet.Id == snippet.Id ? "active" : "")"
-                    @onclick="() => LoadSnippetDetails(snippet.Id)">
-                        @snippet.Title
+                    <li class="snippet-item @(selectedSnippet != null && selectedSnippet.Id == snippet.Id ? "active" : "")">
+                        <span @onclick="() => LoadSnippetDetails(snippet.Id)">
+                            @snippet.Title
+                        </span>
+
+                        <!-- Favourite button with star icon -->
+                        <button class="icon-btn favourite-btn" @onclick="() => EditSnippetFavourite(snippet)">
+                            <i class="fa fa-star @(snippet.IsFavourite ? "yellow" : "white")"></i>
+                        </button>
                     </li>
                 }
             }

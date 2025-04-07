@@ -13,6 +13,7 @@ using Microsoft.AspNetCore.Components.Authorization;
 using static Microsoft.Extensions.Logging.EventSource.LoggingEventSource;
 using System.Collections.Generic;
 using static System.Runtime.InteropServices.JavaScript.JSType;
+using Microsoft.AspNetCore.Components.Web;
 
 namespace Snipster.Pages
 {
@@ -46,6 +47,7 @@ namespace Snipster.Pages
         private bool isLeftPanelOpen { get; set; } = true;
         private bool isMiddlePanelOpen { get; set; } = true;
         private string rightPanelWidth { get; set; } = "50%";
+        private bool IsFavouriteSearch { get; set; }
 
         protected override async Task OnInitializedAsync()
         {
@@ -181,7 +183,7 @@ namespace Snipster.Pages
         {
             editCollectionModal.ShowModal();
             editCollection = collection;
-        }
+        }   
 
         private async Task DeleteCollection(string collectionId)
         {
@@ -191,6 +193,17 @@ namespace Snipster.Pages
             spinnerModal.CloseModal();
         }
 
+        private async Task EditSnippetFavourite(Snippet snippet)
+        {
+            snippet.IsFavourite = !snippet.IsFavourite;
+            await _mongoDbService.SaveSnippetAsync(snippet);
+        }
+        private async Task SearchFavouriteSnippets()
+        {
+            IsFavouriteSearch = !IsFavouriteSearch;
+            await OnSearchSnippet();
+        }
+        
         private async Task HandleValidSubmitNew()
         {
             spinnerModal.ShowModal();
@@ -268,22 +281,24 @@ namespace Snipster.Pages
         {
             spinnerModal.ShowModal();
             //get the list of filtered snippets
-            List<Snippet> filteredSnippetlist = await _mongoDbService.SearchSnippetInSelectedCollectionAsync(searchSnippetQuery, selectedCollectionId);
+            List<Snippet> filteredSnippetlist = await _mongoDbService.SearchSnippetInSelectedCollectionAsync(searchSnippetQuery, selectedCollectionId, IsFavouriteSearch);
 
             // Clear the current snippets list and populate it with the new ones
             snippets.Clear();
 
 
             //betoltom az osszes szurt snppetet kozepre
+            if (filteredSnippetlist != null && filteredSnippetlist.Count > 0)
+            {
+                snippets.AddRange(filteredSnippetlist);
 
-            snippets.AddRange(filteredSnippetlist);
-
-            //kivalsztom az elso snippetet a listarol
-            string firstSnippetId = snippets != null ? snippets.FirstOrDefault().Id : "";
+                //kivalsztom az elso snippetet a listarol
+                string firstSnippetId = snippets != null ? snippets.FirstOrDefault().Id : "";
 
 
-            //betoltom annak a collectionjet bal oldalra
-            await LoadSnippetDetails(firstSnippetId);
+                //betoltom annak a collectionjet bal oldalra
+                await LoadSnippetDetails(firstSnippetId);
+            }
 
 
 
@@ -312,6 +327,7 @@ namespace Snipster.Pages
         {
            await LoadSnippets(selectedCollectionId);
 
+            IsFavouriteSearch = false;
             searchSnippetQuery = "";
             StateHasChanged();
         }

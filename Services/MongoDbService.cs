@@ -116,6 +116,7 @@ namespace Snipster.Services
                     .Set(s => s.Content, snippet.Content)
                     .Set(s => s.HashtagsInput, snippet.HashtagsInput)
                     .Set(s => s.LastModifiedDate, snippet.LastModifiedDate)
+                    .Set(s => s.IsFavourite, snippet.IsFavourite)
                     .Set(s => s.CreatedDate, snippet.CreatedDate);
                 await _snippetsCollection.UpdateOneAsync(filter, update);  // Update if exists
             }
@@ -129,6 +130,7 @@ namespace Snipster.Services
                 .Set(s => s.Content, snippet.Content)
                 .Set(s => s.HashtagsInput, snippet.HashtagsInput)
                 .Set(s => s.LastModifiedDate, snippet.LastModifiedDate)
+                .Set(s => s.IsFavourite, snippet.IsFavourite)
                 .Set(s => s.CreatedDate, snippet.CreatedDate);
 
             await _snippetsCollection.UpdateOneAsync(filter, update);
@@ -181,7 +183,7 @@ namespace Snipster.Services
         }
 
 
-        public async Task<List<Snippet>> SearchSnippetInSelectedCollectionAsync(string keyword, string collectionId)
+        public async Task<List<Snippet>> SearchSnippetInSelectedCollectionAsync(string keyword, string collectionId, bool isFavourite)
         {
 
             if (string.IsNullOrEmpty(collectionId))
@@ -198,19 +200,28 @@ namespace Snipster.Services
             {
                 return new List<Snippet>(); // No collection found or no snippets in collection
             }
+            var filters = new List<FilterDefinition<Snippet>>();
 
-            // Retrieve snippets that belong to the collection
-            var snippetFilter = Builders<Snippet>.Filter.In(s => s.Id, collection.SnippetIds);
+            // Filter for snippets in the collection
+            filters.Add(Builders<Snippet>.Filter.In(s => s.Id, collection.SnippetIds));
 
-            var keywordFilter = Builders<Snippet>.Filter.Or(
+            if (!string.IsNullOrWhiteSpace(keyword))
+            {
+                var keywordFilter = Builders<Snippet>.Filter.Or(
                 Builders<Snippet>.Filter.Regex(s => s.Title, new BsonRegularExpression(keyword, "i")),
                 Builders<Snippet>.Filter.Regex(s => s.Content, new BsonRegularExpression(keyword, "i")),
                 Builders<Snippet>.Filter.Regex(s => s.HashtagsInput, new BsonRegularExpression(keyword, "i"))
-            );
+                );
 
+                filters.Add(keywordFilter);
+            }
 
+            if (isFavourite != null)
+            {
+                filters.Add(Builders<Snippet>.Filter.Eq(s => s.IsFavourite, isFavourite));
+            }
             // Combine filters (ensure snippet belongs to the collection and matches the keyword)
-            var finalFilter = Builders<Snippet>.Filter.And(snippetFilter, keywordFilter);
+            var finalFilter = Builders<Snippet>.Filter.And(filters);
 
 
             return await _snippetsCollection.Find(finalFilter).ToListAsync();

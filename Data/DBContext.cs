@@ -35,6 +35,7 @@ namespace Snipster.Data
             public string HashtagsInput { get; set; }
 
             public string Language { get; set; }
+            public bool IsFavourite { get; set; } 
 
             public static ValidationResult ValidateHashtags(string hashtagsInput, ValidationContext context)
             {
