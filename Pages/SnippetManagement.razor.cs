@@ -25,6 +25,7 @@ namespace Snipster.Pages
         private Modal spinnerModal { get; set; }
         private Snippet selectedSnippet { get; set; }
         private string userEmail { get; set; }
+        private bool IsFavouriteSearch { get; set; }
 
         protected override async Task OnInitializedAsync()
         {
@@ -170,12 +171,18 @@ namespace Snipster.Pages
             await LoadSnippets();
         }
 
+        private async Task SearchFavouriteSnippets()
+        {
+            IsFavouriteSearch = !IsFavouriteSearch;
+            await OnSearchSnippet();
+        }
+
         private async Task OnSearchSnippet()
         {
             spinnerModal.ShowModal();
 
             // Instead of clearing first, directly assign the new filtered list
-            var results = await MongoDbService.SearchSnippetAsync(searchSnippetQuery, userEmail);
+            var results = await MongoDbService.SearchSnippetAsync(searchSnippetQuery, userEmail, IsFavouriteSearch);
 
             // Assign new results directly
             filteredSnippets = results;
@@ -188,6 +195,7 @@ namespace Snipster.Pages
             filteredSnippets = await MongoDbService.GetSnippetsByUserAsync(!string.IsNullOrEmpty(userEmail) ? userEmail : "");
 
             searchSnippetQuery = "";
+            IsFavouriteSearch = false;
             StateHasChanged();
         }
     }
