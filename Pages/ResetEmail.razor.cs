@@ -64,7 +64,7 @@ namespace Snipster.Pages
             if (Environment.GetEnvironmentVariable("Environment") == "Development")
                 resetUrl = $"https://localhost:7225/pw-reset?token={token}";
             else if (Environment.GetEnvironmentVariable("Environment") == "Production")
-                resetUrl = $"https://yourapp.com/pw-reset?token={token}";
+                resetUrl = $"https://snipster.co/pw-reset?token={token}";
 
             ResetEmailTemplate = Regex.Replace(ResetEmailTemplate, "<resetUrl>", resetUrl);
             ResetEmailTemplate = Regex.Replace(ResetEmailTemplate, "<Name>", name);

@@ -266,44 +266,51 @@ namespace Snipster.Pages
 
         private async Task OnSearchCollection()
         {
-            collections = await _mongoDbService.SearchCollectionAsync(searchCollectionQuery, userEmail);
-
-            if (collections != null)
+            if (!string.IsNullOrEmpty(searchCollectionQuery))
             {
-                selectedCollectionId = collections.FirstOrDefault().Id;
-                await LoadSnippets(selectedCollectionId);
+                collections = await _mongoDbService.SearchCollectionAsync(searchCollectionQuery, userEmail);
+
+                if (collections != null)
+                {
+                    selectedCollectionId = collections.FirstOrDefault().Id;
+                    await LoadSnippets(selectedCollectionId);
+                }
+
+                StateHasChanged();
             }
 
-            StateHasChanged();
         }
 
         private async Task OnSearchSnippet()
         {
-            spinnerModal.ShowModal();
-            //get the list of filtered snippets
-            List<Snippet> filteredSnippetlist = await _mongoDbService.SearchSnippetInSelectedCollectionAsync(searchSnippetQuery, selectedCollectionId, IsFavouriteSearch);
-
-            // Clear the current snippets list and populate it with the new ones
-            snippets.Clear();
-
-
-            //betoltom az osszes szurt snppetet kozepre
-            if (filteredSnippetlist != null && filteredSnippetlist.Count > 0)
+            if (!string.IsNullOrEmpty(searchSnippetQuery))
             {
-                snippets.AddRange(filteredSnippetlist);
+                spinnerModal.ShowModal();
+                //get the list of filtered snippets
+                List<Snippet> filteredSnippetlist = await _mongoDbService.SearchSnippetInSelectedCollectionAsync(searchSnippetQuery, selectedCollectionId, IsFavouriteSearch);
 
-                //kivalsztom az elso snippetet a listarol
-                string firstSnippetId = snippets != null ? snippets.FirstOrDefault().Id : "";
-
-
-                //betoltom annak a collectionjet bal oldalra
-                await LoadSnippetDetails(firstSnippetId);
-            }
+                // Clear the current snippets list and populate it with the new ones
+                snippets.Clear();
 
 
+                //betoltom az osszes szurt snppetet kozepre
+                if (filteredSnippetlist != null && filteredSnippetlist.Count > 0)
+                {
+                    snippets.AddRange(filteredSnippetlist);
 
-            StateHasChanged();
-            spinnerModal.CloseModal();           
+                    //kivalsztom az elso snippetet a listarol
+                    string firstSnippetId = snippets != null ? snippets.FirstOrDefault().Id : "";
+
+
+                    //betoltom annak a collectionjet bal oldalra
+                    await LoadSnippetDetails(firstSnippetId);
+                }
+
+
+
+                StateHasChanged();
+                spinnerModal.CloseModal();
+            }        
         }
 
         private async Task CancelSearchCollection()

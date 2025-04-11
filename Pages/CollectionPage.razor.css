@@ -7,14 +7,7 @@
 }
 
 
-.collection-list, .snippet-list, .snippet-details {
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    padding: 20px;
-    background-color: #f9f9f9;
-    transition: width 0.3s ease-in-out;
-    position: relative;
-}
+
 
 
 .collection-list {
@@ -24,6 +17,7 @@
     flex-direction: column;
     margin: 0; /* Remove any margin to connect to the edges */
     color: white;
+    flex: 0 0 30%;
 }
 
 .snippet-list {
@@ -34,17 +28,8 @@
     margin: 0; /* Remove any margin to connect to the edges */
 }
 
-.collection-list {
-    width: 20%;
-}
 
-.snippet-list {
-    width: 30%;
-}
 
-.snippet-details {
-    width: 50%;
-}
 
 .collections-heading, .snippets-heading {
     font-size: 18px;
@@ -94,6 +79,10 @@
 }
 
 .panel[style*="5%"] .searchbar {
+    display: none;
+}
+
+.panel[style*="5%"] .icon-btn {
     display: none;
 }
 
@@ -149,7 +138,7 @@
 }
 
 .snippet-item, .collection-item {
-    padding: 10px;
+    padding: 12px;
     cursor: pointer;
     border-radius: 5px;
     margin: 5px 0;
@@ -159,6 +148,7 @@
     align-items: center;
     border: 1px solid #ccd5e0;
     color: #154360;
+    font-size: 1rem;
 }
 
 .snippet-item:hover, .collection-item:hover {
@@ -306,6 +296,7 @@
     align-self: flex-start;
     padding: 6px 12px;
     margin-right: 15px;
+    box-sizing: border-box;
 }
 
 .btn-submit:hover {
@@ -523,6 +514,11 @@
 .yellow {
     color: #FFD700;
 }
+.input-element,
+.dropdown,
+.textarea {
+    margin-bottom: 12px;
+}
 
 
 @media (max-width: 768px) {
@@ -538,5 +534,32 @@
     .dropdown,
     .textarea {
         width: 100%;
+    }
+
+    .panel, .snippet-list, .section .collection-list { /* adjust selector based on your layout */
+        width: 100% !important;
+        max-width: 100%;
+        flex: 1 1 100%;
+        height: auto;
+        max-height: 100vh;
+    }
+    .page-layout {
+        flex-direction: column;
+        align-items: stretch;
+        height: auto;
+        width: 106% !important;
+    }
+    .button-row {
+        display: flex;
+        gap: 0.5rem;
+        justify-content: space-between;
+    }
+    .btn-submit,
+    .btn-delete {
+        width: 48%; 
+    }
+    .panel {
+        -webkit-overflow-scrolling: touch;
+        scroll-behavior: smooth;
     }
 }

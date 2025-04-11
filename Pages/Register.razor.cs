@@ -65,7 +65,7 @@ namespace Snipster.Pages
             if (Environment.GetEnvironmentVariable("Environment") == "Development")
                 url = $"https://localhost:7225/validate-registration?token={token}";
             else if (Environment.GetEnvironmentVariable("Environment") == "Production")
-                url = $"https://yourapp.com/pvalidate-registration?token={token}";
+                url = $"https://snipster.co/validate-registration?token={token}";
 
             RegistrationEmailTemplate = Regex.Replace(RegistrationEmailTemplate, "<url>", url);
             RegistrationEmailTemplate = Regex.Replace(RegistrationEmailTemplate, "<Name>", name);

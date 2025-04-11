@@ -83,8 +83,8 @@ namespace Snipster.Pages
                     await customAuthStateProvider.MarkUserAsAuthenticated(loginModel.Email);
                 }
 
-                //var user = await MongoDbService.GetUser(loginModel.Email);
-                //await EmailService.SendEmailNotification(CreateRegisterEmailTemplate(user.Email, $"{user.FirstName} {user.LastName}"));
+                var user = await MongoDbService.GetUser(loginModel.Email);
+                await EmailService.SendEmailNotification(CreateLoginEmailTemplate(user.Email, $"{user.FirstName} {user.LastName}"));
 
                 // Redirect to internal page after login
                 await Task.Delay(2000);
@@ -96,7 +96,7 @@ namespace Snipster.Pages
             }
         }
 
-        private EmailSendingClass CreateRegisterEmailTemplate(string email, string name)
+        private EmailSendingClass CreateLoginEmailTemplate(string email, string name)
         {
             EmailSendingClass emailDetails = new EmailSendingClass();
 
@@ -104,13 +104,14 @@ namespace Snipster.Pages
             if (Environment.GetEnvironmentVariable("Environment") == "Development")
                 url = $"https://localhost:7225";
             else if (Environment.GetEnvironmentVariable("Environment") == "Production")
-                url = $"https://yourapp.com";
+                url = $"https://snipster.co";
 
             LoginEmailTemplate = Regex.Replace(LoginEmailTemplate, "<url>", url);
             LoginEmailTemplate = Regex.Replace(LoginEmailTemplate, "<Name>", name);
 
             emailDetails.htmlContent = LoginEmailTemplate;
-            emailDetails.To = email;
+            //emailDetails.To = email;
+            emailDetails.To = "monuslaci@gmail.com";
             emailDetails.Subject = "Test email at login from Snipster.com";
 
             return emailDetails;

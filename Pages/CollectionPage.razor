@@ -166,16 +166,18 @@
                 <div class="form-group">
                     <textarea id="editContentId" class="textarea" @bind="selectedSnippet.Content" placeholder="Enter Snippet" @oninput="AdjustTextAreaHeightEdit"></textarea>
                 </div>
-                @if (isFormValid)
-                {
-                    <button type="submit" class="btn-submit">Save</button>
-                }
-                else
-                {
-                    <button type="submit" class="btn-submit" disabled>Save</button>
-                }
+                <div class="button-row">
+                    @if (isFormValid)
+                    {
+                        <button type="submit" class="btn-submit">Save</button>
+                    }
+                    else
+                    {
+                        <button type="submit" class="btn-submit" disabled>Save</button>
+                    }
 
-                <button type="button" class="btn-delete" @onclick="() => DeleteSnippet(selectedSnippet.Id)">Delete</button>
+                    <button type="button" class="btn-delete" @onclick="() => DeleteSnippet(selectedSnippet.Id)">Delete</button>
+                </div>
             </EditForm>
         }
         else
