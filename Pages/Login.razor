@@ -9,47 +9,48 @@
 @inject IJSRuntime JSRuntime
 
 
+<div class="login-wrapper">
+    <div class="login-card">
 
-<div class="login-card">
 
 
+        <div class="logo-container">
+            <img src="/images/logo.jpg" alt="Logo" class="login-logo" />
+        </div>
 
-    <div class="logo-container">
-        <img src="/images/logo.jpg" alt="Logo" class="login-logo" />
+        <h3 class="login-title">Login</h3>
+
+
+        <EditForm Model="loginModel" OnValidSubmit="HandleLogin">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+
+            <div class="form-group">
+                <label for="email">Email</label>
+                <InputText id="email" class="form-control input-short" @bind-Value="loginModel.Email" />
+            </div>
+
+            <div class="form-group">
+                <label for="password">Password</label>
+                <InputText type="password" id="password" class="form-control input-short" @bind-Value="loginModel.Password" />
+            </div>
+
+            <button type="submit" class="btn btn-primary">Login</button>
+
+            <div class="forgot-email">
+                <a href="/reset-email">Forgot Password?</a>
+            </div>
+
+            <div class="register-link">
+                <span>Don't have an account?</span> <a href="/register">Register here</a>
+            </div>
+
+            <div class="register-link">
+                <span>What is Snipster?</span> <a href="/">Click here to learn about it</a>
+            </div>
+        </EditForm>
+
     </div>
-
-    <h3 class="login-title">Login</h3>
-
-
-    <EditForm Model="loginModel" OnValidSubmit="HandleLogin">
-        <DataAnnotationsValidator />
-        <ValidationSummary />
-
-        <div class="form-group">
-            <label for="email">Email</label>
-            <InputText id="email" class="form-control input-short" @bind-Value="loginModel.Email" />
-        </div>
-
-        <div class="form-group">
-            <label for="password">Password</label>
-            <InputText type="password" id="password" class="form-control input-short" @bind-Value="loginModel.Password" />
-        </div>
-
-        <button type="submit" class="btn btn-primary">Login</button>
-
-        <div class="forgot-email">
-            <a href="/reset-email">Forgot Password?</a>
-        </div>
-
-        <div class="register-link">
-            <span>Don't have an account?</span> <a href="/register">Register here</a>
-        </div>
-
-        <div class="register-link">
-            <span>What is Snipster?</span> <a href="/">Click here to learn about it</a>
-        </div>
-    </EditForm>
-
 </div>
 
 
