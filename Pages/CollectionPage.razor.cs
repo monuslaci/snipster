@@ -238,11 +238,12 @@ namespace Snipster.Pages
             user.MyCollectionIds.Add(selectedCollectionId);
             await _mongoDbService.UpdateUser(user);
 
+            //add the snippet id to the users' SharedSnippetIds
             if (newSnippet.SharedWith.Any())
             {
-                foreach (var item in newSnippet.SharedWith)
+                foreach (var sharedEmail in newSnippet.SharedWith)
                 {
-                    var modifiedUser = await _mongoDbService.GetUser(userEmail);
+                    var modifiedUser = await _mongoDbService.GetUser(sharedEmail);
                     if (modifiedUser != null)
                     {
                         modifiedUser.SharedSnippetIds.Add(snippetId);
@@ -280,6 +281,23 @@ namespace Snipster.Pages
             }
             selectedSnippet.LastModifiedDate = DateTime.Now;
             await _mongoDbService.SaveSnippetAsync(selectedSnippet);
+
+            //add the snippet id to the users' SharedSnippetIds
+            if (selectedSnippet.SharedWith.Any())
+            {
+                foreach (var sharedEmail in selectedSnippet.SharedWith)
+                {
+                    var modifiedUser = await _mongoDbService.GetUser(sharedEmail);
+                    if (modifiedUser != null)
+                    {
+                        modifiedUser.SharedSnippetIds.Add(selectedSnippet.Id);
+                        await _mongoDbService.UpdateUser(user);
+                    }
+
+                }
+            }
+
+
             isAddingSnippet = false;
             await LoadSnippets(selectedCollectionId);
             spinnerModal.CloseModal();
@@ -289,6 +307,23 @@ namespace Snipster.Pages
         {
             spinnerModal.ShowModal();
             await _mongoDbService.DeleteSnippetAsync(id);
+
+            //delete the snippet id from the users' SharedSnippetIds
+            var snippet = await _mongoDbService.GetSnippetByIdAsync(id);
+            if (snippet.SharedWith.Any())
+            {
+                foreach (var sharedEmail in selectedSnippet.SharedWith)
+                {
+                    var modifiedUser = await _mongoDbService.GetUser(sharedEmail);
+                    if (modifiedUser != null)
+                    {
+                        modifiedUser.SharedSnippetIds.Remove(selectedSnippet.Id);
+                        await _mongoDbService.UpdateUser(user);
+                    }
+                }
+            }
+
+            //reload the collection without the snippet
             await LoadSnippets(selectedCollectionId);
 
             var snippetIds = await _mongoDbService.GetSnippetIdsByCollectionAsync(selectedCollectionId);
