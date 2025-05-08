@@ -26,6 +26,13 @@ namespace Snipster.Pages
         private Snippet selectedSnippet { get; set; }
         private string userEmail { get; set; }
         private bool IsFavouriteSearch { get; set; }
+        private int currentPage = 1;
+        private int pageSize = 10;
+        private IEnumerable<Snippet> PagedSnippets => filteredSnippets
+                                                        .Skip((currentPage - 1) * pageSize)
+                                                        .Take(pageSize);
+
+        private int TotalPages => (int) Math.Ceiling((double) (filteredSnippets?.Count() ?? 0) / pageSize);
 
         protected override async Task OnInitializedAsync()
         {
@@ -198,5 +205,16 @@ namespace Snipster.Pages
             IsFavouriteSearch = false;
             StateHasChanged();
         }
+
+        private void GoToPage(int page)
+        {
+            if (page >= 1 && page <= TotalPages)
+            {
+                currentPage = page;
+            }
+        }
+
+        private void NextPage() => GoToPage(currentPage + 1);
+        private void PreviousPage() => GoToPage(currentPage - 1);
     }
 }

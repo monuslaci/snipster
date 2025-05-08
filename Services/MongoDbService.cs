@@ -291,6 +291,34 @@ namespace Snipster.Services
             return await _collectionsCollection.Find(filter).ToListAsync();
         }
 
+        public async Task<List<Collection>> GetSharedCollectionsForUserAsync(string email)
+        {
+            var user = await _usersCollection.Find(u => u.Email == email).FirstOrDefaultAsync();
+
+            if (user == null || user.SharedSnippetIds == null || !user.SharedSnippetIds.Any())
+                return new List<Collection>();
+
+            // Step 1: Fetch the snippets
+            var snippetFilter = Builders<Snippet>.Filter.In(s => s.Id, user.SharedSnippetIds);
+            var sharedSnippets = await _snippetsCollection.Find(snippetFilter).ToListAsync();
+
+            // Step 2: Get distinct collection IDs from snippets
+            var sharedCollectionIds = sharedSnippets
+                .Where(s => !string.IsNullOrEmpty(s.CollectionId))
+                .Select(s => s.CollectionId)
+                .Distinct()
+                .ToList();
+
+            if (!sharedCollectionIds.Any())
+                return new List<Collection>();
+
+            // Step 3: Fetch collections
+            var collectionFilter = Builders<Collection>.Filter.In(c => c.Id, sharedCollectionIds);
+            var sharedCollections = await _collectionsCollection.Find(collectionFilter).ToListAsync();
+
+            return sharedCollections;
+        }
+
         public async Task<List<Collection>> GetLast5CollectionsForUserAsync(string email)
         {
             var collections = await _collectionsCollection

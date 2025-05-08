@@ -30,7 +30,7 @@
 @if (filteredSnippets!= null &&  filteredSnippets.Any())
 {
     <div class="snippet-container">
-        @foreach (var snippet in filteredSnippets)
+        @foreach (var snippet in PagedSnippets)
         {
             <div class="snippet-card">
                 <div class="snippet-header">
@@ -64,6 +64,13 @@ else
 {
     <p class="no-snippets">No snippets found..</p>
 }
+
+    <div class="pagination-controls">
+        <button @onclick="PreviousPage" disabled="@((currentPage == 1))">Previous</button>
+        <span>Page @currentPage of @TotalPages</span>
+        <button @onclick="NextPage" disabled="@((currentPage == TotalPages))">Next</button>
+    </div>
+
 </div>
 
 <!-- Modal for creating snippet -->

@@ -45,6 +45,26 @@
         {
             <p class="no-snippets">No collections found.</p>
         }
+
+
+        @if (sharedCollections != null && sharedCollections.Any())
+        {
+            <hr class="divider" />
+            <h5 class="shared-collections-heading">Shared Collections</h5>
+
+            <ul>
+                @foreach (var sharedCollection in sharedCollections)
+                {
+                    <li class="collection-item shared @(selectedCollectionId != null && selectedCollectionId == sharedCollection.Id ? "active" : "")">
+                        <span @onclick="() => LoadSnippets(sharedCollection.Id)">
+                            @sharedCollection.Title
+                        </span>
+                    </li>
+                }
+            </ul>
+        }
+
+
     </div>
 
     <!-- Middle Section: Snippet List -->

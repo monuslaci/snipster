@@ -25,6 +25,7 @@ namespace Snipster.Pages
         [Inject] MongoDbService _mongoDbService { get; set; }
 
         private List<Collection> collections = new List<Collection>();
+        private List<Collection> sharedCollections = new List<Collection>();
         private Collection newCollection = new Collection();
         private Collection editCollection = new Collection();
         private Snippet newSnippet = new Snippet();
@@ -81,7 +82,10 @@ namespace Snipster.Pages
                 spinnerModal.IsSpinner = true;
                 spinnerModal.ShowModal();
 
+                //get the user's collections
                 collections = await _mongoDbService.GetCollectionsForUserAsync(userEmail);
+                //get the collections that are shared with them
+                sharedCollections = await _mongoDbService.GetSharedCollectionsForUserAsync(userEmail);
 
                 if (!string.IsNullOrEmpty(selectedCollectionId))
                     await LoadSnippets(selectedCollectionId);
