@@ -14,6 +14,7 @@ using static Microsoft.Extensions.Logging.EventSource.LoggingEventSource;
 using System.Collections.Generic;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 using Microsoft.AspNetCore.Components.Web;
+using static Snipster.Data.CommonClasses;
 
 namespace Snipster.Pages
 {
@@ -29,6 +30,7 @@ namespace Snipster.Pages
         private Snippet newSnippet = new Snippet();
         private List<Snippet> snippets = new List<Snippet>();
         private Snippet selectedSnippet { get; set; }
+        private Users user { get; set; }
         private bool isAddingSnippet { get; set; } = false; 
         private string? selectedCollectionId { get; set; }
         private string? selectedSnippetId { get; set; }
@@ -73,6 +75,8 @@ namespace Snipster.Pages
             {
                 var authState = await AuthStateProvider.GetAuthenticationStateAsync();
                 userEmail = authState.User.Identity?.Name;
+
+                user = await _mongoDbService.GetUser(userEmail);
 
                 spinnerModal.IsSpinner = true;
                 spinnerModal.ShowModal();
@@ -204,14 +208,18 @@ namespace Snipster.Pages
             await OnSearchSnippet();
         }
         
-        private async Task HandleValidSubmitNew()
+        private async Task HandleValidSubmitNew() //new snippet
         {
             spinnerModal.ShowModal();
+
             // Save the new snippet and get the generated snippet ID
             var snippetId = await _mongoDbService.AddSnippetAsync(newSnippet);
             if (selectedCollectionIdCreate == null)
                 selectedCollectionIdCreate = selectedCollectionId;
             var selectedCollection = collections.FirstOrDefault(c => c.Id == selectedCollectionIdCreate);
+
+
+            //update collection
             if (selectedCollection != null)
             {
                 // Add the new snippet ID to the collection's SnippetIds list
@@ -219,10 +227,36 @@ namespace Snipster.Pages
                 selectedCollection.LastModifiedDate = DateTime.Now;
                 await _mongoDbService.UpdateCollectionAsync(selectedCollection);
             }
+
+            //update snippet
             newSnippet.CreatedDate = DateTime.Now;
             newSnippet.LastModifiedDate = DateTime.Now;
+            newSnippet.CollectionId = selectedCollectionId;
             await _mongoDbService.SaveSnippetAsync(newSnippet);
+
+            //add collectionId to user's my collection IDs
+            user.MyCollectionIds.Add(selectedCollectionId);
+            await _mongoDbService.UpdateUser(user);
+
+            if (newSnippet.SharedWith.Any())
+            {
+                foreach (var item in newSnippet.SharedWith)
+                {
+                    var modifiedUser = await _mongoDbService.GetUser(userEmail);
+                    if (modifiedUser != null)
+                    {
+                        modifiedUser.SharedSnippetIds.Add(snippetId);
+                        await _mongoDbService.UpdateUser(user);
+                    }
+
+                }
+            }
+
+            
+
             isAddingSnippet = false;
+
+
             await LoadSnippets(selectedCollectionId);
             selectedSnippet = newSnippet;
             adjustHeightNeeded = true;

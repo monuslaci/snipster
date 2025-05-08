@@ -117,6 +117,7 @@ namespace Snipster.Services
                     .Set(s => s.HashtagsInput, snippet.HashtagsInput)
                     .Set(s => s.LastModifiedDate, snippet.LastModifiedDate)
                     .Set(s => s.IsFavourite, snippet.IsFavourite)
+                    .Set(s => s.SharedWithInput, snippet.SharedWithInput)
                     .Set(s => s.CreatedDate, snippet.CreatedDate);
                 await _snippetsCollection.UpdateOneAsync(filter, update);  // Update if exists
             }
@@ -131,6 +132,7 @@ namespace Snipster.Services
                 .Set(s => s.HashtagsInput, snippet.HashtagsInput)
                 .Set(s => s.LastModifiedDate, snippet.LastModifiedDate)
                 .Set(s => s.IsFavourite, snippet.IsFavourite)
+                .Set(s => s.SharedWithInput, snippet.SharedWithInput)
                 .Set(s => s.CreatedDate, snippet.CreatedDate);
 
             await _snippetsCollection.UpdateOneAsync(filter, update);
@@ -273,9 +275,20 @@ namespace Snipster.Services
             return await _collectionsCollection.Find(_ => true).ToListAsync();
         }
 
+        //public async Task<List<Collection>> GetCollectionsForUserAsync(string email)
+        //{
+        //    return await _collectionsCollection.Find(c => c.CreatedBy == email).ToListAsync();
+        //}
+
         public async Task<List<Collection>> GetCollectionsForUserAsync(string email)
         {
-            return await _collectionsCollection.Find(c => c.CreatedBy == email).ToListAsync();
+            var user = await _usersCollection.Find(u => u.Email == email).FirstOrDefaultAsync();
+
+            if (user == null || user.MyCollectionIds == null || !user.MyCollectionIds.Any())
+                return new List<Collection>();
+
+            var filter = Builders<Collection>.Filter.In(c => c.Id, user.MyCollectionIds);
+            return await _collectionsCollection.Find(filter).ToListAsync();
         }
 
         public async Task<List<Collection>> GetLast5CollectionsForUserAsync(string email)
@@ -381,7 +394,9 @@ namespace Snipster.Services
             var filter = Builders<Users>.Filter.Eq(c => c.Email, user.Email);
             var update = Builders<Users>.Update.Set(c => c.RegistrationConfirmed, user.RegistrationConfirmed)
                                                             .Set(c => c.FirstName, user.FirstName)
-                                                            .Set(c => c.LastName, user.LastName);
+                                                            .Set(c => c.LastName, user.LastName)
+                                                            .Set(c => c.MyCollectionIds, user.MyCollectionIds)
+                                                            .Set(c => c.SharedSnippetIds, user.SharedSnippetIds);
 
             await _usersCollection.UpdateOneAsync(filter, update);
         }
