@@ -27,6 +27,7 @@ namespace Snipster.Data
             [Required(ErrorMessage = "Title is required.")]
             public string Title { get; set; }
             public DateTime CreatedDate { get; set; }
+            public string CreatedBy { get; set; }
             public DateTime LastModifiedDate { get; set; }
 
             [Required(ErrorMessage = "Content  is required.")]

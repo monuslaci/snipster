@@ -236,6 +236,7 @@ namespace Snipster.Pages
             newSnippet.CreatedDate = DateTime.Now;
             newSnippet.LastModifiedDate = DateTime.Now;
             newSnippet.CollectionId = selectedCollectionId;
+            newSnippet.CreatedBy = user.Id;
             await _mongoDbService.SaveSnippetAsync(newSnippet);
 
             //add collectionId to user's my collection IDs

@@ -19,6 +19,10 @@
             <button class="icon-btn favourite-btn" @onclick="() => SearchFavouriteSnippets()">
                 <i class="fa fa-star @(IsFavouriteSearch ? "yellow" : "white")"></i>
             </button>
+
+            <button class="icon-btn shared-btn" @onclick="ToggleSharedSnippets">
+                <i class="fa fa-share-alt @(IncludeSharedSnippets ? "yellow" : "white")"></i>
+            </button>
         </div>
 
         <div class="search-buttons">

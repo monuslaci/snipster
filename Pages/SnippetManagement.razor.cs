@@ -13,6 +13,7 @@ namespace Snipster.Pages
         [Inject] MongoDbService MongoDbService { get; set; }
         [Inject] NavigationManager Navigation { get; set; }
         [Inject] private AuthenticationStateProvider AuthStateProvider { get; set; }
+        private bool IncludeSharedSnippets { get; set; } = false;
         private string searchQuery { get; set; }
         private List<Snippet> filteredSnippets = new List<Snippet>();
         private Dictionary<string, IEnumerable<string>> relatedCollections = new Dictionary<string, IEnumerable<string>>();
@@ -59,9 +60,16 @@ namespace Snipster.Pages
         }
         private async Task LoadSnippets()
         {
-            //filteredSnippets = await MongoDbService.GetAllSnippetsAsync();
-
+            //load own snippets
             filteredSnippets = await MongoDbService.GetSnippetsByUserAsync(userEmail);
+
+            if (IncludeSharedSnippets)
+            {
+                //load shared snippets
+                var filteredSharedSnippets = await MongoDbService.GetSharedSnippetsByUserAsync(userEmail);
+                filteredSnippets.AddRange(filteredSharedSnippets);
+            }
+
             await LoadRelatedCollections();
         }
 
@@ -184,13 +192,27 @@ namespace Snipster.Pages
             await OnSearchSnippet();
         }
 
+        private async Task ToggleSharedSnippets()
+        {
+            IncludeSharedSnippets = !IncludeSharedSnippets;
+            await OnSearchSnippet();
+        }
+
         private async Task OnSearchSnippet()
         {
             spinnerModal.ShowModal();
 
             // Instead of clearing first, directly assign the new filtered list
+            //search in the own collections
             var results = await MongoDbService.SearchSnippetAsync(searchSnippetQuery, userEmail, IsFavouriteSearch);
 
+            //search in the shared snippets
+            if (IncludeSharedSnippets)
+            {
+                List<Snippet> sharedResults = await MongoDbService.SearchSharedSnippetAsync(searchSnippetQuery, userEmail, IsFavouriteSearch);
+                results.AddRange(sharedResults);
+            }
+            
             // Assign new results directly
             filteredSnippets = results;
 
