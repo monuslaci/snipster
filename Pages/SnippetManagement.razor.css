@@ -29,35 +29,35 @@ body {
     cursor: pointer;
 }
 
-    .create-collection-btn:hover, .create-snippet-btn:hover {
-        display: block;
-        margin-bottom: 15px;
-        padding: 10px;
-        background-color: rgb(83, 114, 201, 0.4);
-        color: white;
-        border: none;
-        border-radius: 5px;
-        cursor: pointer;
-    }
+.create-collection-btn:hover, .create-snippet-btn:hover {
+    display: block;
+    margin-bottom: 15px;
+    padding: 10px;
+    background-color: rgb(83, 114, 201, 0.4);
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
 
 .snippet-table {
     width: 100%;
     border-collapse: collapse;
 }
 
-    .snippet-table th, .snippet-table td {
-        padding: 8px;
-        text-align: left;
-        border-bottom: 1px solid #ddd;
-    }
+.snippet-table th, .snippet-table td {
+    padding: 8px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
 
-    .snippet-table th {
-        background-color: #f2f2f2;
-    }
+.snippet-table th {
+    background-color: #f2f2f2;
+}
 
-    .snippet-table td button {
-        margin-right: 5px;
-    }
+.snippet-table td button {
+    margin-right: 5px;
+}
 
 select[multiple] {
     height: 200px;
@@ -75,11 +75,11 @@ select[multiple] {
     flex-direction: column;
 }
 
-    .form-group label {
-        font-weight: bold;
-        margin-bottom: 0.3em;
-        color: #333;
-    }
+.form-group label {
+    font-weight: bold;
+    margin-bottom: 0.3em;
+    color: #333;
+}
 
 .form-input {
     padding: 0.8em;
@@ -130,12 +130,11 @@ select[multiple] {
 
 
 .snippet-card {
-    background: #ffffff;
+    background: #F7F7F7;
     border-radius: 12px;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
     padding: 20px;
     width: 600px;
-
     max-width: 600px;
     max-height: 320px;
     display: flex;
@@ -337,9 +336,12 @@ select[multiple] {
     pointer-events: none;
 }
 
-.icon-link:hover .tooltip,
-.logout-container:hover .tooltip {
+button.icon-btn:hover .tooltip {
     opacity: 1;
+}
+
+.icon-btn {
+    position: relative;
 }
 
 @media (max-width: 768px) {
