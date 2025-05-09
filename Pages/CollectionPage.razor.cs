@@ -147,17 +147,35 @@ namespace Snipster.Pages
             // Clear the current snippets list and populate it with the new ones
             snippets.Clear();
 
-            if (snippetIds != null)
+            if (sharedCollections.Where(c => c.Id == selectedCollectionId).Count() > 0)
             {
-                foreach (var snippetId in snippetIds)
+                if (snippetIds != null)
                 {
-                    var snippet = await _mongoDbService.GetSnippetByIdAsync(snippetId);
-                    if (snippet != null)
+                    foreach (var snippetId in snippetIds)
                     {
-                        snippets.Add(snippet);
+                        if (user.SharedSnippetIds.Contains(snippetId))
+                        {
+                            var snippet = await _mongoDbService.GetSnippetByIdAsync(snippetId);
+                            snippets.Add(snippet);
+                        }
                     }
                 }
             }
+            else 
+            {
+                if (snippetIds != null)
+                {
+                    foreach (var snippetId in snippetIds)
+                    {
+                        var snippet = await _mongoDbService.GetSnippetByIdAsync(snippetId);
+                        if (snippet != null)
+                        {
+                            snippets.Add(snippet);
+                        }
+                    }
+                }
+            }
+
             selectedCollectionIdCreate = selectedCollectionId;
             string firstSnippetId = snippetIds != null ? snippetIds.FirstOrDefault() : "";
             await LoadSnippetDetails(firstSnippetId);
