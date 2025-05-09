@@ -140,7 +140,8 @@ try
 
     //builder.Services.AddSingleton<IMongoDbService, MongoDbService>();
     builder.Services.AddBlazoredToast();
-
+    builder.Services.AddServerSideBlazor()
+    .AddCircuitOptions(options => { options.DetailedErrors = true; });
 
 }
 catch (Exception ex)
