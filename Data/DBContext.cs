@@ -178,6 +178,11 @@ namespace Snipster.Data
             [MinLength(8, ErrorMessage = "Password must be at least 8 characters")]
             [RegularExpression(@"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$",  ErrorMessage = "Password must contain at least one uppercase letter, one lowercase letter and one number.")]
             public string Password { get; set; }
+
+            [Required(ErrorMessage = "Please type in the Password again")]
+            [MinLength(8, ErrorMessage = "Password must be at least 8 characters")]
+            [RegularExpression(@"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$", ErrorMessage = "Password must contain at least one uppercase letter, one lowercase letter and one number.")]
+            public string PasswordRepeat { get; set; }
         }
 
         public class EditUserDTO
