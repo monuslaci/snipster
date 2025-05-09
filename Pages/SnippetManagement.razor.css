@@ -137,7 +137,7 @@ select[multiple] {
     width: 600px;
 
     max-width: 600px;
-    max-height: 300px;
+    max-height: 320px;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
@@ -223,14 +223,14 @@ select[multiple] {
     margin-bottom: 15px;
 }
 
-    .search-bar input {
-        padding: 8px;
-        border: 1px solid var(--primary-color);
-        border-radius: 6px;
-        font-size: 14px;
-        width: 55vh;
-        box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
-    }
+.search-bar input {
+    padding: 8px;
+    border: 1px solid var(--primary-color);
+    border-radius: 6px;
+    font-size: 14px;
+    width: 55vh;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+}
 
 .search-buttons {
     display: flex;
@@ -318,6 +318,28 @@ select[multiple] {
 .pagination-controls button:disabled {
     background-color: #ccc;
     cursor: not-allowed;
+}
+
+.tooltip {
+    position: absolute; 
+    bottom: -25px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: black;
+    color: white;
+    text-align: center;
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-size: 12px;
+    white-space: nowrap;
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out;
+    pointer-events: none;
+}
+
+.icon-link:hover .tooltip,
+.logout-container:hover .tooltip {
+    opacity: 1;
 }
 
 @media (max-width: 768px) {

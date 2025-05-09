@@ -95,10 +95,13 @@
                             @snippet.Title
                         </span>
 
-                        <!-- Favourite button with star icon -->
-                        <button class="icon-btn favourite-btn" @onclick="() => EditSnippetFavourite(snippet)">
-                            <i class="fa fa-star @(snippet.IsFavourite ? "yellow" : "white")"></i>
-                        </button>
+                        @if (sharedCollections != null && sharedCollections.Where(c => c.Id == selectedCollectionId).Count() == 0)
+                        {
+                            <!-- Favourite button with star icon -->
+                            <button class="icon-btn favourite-btn" @onclick="() => EditSnippetFavourite(snippet)">
+                                <i class="fa fa-star @(snippet.IsFavourite ? "yellow" : "white")"></i>
+                            </button>                          
+                        }
                     </li>
                 }
             }

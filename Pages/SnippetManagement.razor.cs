@@ -225,9 +225,11 @@ namespace Snipster.Pages
                 List<Snippet> sharedResults = await MongoDbService.SearchSharedSnippetAsync(searchSnippetQuery, userEmail, IsFavouriteSearch);
                 results.AddRange(sharedResults);
             }
-            
+
             // Assign new results directly
             filteredSnippets = results;
+
+            await AdUserNamesToSnippets(filteredSnippets);
 
             StateHasChanged();
             spinnerModal.CloseModal();
