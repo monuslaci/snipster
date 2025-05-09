@@ -249,23 +249,23 @@ select[multiple] {
     text-align: center;
 }
 
-.search-buttons .create-collection-btn.search {
-    background-color: #004080; /* Deep blue */
-    color: white;
-}
+    .search-buttons .create-collection-btn.search {
+        background-color: #004080; /* Deep blue */
+        color: white;
+    }
 
-.search-buttons .create-collection-btn.search:hover {
-    background-color: #003366; /* Darker blue */
-}
+        .search-buttons .create-collection-btn.search:hover {
+            background-color: #003366; /* Darker blue */
+        }
 
-.search-buttons .create-collection-btn.cancel {
-    background-color: #D9534F; /* Soft red */
-    color: white;
-}
+    .search-buttons .create-collection-btn.cancel {
+        background-color: #D9534F; /* Soft red */
+        color: white;
+    }
 
-.search-buttons .create-collection-btn.cancel:hover {
-    background-color: #C9302C; /* Darker red */
-}
+    .search-buttons .create-collection-btn.cancel:hover {
+        background-color: #C9302C; /* Darker red */
+        }
 
 .search-buttons button {
     padding: 5px 10px;
@@ -370,7 +370,7 @@ button.icon-btn:hover .tooltip {
     }
 
     .snippet-card, .snippet-container {
-        width: 100%;
+        width: 92%;
         max-width: 600px;
         min-width: unset;
     }

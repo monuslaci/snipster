@@ -565,7 +565,7 @@
         flex-direction: column;
         align-items: stretch;
         height: auto;
-        width: 106% !important;
+        width: 100% !important;
     }
     .button-row {
         display: flex;
