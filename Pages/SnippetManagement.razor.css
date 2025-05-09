@@ -134,7 +134,8 @@ select[multiple] {
     border-radius: 12px;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
     padding: 20px;
-    width: 100%;
+    width: 600px;
+
     max-width: 600px;
     max-height: 300px;
     display: flex;
@@ -238,38 +239,38 @@ select[multiple] {
     margin-top: 20px;
 }
 
-    .search-buttons .create-collection-btn {
-        flex: 1; /* Make buttons equal width */
-        padding: 6px 12px;
-        border: none;
-        border-radius: 6px;
-        cursor: pointer;
-        font-size: 14px;
-        transition: background 0.3s ease;
-        text-align: center;
-    }
+.search-buttons .create-collection-btn {
+    flex: 1; /* Make buttons equal width */
+    padding: 6px 12px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background 0.3s ease;
+    text-align: center;
+}
 
-        .search-buttons .create-collection-btn.search {
-            background-color: #004080; /* Deep blue */
-            color: white;
-        }
+.search-buttons .create-collection-btn.search {
+    background-color: #004080; /* Deep blue */
+    color: white;
+}
 
-            .search-buttons .create-collection-btn.search:hover {
-                background-color: #003366; /* Darker blue */
-            }
+.search-buttons .create-collection-btn.search:hover {
+    background-color: #003366; /* Darker blue */
+}
 
-        .search-buttons .create-collection-btn.cancel {
-            background-color: #D9534F; /* Soft red */
-            color: white;
-        }
+.search-buttons .create-collection-btn.cancel {
+    background-color: #D9534F; /* Soft red */
+    color: white;
+}
 
-            .search-buttons .create-collection-btn.cancel:hover {
-                background-color: #C9302C; /* Darker red */
-            }
+.search-buttons .create-collection-btn.cancel:hover {
+    background-color: #C9302C; /* Darker red */
+}
 
-    .search-buttons button {
-        padding: 5px 10px;
-    }
+.search-buttons button {
+    padding: 5px 10px;
+}
 
 .result {
     margin-top: 20px;
@@ -292,6 +293,10 @@ select[multiple] {
 
 .yellow {
     color: #FFD700;
+}
+
+.green {
+    color: #00D26A;
 }
 
 .pagination-controls {
@@ -328,7 +333,7 @@ select[multiple] {
     .search-input-row,  .search-bar, .snippet-content, .snippet-collections {
         width: 100% !important;
         max-width: 100%;
-        flex: 1 1 100%;
+/*        flex: 1 1 100%;*/
         height: auto;
         max-height: 100vh;
     }

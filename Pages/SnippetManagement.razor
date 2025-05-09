@@ -18,10 +18,12 @@
 
             <button class="icon-btn favourite-btn" @onclick="() => SearchFavouriteSnippets()">
                 <i class="fa fa-star @(IsFavouriteSearch ? "yellow" : "white")"></i>
+                <span class="tooltip">Search for Favorite Snippets</span>
             </button>
 
-            <button class="icon-btn shared-btn" @onclick="ToggleSharedSnippets">
-                <i class="fa fa-share-alt @(IncludeSharedSnippets ? "yellow" : "white")"></i>
+            <button class="icon-btn favourite-btn" @onclick="ToggleSharedSnippets">
+                <i class="fa fa-share-alt @(IncludeSharedSnippets ? "green" : "white")"></i>
+                <span class="tooltip">Show Shared Snippets</span>
             </button>
         </div>
 
@@ -44,7 +46,7 @@
                     <p>@snippet.Content</p>
                 </div>
                 <div class="snippet-collections">
-                    <strong>Collections:</strong>
+                    <strong>Collections: </strong>
                     @if (relatedCollections.ContainsKey(snippet.Id))
                     {
                         <span>@string.Join(", ", relatedCollections[snippet.Id])</span>
@@ -54,6 +56,10 @@
                         <span>Not added to collection yet..</span>
                     }
                 </div>
+                    <div class="snippet-collections">
+                        <strong>Owner:</strong>
+                            <span>@snippet.CreatedBy</span>
+                    </div>
                 <div class="snippet-actions">
 @*                     <button class="edit-btn" @onclick="() => EditSnippet(snippet)">Edit</button>
                     <button class="delete-btn" @onclick="() => DeleteSnippet(snippet.Id)">Delete</button> *@

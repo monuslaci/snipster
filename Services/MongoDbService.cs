@@ -160,7 +160,8 @@ namespace Snipster.Services
                     .Set(s => s.IsFavourite, snippet.IsFavourite)
                     .Set(s => s.SharedWithInput, snippet.SharedWithInput)
                     .Set(s => s.CreatedBy, snippet.CreatedBy)
-                    .Set(s => s.CreatedDate, snippet.CreatedDate);
+                    .Set(s => s.CreatedDate, snippet.CreatedDate)
+                    .Set(s => s.CollectionId, snippet.CollectionId);
                 await _snippetsCollection.UpdateOneAsync(filter, update);  // Update if exists
             }
         }
@@ -175,6 +176,7 @@ namespace Snipster.Services
                 .Set(s => s.LastModifiedDate, snippet.LastModifiedDate)
                 .Set(s => s.IsFavourite, snippet.IsFavourite)
                 .Set(s => s.SharedWithInput, snippet.SharedWithInput)
+                .Set(s => s.CollectionId, snippet.CollectionId)
                 .Set(s => s.CreatedDate, snippet.CreatedDate);
 
             await _snippetsCollection.UpdateOneAsync(filter, update);
@@ -432,7 +434,7 @@ namespace Snipster.Services
         {
             var user = await _usersCollection.Find(u => u.Email == email).FirstOrDefaultAsync();
 
-            if (user == null || user.SharedSnippetIds == null || !user.SharedSnippetIds.Any())
+            if (user == null)
                 return new List<Collection>();
 
             // Step 1: Fetch the snippets
@@ -552,6 +554,11 @@ namespace Snipster.Services
             var user = await _usersCollection.Find(u => u.Email == email).FirstOrDefaultAsync();
 
             return user;
+        }
+
+        public async Task<List<Users>> GetAllUsers()
+        {
+            return await _usersCollection.Find(_ => true).ToListAsync();
         }
 
         public async Task UpdateUser(Users user)

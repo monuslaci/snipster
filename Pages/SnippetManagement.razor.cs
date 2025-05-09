@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Snipster.Components;
 using Snipster.Services;
+using System.Collections.Generic;
 using static Snipster.Data.DBContext;
 
 namespace Snipster.Pages
@@ -69,8 +70,20 @@ namespace Snipster.Pages
                 var filteredSharedSnippets = await MongoDbService.GetSharedSnippetsByUserAsync(userEmail);
                 filteredSnippets.AddRange(filteredSharedSnippets);
             }
+            await AdUserNamesToSnippets(filteredSnippets);
 
             await LoadRelatedCollections();
+        }
+
+        private async Task AdUserNamesToSnippets(List<Snippet> snippetList)
+        {
+            var allUsers = await MongoDbService.GetAllUsers();
+            foreach (var s in snippetList)
+            {
+                var u = allUsers.Where(u => u.Id == s.CreatedBy).FirstOrDefault();
+                if (u != null)
+                    s.CreatedBy = $"{u.FirstName} {u.LastName}";
+            }
         }
 
         private async Task LoadCollections()
