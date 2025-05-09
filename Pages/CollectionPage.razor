@@ -22,29 +22,51 @@
             </div>
         </div>
         <button class="create-collection-btn" @onclick="ShowCreateCollectionModal">+</button>
-        @if (collections != null && collections.Any())
-        {
-            <ul>
-                @foreach (var collection in collections)
-                {
-                    <li class="collection-item @(selectedCollectionId != null && selectedCollectionId == collection.Id ? "active" : "")">
-                        <span @onclick="() => LoadSnippets(collection.Id)">
-                            @collection.Title
-                        </span>
-                        <button class="icon-btn edit-btn" @onclick="() => EditCollection(collection)">
-                            <i class="fa fa-edit"></i>
-                        </button>
-                        <button class="icon-btn delete-btn" @onclick="() => DeleteCollection(collection.Id)">
-                            <i class="fa fa-trash"></i>
-                        </button>
-                    </li>
-                }
-            </ul>
-        }
-        else
-        {
-            <p class="no-snippets">No collections found.</p>
-        }
+
+        <div class="snippet-scroll-container">
+            @if (collections != null && collections.Any())
+            {
+                <ul>
+                    @foreach (var collection in collections)
+                    {
+                        <li class="collection-item @(selectedCollectionId != null && selectedCollectionId == collection.Id ? "active" : "")">
+                            <span @onclick="() => LoadSnippets(collection.Id)">
+                                @collection.Title
+                            </span>
+                            <button class="icon-btn edit-btn" @onclick="() => EditCollection(collection)">
+                                <i class="fa fa-edit"></i>
+                            </button>
+                            <button class="icon-btn delete-btn" @onclick="() => DeleteCollection(collection.Id)">
+                                <i class="fa fa-trash"></i>
+                            </button>
+                        </li>
+                    }
+                </ul>
+            }
+            else
+            {
+                <p class="no-snippets">No collections found.</p>
+            }
+
+
+            @if (sharedCollections != null && sharedCollections.Any())
+            {
+                <hr class="divider" />
+                <h5 class="shared-collections-heading">Shared Collections</h5>
+
+                <ul>
+                    @foreach (var sharedCollection in sharedCollections)
+                    {
+                        <li class="collection-item shared @(selectedCollectionId != null && selectedCollectionId == sharedCollection.Id ? "active" : "")">
+                            <span @onclick="() => LoadSnippets(sharedCollection.Id)">
+                                @sharedCollection.Title
+                            </span>
+                        </li>
+                    }
+                </ul>
+            }
+        </div>
+
     </div>
 
     <!-- Middle Section: Snippet List -->
@@ -65,28 +87,34 @@
             </div>
         </div>
         <button class="create-snippet-btn" @onclick="ShowSnippetFields">+</button>
-        <ul>
-            @if (snippets != null && snippets.Any())
-            {
-                @foreach (var snippet in snippets)
-                {
-                    <li class="snippet-item @(selectedSnippet != null && selectedSnippet.Id == snippet.Id ? "active" : "")">
-                        <span @onclick="() => LoadSnippetDetails(snippet.Id)">
-                            @snippet.Title
-                        </span>
 
-                        <!-- Favourite button with star icon -->
-                        <button class="icon-btn favourite-btn" @onclick="() => EditSnippetFavourite(snippet)">
-                            <i class="fa fa-star @(snippet.IsFavourite ? "yellow" : "white")"></i>
-                        </button>
-                    </li>
+        <div class="snippet-scroll-container">
+            <ul>
+                @if (snippets != null && snippets.Any())
+                {
+                    @foreach (var snippet in snippets)
+                    {
+                        <li class="snippet-item @(selectedSnippet != null && selectedSnippet.Id == snippet.Id ? "active" : "")">
+                            <span @onclick="() => LoadSnippetDetails(snippet.Id)">
+                                @snippet.Title
+                            </span>
+
+                            @if (selectedCollectionIsOwn)
+                            {
+                                <!-- Favourite button with star icon -->
+                                <button class="icon-btn favourite-btn" @onclick="() => EditSnippetFavourite(snippet)">
+                                    <i class="fa fa-star @(snippet.IsFavourite ? "yellow" : "white")"></i>
+                                </button>                          
+                            }
+                        </li>
+                    }
                 }
-            }
-            else
-            {
-                <li>No snippets available</li>
-            }
+                else
+                {
+                    <li>No snippets available</li>
+                }
         </ul>
+        </div>
     </div>
 
     <!-- Right Section: Snippet Details/Editor -->
@@ -105,7 +133,15 @@
 
                 <div class="form-group">
                     <input type="text" id="hashtags" class="input-element" @bind="@newSnippet.HashtagsInput" placeholder="Enter hashtags separated by spaces" />
-@*                     <ValidationMessage For="@(() => newSnippet.HashtagsInput)" /> *@
+                </div>
+
+                <div class="form-group">
+                    <input type="text"
+                           id="sharedemailadresses"
+                           class="input-element"
+                    @bind="newSnippet.SharedWithInput"
+                           placeholder="Enter email addresses separated by semicolons" />
+                    <ValidationMessage For="@(() => newSnippet.SharedWithInput)" />
                 </div>
 
                 <div class="form-group">
@@ -142,11 +178,11 @@
                 <ValidationSummary />
 
                 <div class="form-group">
-                    <input type="text" id="title" class="input-element" @bind="selectedSnippet.Title" placeholder="Title" />
+                    <input type="text" id="title" class="input-element" @bind="selectedSnippet.Title" placeholder="Title" disabled="@(!selectedCollectionIsOwn ? "disabled" : null)" />
                 </div>
 
                 <div class="form-group">
-                    <input type="text" id="hashtags" class="input-element" @bind="@selectedSnippet.HashtagsInput" placeholder="Enter hashtags separated by spaces" />
+                    <input type="text" id="hashtags" class="input-element" @bind="@selectedSnippet.HashtagsInput" placeholder="Enter hashtags separated by spaces" disabled="@(!selectedCollectionIsOwn ? "disabled" : null)" />
 
                     @if (HashtagsInput != null && ValidHashtags.Count != HashtagsInput.Split(' ').Length)
                     {
@@ -155,28 +191,41 @@
                 </div>
 
                 <div class="form-group">
+                    <input type="text"
+                           id="sharedemailadresses"
+                           class="input-element"
+                    @bind="selectedSnippet.SharedWithInput"
+                           placeholder="Enter email addresses separated by semicolons"
+                           disabled="@(!selectedCollectionIsOwn ? "disabled" : null)" />
+                    <ValidationMessage For="@(() => newSnippet.SharedWithInput)" />
+                </div>
+
+@*                 <div class="form-group">
                     <select id="collections" class="dropdown" @bind="selectedCollectionId">
                         @foreach (var collection in collections)
                         {
                             <option value="@collection.Id">@collection.Title</option>
                         }
                     </select>
-                </div>
+                </div> *@
 
                 <div class="form-group">
-                    <textarea id="editContentId" class="textarea" @bind="selectedSnippet.Content" placeholder="Enter Snippet" @oninput="AdjustTextAreaHeightEdit"></textarea>
+                    <textarea id="editContentId" class="textarea" @bind="selectedSnippet.Content" placeholder="Enter Snippet" @oninput="AdjustTextAreaHeightEdit" disabled="@(!selectedCollectionIsOwn ? "disabled" : null)"></textarea>
                 </div>
                 <div class="button-row">
-                    @if (isFormValid)
+                    @if (selectedCollectionIsOwn)
                     {
-                        <button type="submit" class="btn-submit">Save</button>
-                    }
-                    else
-                    {
-                        <button type="submit" class="btn-submit" disabled>Save</button>
-                    }
+                        @if (isFormValid)
+                        {
+                            <button type="submit" class="btn-submit">Save</button>
+                        }
+                        else
+                        {
+                            <button type="submit" class="btn-submit" disabled>Save</button>
+                        }                                  
 
                     <button type="button" class="btn-delete" @onclick="() => DeleteSnippet(selectedSnippet.Id)">Delete</button>
+                    }
                 </div>
             </EditForm>
         }
@@ -200,7 +249,7 @@
         <div class="modal-body-edit">
             <div class="form-group">
                 <label>Title:</label>
-                <InputText class="form-input" @bind-Value="editCollection.Title" />
+                <InputText class="form-input" @bind-Value="newCollection.Title" />
             </div>
 
 

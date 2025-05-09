@@ -18,6 +18,12 @@
 
             <button class="icon-btn favourite-btn" @onclick="() => SearchFavouriteSnippets()">
                 <i class="fa fa-star @(IsFavouriteSearch ? "yellow" : "white")"></i>
+                <span class="tooltip">Search for Favorite Snippets</span>
+            </button>
+
+            <button class="icon-btn favourite-btn" @onclick="ToggleSharedSnippets">
+                <i class="fa fa-share-alt @(IncludeSharedSnippets ? "green" : "white")"></i>
+                <span class="tooltip">Show Shared Snippets</span>
             </button>
         </div>
 
@@ -30,7 +36,7 @@
 @if (filteredSnippets!= null &&  filteredSnippets.Any())
 {
     <div class="snippet-container">
-        @foreach (var snippet in filteredSnippets)
+        @foreach (var snippet in PagedSnippets)
         {
             <div class="snippet-card">
                 <div class="snippet-header">
@@ -40,7 +46,7 @@
                     <p>@snippet.Content</p>
                 </div>
                 <div class="snippet-collections">
-                    <strong>Collections:</strong>
+                    <strong>Collections: </strong>
                     @if (relatedCollections.ContainsKey(snippet.Id))
                     {
                         <span>@string.Join(", ", relatedCollections[snippet.Id])</span>
@@ -50,6 +56,10 @@
                         <span>Not added to collection yet..</span>
                     }
                 </div>
+                    <div class="snippet-collections">
+                        <strong>Owner:</strong>
+                            <span>@snippet.CreatedBy</span>
+                    </div>
                 <div class="snippet-actions">
 @*                     <button class="edit-btn" @onclick="() => EditSnippet(snippet)">Edit</button>
                     <button class="delete-btn" @onclick="() => DeleteSnippet(snippet.Id)">Delete</button> *@
@@ -64,6 +74,13 @@ else
 {
     <p class="no-snippets">No snippets found..</p>
 }
+
+    <div class="pagination-controls">
+        <button @onclick="PreviousPage" disabled="@((currentPage == 1))">Previous</button>
+        <span>Page @currentPage of @TotalPages</span>
+        <button @onclick="NextPage" disabled="@((currentPage == TotalPages))">Next</button>
+    </div>
+
 </div>
 
 <!-- Modal for creating snippet -->

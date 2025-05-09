@@ -12,6 +12,7 @@ using static Snipster.Data.DBContext;
 using Microsoft.Win32;
 using AspNetCore.Identity.MongoDbCore.Models;
 using MongoDbGenericRepository.Attributes;
+using System.Text.RegularExpressions;
 
 namespace Snipster.Data
 {
@@ -26,6 +27,7 @@ namespace Snipster.Data
             [Required(ErrorMessage = "Title is required.")]
             public string Title { get; set; }
             public DateTime CreatedDate { get; set; }
+            public string CreatedBy { get; set; }
             public DateTime LastModifiedDate { get; set; }
 
             [Required(ErrorMessage = "Content  is required.")]
@@ -33,9 +35,25 @@ namespace Snipster.Data
 
             [CustomValidation(typeof(Snippet), nameof(ValidateHashtags))]
             public string HashtagsInput { get; set; }
-
             public string Language { get; set; }
-            public bool IsFavourite { get; set; } 
+            public bool IsFavourite { get; set; }
+            public bool IsPublic { get; set; }
+            public List<string> SharedWith { get; set; } = new List<string>();
+            public string? CollectionId { get; set; }
+
+            [CustomValidation(typeof(Snippet), nameof(ValidateEmails))]
+            public string SharedWithInput
+            {
+                get => string.Join(";", SharedWith);
+                set
+                {
+                    SharedWith = value
+                        ?.Split(";", StringSplitOptions.RemoveEmptyEntries)
+                        .Select(email => email.Trim())
+                        .Where(email => !string.IsNullOrWhiteSpace(email))
+                        .ToList() ?? new List<string>();
+                }
+            }
 
             public static ValidationResult ValidateHashtags(string hashtagsInput, ValidationContext context)
             {
@@ -65,6 +83,35 @@ namespace Snipster.Data
                     {
                         return new ValidationResult("Hashtags cannot contain spaces.");
                     }
+                }
+
+                return ValidationResult.Success;
+            }
+
+            public static ValidationResult ValidateEmails(string sharedWithInput, ValidationContext context)
+            {
+                if (string.IsNullOrWhiteSpace(sharedWithInput))
+                    return ValidationResult.Success;
+
+                var emails = sharedWithInput
+                    .Split(";", StringSplitOptions.RemoveEmptyEntries)
+                    .Select(e => e.Trim())
+                    .ToList();
+
+                var emailRegex = new Regex(@"^[^@\s]+@[^@\s]+\.[^@\s]+$");
+
+                foreach (var email in emails)
+                {
+                    if (!emailRegex.IsMatch(email))
+                    {
+                        return new ValidationResult($"Invalid email: '{email}'");
+                    }
+                }
+
+                // This allows validation to update the actual SharedWith list
+                if (context.ObjectInstance is Snippet instance)
+                {
+                    instance.SharedWith = emails; // ✅ sets multiple email addresses correctly
                 }
 
                 return ValidationResult.Success;
@@ -106,6 +153,8 @@ namespace Snipster.Data
             //public string Email { get; set; }     
             //public string PasswordHash { get; set; }
             public bool RegistrationConfirmed { get; set; }
+            public List<string> MyCollectionIds { get; set; } = new List<string>();
+            public List<string> SharedSnippetIds { get; set; } = new List<string>();
         }
         public class RegisterUserDTO
         {
@@ -129,6 +178,11 @@ namespace Snipster.Data
             [MinLength(8, ErrorMessage = "Password must be at least 8 characters")]
             [RegularExpression(@"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$",  ErrorMessage = "Password must contain at least one uppercase letter, one lowercase letter and one number.")]
             public string Password { get; set; }
+
+            [Required(ErrorMessage = "Please type in the Password again")]
+            [MinLength(8, ErrorMessage = "Password must be at least 8 characters")]
+            [RegularExpression(@"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$", ErrorMessage = "Password must contain at least one uppercase letter, one lowercase letter and one number.")]
+            public string PasswordRepeat { get; set; }
         }
 
         public class EditUserDTO

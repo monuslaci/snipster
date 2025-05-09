@@ -36,6 +36,12 @@ namespace Snipster.Pages
                 
             };
 
+            if (newUser.Password != newUser.PasswordRepeat)
+            {
+                ToastService.ShowError("New password must match the repeated password.");
+                return;
+            }
+
             var result = await MongoDbService.RegisterUserAsync(user, newUser.Password);
 
             if (result)

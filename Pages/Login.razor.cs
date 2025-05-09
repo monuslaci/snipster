@@ -84,7 +84,7 @@ namespace Snipster.Pages
                 }
 
                 var user = await MongoDbService.GetUser(loginModel.Email);
-                await EmailService.SendEmailNotification(CreateLoginEmailTemplate(user.Email, $"{user.FirstName} {user.LastName}"));
+                //await EmailService.SendEmailNotification(CreateLoginEmailTemplate(user.Email, $"{user.FirstName} {user.LastName}"));
 
                 // Redirect to internal page after login
                 await Task.Delay(2000);

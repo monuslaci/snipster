@@ -8,7 +8,7 @@ window.adjustTextAreaHeight = function (elementId) {
         var newHeight = textarea.scrollHeight;
 
         // Get the maximum height based on the window height, minus some offset for padding/margins
-        var maxHeight = window.innerHeight - 345; 
+        var maxHeight = window.innerHeight - 390; 
 
         // Use the smaller of the new height and the maximum height
         textarea.style.height = (newHeight > maxHeight ? maxHeight : newHeight) + 'px';

@@ -50,25 +50,66 @@ namespace Snipster.Services
             return await _snippetsCollection.Find(_ => true).ToListAsync();
         }
 
+        //public async Task<List<Snippet>> GetSnippetsByUserAsync(string email)
+        //{
+        //    // Find collections where CreatedBy matches the actual user
+        //    var userCollections = await _collectionsCollection
+        //        .Find(collection => collection.CreatedBy == email)
+        //        .ToListAsync();
+
+        //    // Extract all snippet IDs from the user's collections
+        //    var snippetIds = userCollections.SelectMany(col => col.SnippetIds).Distinct().ToList();
+
+        //    if (!snippetIds.Any())
+        //    {
+        //        return new List<Snippet>(); // No snippets found
+        //    }
+
+        //    // Find snippets with the extracted IDs
+        //    return await _snippetsCollection
+        //        .Find(snippet => snippetIds.Contains(snippet.Id))
+        //        .ToListAsync();
+        //}
+
         public async Task<List<Snippet>> GetSnippetsByUserAsync(string email)
         {
-            // Find collections where CreatedBy matches the actual user
-            var userCollections = await _collectionsCollection
-                .Find(collection => collection.CreatedBy == email)
-                .ToListAsync();
+            // Step 1: Find the user by email
+            var user = await _usersCollection.Find(u => u.Email == email).FirstOrDefaultAsync();
+            if (user == null || user.MyCollectionIds == null || !user.MyCollectionIds.Any())
+            {
+                return new List<Snippet>();
+            }
 
-            // Extract all snippet IDs from the user's collections
-            var snippetIds = userCollections.SelectMany(col => col.SnippetIds).Distinct().ToList();
+            // Step 2: Load collections using MyCollectionIds
+            var filter = Builders<Collection>.Filter.In(c => c.Id, user.MyCollectionIds);
+            var userCollections = await _collectionsCollection.Find(filter).ToListAsync();
+
+            // Step 3: Extract snippet IDs
+            var snippetIds = userCollections.SelectMany(c => c.SnippetIds).Distinct().ToList();
 
             if (!snippetIds.Any())
             {
-                return new List<Snippet>(); // No snippets found
+                return new List<Snippet>();
             }
 
-            // Find snippets with the extracted IDs
+            // Step 4: Load snippets from the snippet IDs
             return await _snippetsCollection
                 .Find(snippet => snippetIds.Contains(snippet.Id))
                 .ToListAsync();
+        }
+
+        public async Task<List<Snippet>> GetSharedSnippetsByUserAsync(string email)
+        {
+            // Step 1: Find the user
+            var user = await _usersCollection.Find(u => u.Email == email).FirstOrDefaultAsync();
+            if (user == null || user.SharedSnippetIds == null || !user.SharedSnippetIds.Any())
+            {
+                return new List<Snippet>();
+            }
+
+            // Step 2: Query snippets by SharedSnippetIds
+            var filter = Builders<Snippet>.Filter.In(s => s.Id, user.SharedSnippetIds);
+            return await _snippetsCollection.Find(filter).ToListAsync();
         }
 
         public async Task<Snippet> GetSnippetByIdAsync(string id)
@@ -117,7 +158,10 @@ namespace Snipster.Services
                     .Set(s => s.HashtagsInput, snippet.HashtagsInput)
                     .Set(s => s.LastModifiedDate, snippet.LastModifiedDate)
                     .Set(s => s.IsFavourite, snippet.IsFavourite)
-                    .Set(s => s.CreatedDate, snippet.CreatedDate);
+                    .Set(s => s.SharedWithInput, snippet.SharedWithInput)
+                    .Set(s => s.CreatedBy, snippet.CreatedBy)
+                    .Set(s => s.CreatedDate, snippet.CreatedDate)
+                    .Set(s => s.CollectionId, snippet.CollectionId);
                 await _snippetsCollection.UpdateOneAsync(filter, update);  // Update if exists
             }
         }
@@ -131,6 +175,8 @@ namespace Snipster.Services
                 .Set(s => s.HashtagsInput, snippet.HashtagsInput)
                 .Set(s => s.LastModifiedDate, snippet.LastModifiedDate)
                 .Set(s => s.IsFavourite, snippet.IsFavourite)
+                .Set(s => s.SharedWithInput, snippet.SharedWithInput)
+                .Set(s => s.CollectionId, snippet.CollectionId)
                 .Set(s => s.CreatedDate, snippet.CreatedDate);
 
             await _snippetsCollection.UpdateOneAsync(filter, update);
@@ -141,14 +187,70 @@ namespace Snipster.Services
             await _snippetsCollection.DeleteOneAsync(s => s.Id == id);
         }
 
+        //public async Task<List<Snippet>> SearchSnippetAsync(string keyword, string email, bool isFavouriteSearch)
+        //{
+        //    var userCollections = await _collectionsCollection
+        //        .Find(collection => collection.CreatedBy == email)
+        //        .ToListAsync();
+
+        //    // Extract all snippet IDs from the user's collections
+        //    var snippetIds = userCollections.SelectMany(col => col.SnippetIds)
+        //        .Distinct()
+        //        .ToList();
+
+        //    if (!snippetIds.Any())
+        //    {
+        //        return new List<Snippet>(); // No snippets found
+        //    }
+
+        //    // Build filters
+        //    var filters = new List<FilterDefinition<Snippet>>();
+
+        //    // Filter snippets that belong to user's collections
+        //    filters.Add(Builders<Snippet>.Filter.In(s => s.Id, snippetIds));
+
+        //    // Keyword filters (if provided)
+        //    if (!string.IsNullOrWhiteSpace(keyword))
+        //    {
+        //        var keywordFilter = Builders<Snippet>.Filter.Or(
+        //            Builders<Snippet>.Filter.Regex(s => s.Id, new BsonRegularExpression(keyword, "i")),
+        //            Builders<Snippet>.Filter.Regex(s => s.Title, new BsonRegularExpression(keyword, "i")),
+        //            Builders<Snippet>.Filter.Regex(s => s.Content, new BsonRegularExpression(keyword, "i")),
+        //            Builders<Snippet>.Filter.Regex(s => s.HashtagsInput, new BsonRegularExpression(keyword, "i"))
+        //        );
+
+        //        filters.Add(keywordFilter);
+        //    }
+
+        //    // Apply isFavourite filter if true
+        //    if (isFavouriteSearch)
+        //    {
+        //        filters.Add(Builders<Snippet>.Filter.Eq(s => s.IsFavourite, true));
+        //    }
+
+        //    // Combine all filters
+        //    var finalFilter = Builders<Snippet>.Filter.And(filters);
+
+        //    return await _snippetsCollection.Find(finalFilter).ToListAsync();
+        //}
+
         public async Task<List<Snippet>> SearchSnippetAsync(string keyword, string email, bool isFavouriteSearch)
         {
-            var userCollections = await _collectionsCollection
-                .Find(collection => collection.CreatedBy == email)
-                .ToListAsync();
+            // Step 1: Load the user
+            var user = await _usersCollection.Find(u => u.Email == email).FirstOrDefaultAsync();
 
-            // Extract all snippet IDs from the user's collections
-            var snippetIds = userCollections.SelectMany(col => col.SnippetIds)
+            if (user == null || user.MyCollectionIds == null || !user.MyCollectionIds.Any())
+            {
+                return new List<Snippet>(); // No collections = no snippets
+            }
+
+            // Step 2: Fetch collections by user's MyCollectionIds
+            var filterCollections = Builders<Collection>.Filter.In(c => c.Id, user.MyCollectionIds);
+            var userCollections = await _collectionsCollection.Find(filterCollections).ToListAsync();
+
+            // Step 3: Extract snippet IDs
+            var snippetIds = userCollections
+                .SelectMany(col => col.SnippetIds)
                 .Distinct()
                 .ToList();
 
@@ -157,13 +259,13 @@ namespace Snipster.Services
                 return new List<Snippet>(); // No snippets found
             }
 
-            // Build filters
-            var filters = new List<FilterDefinition<Snippet>>();
+            // Step 4: Build filters
+            var filters = new List<FilterDefinition<Snippet>>
+            {
+                Builders<Snippet>.Filter.In(s => s.Id, snippetIds) // only user's snippets
+            };
 
-            // Filter snippets that belong to user's collections
-            filters.Add(Builders<Snippet>.Filter.In(s => s.Id, snippetIds));
-
-            // Keyword filters (if provided)
+            // Keyword filter
             if (!string.IsNullOrWhiteSpace(keyword))
             {
                 var keywordFilter = Builders<Snippet>.Filter.Or(
@@ -176,15 +278,54 @@ namespace Snipster.Services
                 filters.Add(keywordFilter);
             }
 
-            // Apply isFavourite filter if true
+            // Favourites filter
             if (isFavouriteSearch)
             {
                 filters.Add(Builders<Snippet>.Filter.Eq(s => s.IsFavourite, true));
             }
 
-            // Combine all filters
+            // Step 5: Combine filters and query
             var finalFilter = Builders<Snippet>.Filter.And(filters);
+            return await _snippetsCollection.Find(finalFilter).ToListAsync();
+        }
 
+        public async Task<List<Snippet>> SearchSharedSnippetAsync(string keyword, string email, bool isFavouriteSearch)
+        {
+            // Step 1: Load the user
+            var user = await _usersCollection.Find(u => u.Email == email).FirstOrDefaultAsync();
+
+            if (user == null || user.SharedSnippetIds == null || !user.SharedSnippetIds.Any())
+            {
+                return new List<Snippet>(); // No shared snippets
+            }
+
+            // Step 2: Build base filter using SharedSnippetIds
+            var filters = new List<FilterDefinition<Snippet>>
+            {
+                Builders<Snippet>.Filter.In(s => s.Id, user.SharedSnippetIds)
+            };
+
+            // Step 3: Keyword search (if any)
+            if (!string.IsNullOrWhiteSpace(keyword))
+            {
+                var keywordFilter = Builders<Snippet>.Filter.Or(
+                    Builders<Snippet>.Filter.Regex(s => s.Id, new BsonRegularExpression(keyword, "i")),
+                    Builders<Snippet>.Filter.Regex(s => s.Title, new BsonRegularExpression(keyword, "i")),
+                    Builders<Snippet>.Filter.Regex(s => s.Content, new BsonRegularExpression(keyword, "i")),
+                    Builders<Snippet>.Filter.Regex(s => s.HashtagsInput, new BsonRegularExpression(keyword, "i"))
+                );
+
+                filters.Add(keywordFilter);
+            }
+
+            // Step 4: Favourites filter (optional)
+            if (isFavouriteSearch)
+            {
+                filters.Add(Builders<Snippet>.Filter.Eq(s => s.IsFavourite, true));
+            }
+
+            // Step 5: Combine and search
+            var finalFilter = Builders<Snippet>.Filter.And(filters);
             return await _snippetsCollection.Find(finalFilter).ToListAsync();
         }
 
@@ -273,9 +414,48 @@ namespace Snipster.Services
             return await _collectionsCollection.Find(_ => true).ToListAsync();
         }
 
+        //public async Task<List<Collection>> GetCollectionsForUserAsync(string email)
+        //{
+        //    return await _collectionsCollection.Find(c => c.CreatedBy == email).ToListAsync();
+        //}
+
         public async Task<List<Collection>> GetCollectionsForUserAsync(string email)
         {
-            return await _collectionsCollection.Find(c => c.CreatedBy == email).ToListAsync();
+            var user = await _usersCollection.Find(u => u.Email == email).FirstOrDefaultAsync();
+
+            if (user == null || user.MyCollectionIds == null || !user.MyCollectionIds.Any())
+                return new List<Collection>();
+
+            var filter = Builders<Collection>.Filter.In(c => c.Id, user.MyCollectionIds);
+            return await _collectionsCollection.Find(filter).ToListAsync();
+        }
+
+        public async Task<List<Collection>> GetSharedCollectionsForUserAsync(string email)
+        {
+            var user = await _usersCollection.Find(u => u.Email == email).FirstOrDefaultAsync();
+
+            if (user == null)
+                return new List<Collection>();
+
+            // Step 1: Fetch the snippets
+            var snippetFilter = Builders<Snippet>.Filter.In(s => s.Id, user.SharedSnippetIds);
+            var sharedSnippets = await _snippetsCollection.Find(snippetFilter).ToListAsync();
+
+            // Step 2: Get distinct collection IDs from snippets
+            var sharedCollectionIds = sharedSnippets
+                .Where(s => !string.IsNullOrEmpty(s.CollectionId))
+                .Select(s => s.CollectionId)
+                .Distinct()
+                .ToList();
+
+            if (!sharedCollectionIds.Any())
+                return new List<Collection>();
+
+            // Step 3: Fetch collections
+            var collectionFilter = Builders<Collection>.Filter.In(c => c.Id, sharedCollectionIds);
+            var sharedCollections = await _collectionsCollection.Find(collectionFilter).ToListAsync();
+
+            return sharedCollections;
         }
 
         public async Task<List<Collection>> GetLast5CollectionsForUserAsync(string email)
@@ -376,12 +556,19 @@ namespace Snipster.Services
             return user;
         }
 
+        public async Task<List<Users>> GetAllUsers()
+        {
+            return await _usersCollection.Find(_ => true).ToListAsync();
+        }
+
         public async Task UpdateUser(Users user)
         {
             var filter = Builders<Users>.Filter.Eq(c => c.Email, user.Email);
             var update = Builders<Users>.Update.Set(c => c.RegistrationConfirmed, user.RegistrationConfirmed)
                                                             .Set(c => c.FirstName, user.FirstName)
-                                                            .Set(c => c.LastName, user.LastName);
+                                                            .Set(c => c.LastName, user.LastName)
+                                                            .Set(c => c.MyCollectionIds, user.MyCollectionIds)
+                                                            .Set(c => c.SharedSnippetIds, user.SharedSnippetIds);
 
             await _usersCollection.UpdateOneAsync(filter, update);
         }
