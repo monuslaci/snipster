@@ -52,6 +52,8 @@ namespace Snipster.Pages
         private bool isMiddlePanelOpen { get; set; } = true;
         private string rightPanelWidth { get; set; } = "50%";
         private bool IsFavouriteSearch { get; set; }
+        private bool selectedCollectionIsOwn { get; set; }
+        private string isDisabled { get; set; } = "";
 
         protected override async Task OnInitializedAsync()
         {
@@ -144,6 +146,18 @@ namespace Snipster.Pages
             // Get the snippet IDs for the selected collection
             var snippetIds = await _mongoDbService.GetSnippetIdsByCollectionAsync(selectedCollectionId);
 
+            if (sharedCollections != null && sharedCollections.Where(c => c.Id == selectedCollectionId).Count() == 0)
+            {
+                selectedCollectionIsOwn = true;
+                isDisabled = "disabled";
+            }
+            else
+            {
+                selectedCollectionIsOwn = false;
+                isDisabled = "";
+            }
+           
+
             // Clear the current snippets list and populate it with the new ones
             snippets.Clear();
 
@@ -190,7 +204,10 @@ namespace Snipster.Pages
             spinnerModal.ShowModal();
             isAddingSnippet = false;
             selectedSnippet = await _mongoDbService.GetSnippetByIdAsync(snippetId);
-            selectedSnippetOriginalSharedWith = selectedSnippet.SharedWith;
+            if (selectedSnippet != null) 
+                selectedSnippetOriginalSharedWith = selectedSnippet.SharedWith;
+
+
             adjustHeightNeeded = true;
             spinnerModal.CloseModal();
 
