@@ -22,48 +22,50 @@
             </div>
         </div>
         <button class="create-collection-btn" @onclick="ShowCreateCollectionModal">+</button>
-        @if (collections != null && collections.Any())
-        {
-            <ul>
-                @foreach (var collection in collections)
-                {
-                    <li class="collection-item @(selectedCollectionId != null && selectedCollectionId == collection.Id ? "active" : "")">
-                        <span @onclick="() => LoadSnippets(collection.Id)">
-                            @collection.Title
-                        </span>
-                        <button class="icon-btn edit-btn" @onclick="() => EditCollection(collection)">
-                            <i class="fa fa-edit"></i>
-                        </button>
-                        <button class="icon-btn delete-btn" @onclick="() => DeleteCollection(collection.Id)">
-                            <i class="fa fa-trash"></i>
-                        </button>
-                    </li>
-                }
-            </ul>
-        }
-        else
-        {
-            <p class="no-snippets">No collections found.</p>
-        }
+
+        <div class="snippet-scroll-container">
+            @if (collections != null && collections.Any())
+            {
+                <ul>
+                    @foreach (var collection in collections)
+                    {
+                        <li class="collection-item @(selectedCollectionId != null && selectedCollectionId == collection.Id ? "active" : "")">
+                            <span @onclick="() => LoadSnippets(collection.Id)">
+                                @collection.Title
+                            </span>
+                            <button class="icon-btn edit-btn" @onclick="() => EditCollection(collection)">
+                                <i class="fa fa-edit"></i>
+                            </button>
+                            <button class="icon-btn delete-btn" @onclick="() => DeleteCollection(collection.Id)">
+                                <i class="fa fa-trash"></i>
+                            </button>
+                        </li>
+                    }
+                </ul>
+            }
+            else
+            {
+                <p class="no-snippets">No collections found.</p>
+            }
 
 
-        @if (sharedCollections != null && sharedCollections.Any())
-        {
-            <hr class="divider" />
-            <h5 class="shared-collections-heading">Shared Collections</h5>
+            @if (sharedCollections != null && sharedCollections.Any())
+            {
+                <hr class="divider" />
+                <h5 class="shared-collections-heading">Shared Collections</h5>
 
-            <ul>
-                @foreach (var sharedCollection in sharedCollections)
-                {
-                    <li class="collection-item shared @(selectedCollectionId != null && selectedCollectionId == sharedCollection.Id ? "active" : "")">
-                        <span @onclick="() => LoadSnippets(sharedCollection.Id)">
-                            @sharedCollection.Title
-                        </span>
-                    </li>
-                }
-            </ul>
-        }
-
+                <ul>
+                    @foreach (var sharedCollection in sharedCollections)
+                    {
+                        <li class="collection-item shared @(selectedCollectionId != null && selectedCollectionId == sharedCollection.Id ? "active" : "")">
+                            <span @onclick="() => LoadSnippets(sharedCollection.Id)">
+                                @sharedCollection.Title
+                            </span>
+                        </li>
+                    }
+                </ul>
+            }
+        </div>
 
     </div>
 
@@ -85,31 +87,34 @@
             </div>
         </div>
         <button class="create-snippet-btn" @onclick="ShowSnippetFields">+</button>
-        <ul>
-            @if (snippets != null && snippets.Any())
-            {
-                @foreach (var snippet in snippets)
-                {
-                    <li class="snippet-item @(selectedSnippet != null && selectedSnippet.Id == snippet.Id ? "active" : "")">
-                        <span @onclick="() => LoadSnippetDetails(snippet.Id)">
-                            @snippet.Title
-                        </span>
 
-                        @if (selectedCollectionIsOwn)
-                        {
-                            <!-- Favourite button with star icon -->
-                            <button class="icon-btn favourite-btn" @onclick="() => EditSnippetFavourite(snippet)">
-                                <i class="fa fa-star @(snippet.IsFavourite ? "yellow" : "white")"></i>
-                            </button>                          
-                        }
-                    </li>
+        <div class="snippet-scroll-container">
+            <ul>
+                @if (snippets != null && snippets.Any())
+                {
+                    @foreach (var snippet in snippets)
+                    {
+                        <li class="snippet-item @(selectedSnippet != null && selectedSnippet.Id == snippet.Id ? "active" : "")">
+                            <span @onclick="() => LoadSnippetDetails(snippet.Id)">
+                                @snippet.Title
+                            </span>
+
+                            @if (selectedCollectionIsOwn)
+                            {
+                                <!-- Favourite button with star icon -->
+                                <button class="icon-btn favourite-btn" @onclick="() => EditSnippetFavourite(snippet)">
+                                    <i class="fa fa-star @(snippet.IsFavourite ? "yellow" : "white")"></i>
+                                </button>                          
+                            }
+                        </li>
+                    }
                 }
-            }
-            else
-            {
-                <li>No snippets available</li>
-            }
+                else
+                {
+                    <li>No snippets available</li>
+                }
         </ul>
+        </div>
     </div>
 
     <!-- Right Section: Snippet Details/Editor -->

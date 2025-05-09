@@ -8,9 +8,6 @@
 }
 
 
-
-
-
 .collection-list {
     width: 10%;
     background: linear-gradient(180deg, #23297A 50%, #23297A 80%);
@@ -27,6 +24,12 @@
     display: flex;
     flex-direction: column;
     margin: 0; /* Remove any margin to connect to the edges */
+}
+
+.snippet-scroll-container {
+    overflow-y: auto;
+    flex-grow: 1;
+    margin-top: 10px;
 }
 
 
