@@ -18,6 +18,8 @@ using static Snipster.Helpers.GeneralHelpers;
 using System.Text.RegularExpressions;
 using Amazon.Runtime.Internal.Endpoints.StandardLibrary;
 using BCrypt.Net;
+using Snipster.Services.AppStates;
+
 
 namespace Snipster.Pages
 {
@@ -27,6 +29,7 @@ namespace Snipster.Pages
         [Inject] private AuthenticationStateProvider AuthStateProvider { get; set; }
         [Inject] NavigationManager Navigation { get; set; }
         [Inject] MongoDbService _mongoDbService { get; set; }
+        [Inject] private AppState _appState { get; set; }
         private string? userEmail { get; set; }
         private Modal spinnerModal = new Modal();
         private ChangePwModel editPassword = new ChangePwModel();
@@ -43,9 +46,9 @@ namespace Snipster.Pages
             {
                 spinnerModal.IsSpinner = true;
                 spinnerModal.ShowModal();
-                var authState = await AuthStateProvider.GetAuthenticationStateAsync();
-                userEmail = authState.User.Identity?.Name;
-                user = await _mongoDbService.GetUser(userEmail);
+
+                userEmail = _appState.userEmail;
+                user = _appState.user;
 
                 spinnerModal.CloseModal();
 

@@ -15,6 +15,7 @@ using System.Collections.Generic;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 using Microsoft.AspNetCore.Components.Web;
 using static Snipster.Data.CommonClasses;
+using Snipster.Services.AppStates;
 
 namespace Snipster.Pages
 {
@@ -23,6 +24,7 @@ namespace Snipster.Pages
         [Inject] NavigationManager Navigation { get; set; }
         [Inject] private AuthenticationStateProvider AuthStateProvider { get; set; }
         [Inject] MongoDbService _mongoDbService { get; set; }
+        [Inject] private AppState _appState { get; set; }
 
         private List<Collection> collections = new List<Collection>();
         private List<Collection> sharedCollections = new List<Collection>();
@@ -58,7 +60,7 @@ namespace Snipster.Pages
         protected override async Task OnInitializedAsync()
         {
 
-
+       
             var uri = Navigation.ToAbsoluteUri(Navigation.Uri);
             var query = Microsoft.AspNetCore.WebUtilities.QueryHelpers.ParseQuery(uri.Query);
 
@@ -71,19 +73,25 @@ namespace Snipster.Pages
             {
                 selectedSnippetId = sid;
             }
+
         }
 
         protected override async Task OnAfterRenderAsync(bool firstRender)
         {
             if (firstRender)
             {
-                var authState = await AuthStateProvider.GetAuthenticationStateAsync();
-                userEmail = authState.User.Identity?.Name;
-
-                user = await _mongoDbService.GetUser(userEmail);
-
                 spinnerModal.IsSpinner = true;
                 spinnerModal.ShowModal();
+                //var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+                //userEmail = authState.User.Identity?.Name;
+
+                //user = await _mongoDbService.GetUser(userEmail);
+
+                userEmail = _appState.userEmail;
+                user = _appState.user;
+
+                //spinnerModal.IsSpinner = true;
+                //spinnerModal.ShowModal();
 
                 //get the user's collections
                 collections = await _mongoDbService.GetCollectionsForUserAsync(userEmail);
@@ -305,12 +313,9 @@ namespace Snipster.Pages
                     }
 
                 }
-            }
-
-            
+            }          
 
             isAddingSnippet = false;
-
 
             await LoadSnippets(selectedCollectionId);
             selectedSnippet = newSnippet;

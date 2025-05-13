@@ -19,6 +19,7 @@ using Blazored.Toast;
 using SendGrid;
 using SendGrid.Helpers.Mail;
 using static Snipster.Helpers.GeneralHelpers;
+using Snipster.Services.AppStates;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -132,6 +133,7 @@ try
     builder.Services.AddAuthorizationCore(); // Add authorization service for Blazor
     builder.Services.AddControllersWithViews();
 
+    builder.Services.AddScoped<AppState>();
 
     //builder.Services.AddScoped<Blazored.Toast.Services.IToastService, Blazored.Toast.Services.ToastService>();
     builder.Services.AddScoped<IEmailService, EmailService>();
@@ -140,8 +142,8 @@ try
 
     //builder.Services.AddSingleton<IMongoDbService, MongoDbService>();
     builder.Services.AddBlazoredToast();
-    builder.Services.AddServerSideBlazor()
-    .AddCircuitOptions(options => { options.DetailedErrors = true; });
+    //builder.Services.AddServerSideBlazor()
+    //.AddCircuitOptions(options => { options.DetailedErrors = true; });
 
 }
 catch (Exception ex)

@@ -1,10 +1,12 @@
 ﻿@using Snipster.Services;
 @using Blazored.Toast
+@using Snipster.Services.AppStates;
 
 @inject NavigationManager Navigation
 @inject AuthenticationStateProvider AuthStateProvider 
 @inject CustomAuthenticationStateProvider CustomAuthProvider
 @inject ProtectedLocalStorage ProtectedLocalStorage
+@inject AppState _appState 
 
 @inherits LayoutComponentBase
 
@@ -62,8 +64,24 @@
 
 @code {
     private bool IsAuthPage => Navigation.Uri.Contains("login", StringComparison.OrdinalIgnoreCase)
-                         || Navigation.Uri.Contains("register", StringComparison.OrdinalIgnoreCase)
-                         || Navigation.Uri.Contains("reset", StringComparison.OrdinalIgnoreCase);
+                     || Navigation.Uri.Contains("register", StringComparison.OrdinalIgnoreCase)
+                     || Navigation.Uri.Contains("reset", StringComparison.OrdinalIgnoreCase);
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (_appState.user == null)
+            await _appState.GetUserFfromSessionStorage();
+    
+    }
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+
+
+        }
+    }
 
     private async Task Logout()
     {

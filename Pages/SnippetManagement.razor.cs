@@ -4,8 +4,10 @@ using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Snipster.Components;
 using Snipster.Services;
+using Snipster.Services.AppStates;
 using System.Collections.Generic;
 using static Snipster.Data.DBContext;
+
 
 namespace Snipster.Pages
 {
@@ -14,6 +16,7 @@ namespace Snipster.Pages
         [Inject] MongoDbService MongoDbService { get; set; }
         [Inject] NavigationManager Navigation { get; set; }
         [Inject] private AuthenticationStateProvider AuthStateProvider { get; set; }
+        [Inject] private AppState _appState { get; set; }
         private bool IncludeSharedSnippets { get; set; } = false;
         private string searchQuery { get; set; }
         private List<Snippet> filteredSnippets = new List<Snippet>();
@@ -47,8 +50,7 @@ namespace Snipster.Pages
         {
             if (firstRender)
             {
-                var authState = await AuthStateProvider.GetAuthenticationStateAsync();
-                userEmail = authState.User.Identity?.Name;
+                userEmail = _appState.userEmail;
 
                 spinnerModal.IsSpinner = true;
                 spinnerModal.ShowModal();

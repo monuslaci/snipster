@@ -18,6 +18,7 @@ using System.Text.RegularExpressions;
 using AspNetCore.Identity.MongoDbCore.Models;
 using System.Xml.Linq;
 using static System.Runtime.InteropServices.JavaScript.JSType;
+using Snipster.Services.AppStates;
 
 namespace Snipster.Pages
 {
@@ -27,6 +28,7 @@ namespace Snipster.Pages
         [Inject] MongoDbService MongoDbService { get; set; }
         [Inject] NavigationManager Navigation { get; set; }
         [Inject] EmailService EmailService { get; set; }
+        [Inject] private AppState _appState { get; set; }
         private ResetModel resetEmailModel = new ResetModel();
         private bool emailSent { get; set; } = false;
         
@@ -34,7 +36,7 @@ namespace Snipster.Pages
         private async Task HandleResetEmail()
         {
             // Fetch the user's email from the database (mocked here)
-            var user = await MongoDbService.GetUser(resetEmailModel.Email);
+            var user = _appState.user;
 
             if (user != null)
             {

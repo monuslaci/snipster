@@ -17,6 +17,7 @@ using AspNetCore.Identity.MongoDbCore.Models;
 using static Snipster.Helpers.GeneralHelpers;
 using System.Text.RegularExpressions;
 using Amazon.Runtime.Internal.Endpoints.StandardLibrary;
+using Snipster.Services.AppStates;
 
 namespace Snipster.Pages
 {
@@ -27,6 +28,7 @@ namespace Snipster.Pages
         [Inject] Blazored.Toast.Services.IToastService ToastService { get; set; }
         [Inject] private AuthenticationStateProvider AuthStateProvider { get; set; }
         [Inject] EmailService EmailService { get; set; }
+        [Inject] private AppState _appState { get; set; }
         private ResetModel resetEmailModel = new ResetModel();
         private bool isProcessing = false;
         private bool isSuccess = false;
@@ -46,9 +48,9 @@ namespace Snipster.Pages
             if (firstRender)
             {
                 spinnerModal.ShowModal();
-                var authState = await AuthStateProvider.GetAuthenticationStateAsync();
-                userEmail = authState.User.Identity?.Name;
-                user = await _mongoDbService.GetUser(userEmail);
+
+                userEmail = _appState.userEmail;
+                user = _appState.user;
 
                 isProcessing = true;
                 bool success = await _mongoDbService.ValidateGeneratedRegisterTokenAsync(Token);

@@ -18,6 +18,7 @@ using System.Text.RegularExpressions;
 using AspNetCore.Identity.MongoDbCore.Models;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage;
+using Snipster.Services.AppStates;
 
 namespace Snipster.Pages
 {
@@ -31,6 +32,7 @@ namespace Snipster.Pages
         [Inject] NavigationManager Navigation { get; set; }
         [Inject] EmailService EmailService { get; set; }
         [Inject] ProtectedSessionStorage SessionStorage { get; set; }
+        [Inject] private AppState _appState { get; set; }
 
         private bool _isInitialized = false;
 
@@ -83,7 +85,9 @@ namespace Snipster.Pages
                     await customAuthStateProvider.MarkUserAsAuthenticated(loginModel.Email);
                 }
 
-                var user = await MongoDbService.GetUser(loginModel.Email);
+                await _appState.LoadCurrentUser(loginModel.Email);
+                var user = _appState.user;
+                //var user = await MongoDbService.GetUser(loginModel.Email);
                 //await EmailService.SendEmailNotification(CreateLoginEmailTemplate(user.Email, $"{user.FirstName} {user.LastName}"));
 
                 // Redirect to internal page after login
