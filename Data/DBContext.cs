@@ -13,6 +13,7 @@ using Microsoft.Win32;
 using AspNetCore.Identity.MongoDbCore.Models;
 using MongoDbGenericRepository.Attributes;
 using System.Text.RegularExpressions;
+using Microsoft.AspNetCore.Components;
 
 namespace Snipster.Data
 {
@@ -40,6 +41,7 @@ namespace Snipster.Data
             public bool IsPublic { get; set; }
             public List<string> SharedWith { get; set; } = new List<string>();
             public string? CollectionId { get; set; }
+
 
             [CustomValidation(typeof(Snippet), nameof(ValidateEmails))]
             public string SharedWithInput

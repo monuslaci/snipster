@@ -30,9 +30,11 @@ namespace Snipster.Services.AppStates
         public Users? user { get; set; }
         public ProtectedBrowserStorageResult<string> storedUser { get; set; }
         public ProtectedBrowserStorageResult<string> storedExpiration { get; set; }
+        public List<Collection> collections = new List<Collection>();
+        public List<Collection> sharedCollections = new List<Collection>();
         private AuthenticationStateProvider _authStateProvider { get; set; }
         private MongoDbService _mongoDbService { get; set; }
-        ProtectedSessionStorage _sessionStorage { get; set; }
+        private ProtectedSessionStorage _sessionStorage { get; set; }
         public AppState(AuthenticationStateProvider _authStateProvider, MongoDbService _mongoDbService, ProtectedSessionStorage _sessionStorage)
         {
             this._authStateProvider = _authStateProvider;
@@ -108,6 +110,45 @@ namespace Snipster.Services.AppStates
 
                 user = await _mongoDbService.GetUser(userEmail);
                 //userEmail = user.Email;
+            }
+            catch (Exception ex)
+            {
+
+                try
+                {
+
+                }
+                catch { }
+
+            }
+        }
+
+        public async Task LoadCollections()
+        {
+            try
+            {
+
+                //get the user's collections
+                collections = await _mongoDbService.GetCollectionsForUserAsync(userEmail);
+            }
+            catch (Exception ex)
+            {
+
+                try
+                {
+
+                }
+                catch { }
+
+            }
+        }
+
+        public async Task LoadSharedCollections()
+        {
+            try
+            {
+                //get the collections that are shared with them
+                sharedCollections = await _mongoDbService.GetSharedCollectionsForUserAsync(userEmail);
             }
             catch (Exception ex)
             {

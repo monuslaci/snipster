@@ -43,7 +43,7 @@ try
     //});
 
 
-
+    builder.Services.AddScoped<AppState>();
     // Register MongoDbService with IMongoDatabase and IPasswordHasher<Users>
     builder.Services.AddSingleton<MongoDbService>(sp =>
     {
@@ -133,7 +133,7 @@ try
     builder.Services.AddAuthorizationCore(); // Add authorization service for Blazor
     builder.Services.AddControllersWithViews();
 
-    builder.Services.AddScoped<AppState>();
+
 
     //builder.Services.AddScoped<Blazored.Toast.Services.IToastService, Blazored.Toast.Services.ToastService>();
     builder.Services.AddScoped<IEmailService, EmailService>();

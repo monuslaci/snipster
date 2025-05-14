@@ -3,9 +3,11 @@
 @using Snipster.Components
 @using System.Security.Claims;
 @using static Snipster.Data.DBContext;
+@using Snipster.Services.AppStates;
 @inject IJSRuntime JSRuntime
 @inject MongoDbService _mongoDbService
 @inject AuthenticationStateProvider AuthenticationStateProvider
+@inject AppState _appState 
 
 @page "/"
 @* @attribute [Authorize] *@
@@ -133,8 +135,14 @@ else
         {
             //Navigation.NavigateTo("/login");
             isAuthenticated = true;
+
             userEmail = user.Identity?.Name;
-            collections = await _mongoDbService.GetLast5CollectionsForUserAsync(userEmail ?? "");
+
+            if (!_appState.collections.Any())
+                await _appState.LoadCollections();
+            var allCollections = _appState.collections;
+
+            collections = await _mongoDbService.GetLast5CollectionsForUserAsync(_appState.user, allCollections);
             userName = user.Identity?.Name;
         }         
     }

@@ -93,10 +93,20 @@ namespace Snipster.Pages
                 //spinnerModal.IsSpinner = true;
                 //spinnerModal.ShowModal();
 
+                ////get the user's collections
+                //collections = await _mongoDbService.GetCollectionsForUserAsync(userEmail);
+                ////get the collections that are shared with them
+                //sharedCollections = await _mongoDbService.GetSharedCollectionsForUserAsync(userEmail);
+
+                if (!_appState.collections.Any() )
+                    await _appState.LoadCollections();
+                if (!_appState.sharedCollections.Any())
+                    await _appState.LoadSharedCollections();
+
                 //get the user's collections
-                collections = await _mongoDbService.GetCollectionsForUserAsync(userEmail);
+                collections = _appState.collections;
                 //get the collections that are shared with them
-                sharedCollections = await _mongoDbService.GetSharedCollectionsForUserAsync(userEmail);
+                sharedCollections = _appState.sharedCollections;
 
                 if (!string.IsNullOrEmpty(selectedCollectionId))
                     await LoadSnippets(selectedCollectionId);
@@ -135,9 +145,13 @@ namespace Snipster.Pages
             await _mongoDbService.AddCollectionAsync(newCollection);
 
             //get the user's collections
-            collections = await _mongoDbService.GetCollectionsForUserAsync(userEmail);
+            await _appState.LoadCollections();
+            //collections = await _mongoDbService.GetCollectionsForUserAsync(userEmail);
+            collections = _appState.collections;
+
+
             //get the collections that are shared with them
-            sharedCollections = await _mongoDbService.GetSharedCollectionsForUserAsync(userEmail);
+            sharedCollections = _appState.sharedCollections;
 
             //add collectionId to user's my collection IDs
             user.MyCollectionIds.Add(newCollection.Id);
@@ -238,10 +252,12 @@ namespace Snipster.Pages
             await _mongoDbService.UpdateCollectionAsync(editCollection);
             editCollectionModal.CloseModal();
 
+            await _appState.LoadCollections();
+
             //get the user's collections
-            collections = await _mongoDbService.GetCollectionsForUserAsync(userEmail);
+            collections = _appState.collections;
             //get the collections that are shared with them
-            sharedCollections = await _mongoDbService.GetSharedCollectionsForUserAsync(userEmail);
+            sharedCollections = _appState.sharedCollections;
 
             spinnerModal.CloseModal();
         }
@@ -256,7 +272,11 @@ namespace Snipster.Pages
         {
             spinnerModal.ShowModal();
             await _mongoDbService.DeleteCollectionAsync(collectionId);
-            collections = await _mongoDbService.GetCollectionsAsync(); // Refresh the list
+
+            await _appState.LoadCollections();
+
+            //get the user's collections
+            collections = _appState.collections;
             spinnerModal.CloseModal();
         }
 
@@ -382,11 +402,11 @@ namespace Snipster.Pages
         private async Task DeleteSnippet(string id)
         {
             spinnerModal.ShowModal();
-            await _mongoDbService.DeleteSnippetAsync(id);
+
 
             //delete the snippet id from the users' SharedSnippetIds
             var snippet = await _mongoDbService.GetSnippetByIdAsync(id);
-            if (snippet.SharedWith.Any())
+            if (snippet != null && snippet.SharedWith.Any())
             {
                 foreach (var sharedEmail in selectedSnippet.SharedWith)
                 {
@@ -398,6 +418,8 @@ namespace Snipster.Pages
                     }
                 }
             }
+
+            await _mongoDbService.DeleteSnippetAsync(id);
 
             //reload the collection without the snippet
             await LoadSnippets(selectedCollectionId);
@@ -413,11 +435,17 @@ namespace Snipster.Pages
         {
             if (!string.IsNullOrEmpty(searchCollectionQuery))
             {
-                collections = await _mongoDbService.SearchCollectionAsync(searchCollectionQuery, userEmail);
+                collections = await _mongoDbService.SearchCollectionAsync(searchCollectionQuery, userEmail, _appState.collections);
+                sharedCollections = await _mongoDbService.SearchCollectionAsync(searchCollectionQuery, userEmail, _appState.sharedCollections);
 
-                if (collections != null)
+                if (collections.Any())
                 {
                     selectedCollectionId = collections.FirstOrDefault().Id;
+                    await LoadSnippets(selectedCollectionId);
+                }
+                else if (!collections.Any() && sharedCollections.Any())
+                {
+                    selectedCollectionId = sharedCollections.FirstOrDefault().Id;
                     await LoadSnippets(selectedCollectionId);
                 }
 
@@ -462,11 +490,17 @@ namespace Snipster.Pages
         {
             spinnerModal.ShowModal();
 
-            collections = await _mongoDbService.GetCollectionsForUserAsync(userEmail);
+            collections = _appState.collections;
+            sharedCollections = _appState.sharedCollections;
 
-            if (collections != null)
+            if (collections.Any())
             {
                 selectedCollectionId = collections.FirstOrDefault().Id;
+                await LoadSnippets(selectedCollectionId);
+            }
+            else if (!collections.Any() && sharedCollections.Any())
+            {
+                selectedCollectionId = sharedCollections.FirstOrDefault().Id;
                 await LoadSnippets(selectedCollectionId);
             }
 

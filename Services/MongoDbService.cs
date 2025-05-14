@@ -5,6 +5,8 @@ using BCrypt.Net;
 using static Snipster.Data.CommonClasses;
 using System.Security.Cryptography;
 using MongoDB.Bson;
+using Snipster.Services.AppStates;
+using Microsoft.AspNetCore.Components;
 
 namespace Snipster.Services
 {
@@ -71,43 +73,43 @@ namespace Snipster.Services
         //        .ToListAsync();
         //}
 
-        public async Task<List<Snippet>> GetSnippetsByUserAsync(string email)
+        public async Task<List<Snippet>> GetSnippetsByUserAsync(Users user, List<Collection> userCollections)
         {
             // Step 1: Find the user by email
-            var user = await _usersCollection.Find(u => u.Email == email).FirstOrDefaultAsync();
             if (user == null || user.MyCollectionIds == null || !user.MyCollectionIds.Any())
             {
                 return new List<Snippet>();
             }
 
-            // Step 2: Load collections using MyCollectionIds
-            var filter = Builders<Collection>.Filter.In(c => c.Id, user.MyCollectionIds);
-            var userCollections = await _collectionsCollection.Find(filter).ToListAsync();
+            // Filter collections to only those in MyCollectionIds (if not already filtered)
+            var validCollections = userCollections
+                .Where(c => user.MyCollectionIds.Contains(c.Id))
+                .ToList();
 
-            // Step 3: Extract snippet IDs
-            var snippetIds = userCollections.SelectMany(c => c.SnippetIds).Distinct().ToList();
+            if (!validCollections.Any())
+                return new List<Snippet>();
+
+            // Extract all unique snippet IDs from the user's collections
+            var snippetIds = validCollections
+                .SelectMany(c => c.SnippetIds)
+                .Distinct()
+                .ToList();
 
             if (!snippetIds.Any())
-            {
                 return new List<Snippet>();
-            }
 
-            // Step 4: Load snippets from the snippet IDs
-            return await _snippetsCollection
-                .Find(snippet => snippetIds.Contains(snippet.Id))
-                .ToListAsync();
+            // Query for snippets using those IDs
+            var filter = Builders<Snippet>.Filter.In(s => s.Id, snippetIds);
+            return await _snippetsCollection.Find(filter).ToListAsync(); ;
         }
 
-        public async Task<List<Snippet>> GetSharedSnippetsByUserAsync(string email)
+        public async Task<List<Snippet>> GetSharedSnippetsByUserAsync(Users user)
         {
-            // Step 1: Find the user
-            var user = await _usersCollection.Find(u => u.Email == email).FirstOrDefaultAsync();
             if (user == null || user.SharedSnippetIds == null || !user.SharedSnippetIds.Any())
             {
                 return new List<Snippet>();
             }
 
-            // Step 2: Query snippets by SharedSnippetIds
             var filter = Builders<Snippet>.Filter.In(s => s.Id, user.SharedSnippetIds);
             return await _snippetsCollection.Find(filter).ToListAsync();
         }
@@ -234,23 +236,17 @@ namespace Snipster.Services
         //    return await _snippetsCollection.Find(finalFilter).ToListAsync();
         //}
 
-        public async Task<List<Snippet>> SearchSnippetAsync(string keyword, string email, bool isFavouriteSearch)
+        public async Task<List<Snippet>> SearchSnippetAsync(string keyword, Users user, List<Collection> collections, bool isFavouriteSearch)
         {
-            // Step 1: Load the user
-            var user = await _usersCollection.Find(u => u.Email == email).FirstOrDefaultAsync();
-
-            if (user == null || user.MyCollectionIds == null || !user.MyCollectionIds.Any())
+            if (user == null || collections == null || collections.Count == 0)
             {
-                return new List<Snippet>(); // No collections = no snippets
+                return new List<Snippet>();
             }
 
-            // Step 2: Fetch collections by user's MyCollectionIds
-            var filterCollections = Builders<Collection>.Filter.In(c => c.Id, user.MyCollectionIds);
-            var userCollections = await _collectionsCollection.Find(filterCollections).ToListAsync();
-
-            // Step 3: Extract snippet IDs
-            var snippetIds = userCollections
-                .SelectMany(col => col.SnippetIds)
+            // Extract snippet IDs from the provided collections
+            var snippetIds = collections
+                .Where(c => user.MyCollectionIds.Contains(c.Id)) // Only consider collections owned by the user
+                .SelectMany(c => c.SnippetIds)
                 .Distinct()
                 .ToList();
 
@@ -259,13 +255,12 @@ namespace Snipster.Services
                 return new List<Snippet>(); // No snippets found
             }
 
-            // Step 4: Build filters
+            // Build filters
             var filters = new List<FilterDefinition<Snippet>>
-            {
-                Builders<Snippet>.Filter.In(s => s.Id, snippetIds) // only user's snippets
-            };
+                {
+                    Builders<Snippet>.Filter.In(s => s.Id, snippetIds)
+                };
 
-            // Keyword filter
             if (!string.IsNullOrWhiteSpace(keyword))
             {
                 var keywordFilter = Builders<Snippet>.Filter.Or(
@@ -274,26 +269,20 @@ namespace Snipster.Services
                     Builders<Snippet>.Filter.Regex(s => s.Content, new BsonRegularExpression(keyword, "i")),
                     Builders<Snippet>.Filter.Regex(s => s.HashtagsInput, new BsonRegularExpression(keyword, "i"))
                 );
-
                 filters.Add(keywordFilter);
             }
 
-            // Favourites filter
             if (isFavouriteSearch)
             {
                 filters.Add(Builders<Snippet>.Filter.Eq(s => s.IsFavourite, true));
             }
 
-            // Step 5: Combine filters and query
             var finalFilter = Builders<Snippet>.Filter.And(filters);
             return await _snippetsCollection.Find(finalFilter).ToListAsync();
         }
 
-        public async Task<List<Snippet>> SearchSharedSnippetAsync(string keyword, string email, bool isFavouriteSearch)
+        public async Task<List<Snippet>> SearchSharedSnippetAsync(string keyword, string email, bool isFavouriteSearch, Users user)
         {
-            // Step 1: Load the user
-            var user = await _usersCollection.Find(u => u.Email == email).FirstOrDefaultAsync();
-
             if (user == null || user.SharedSnippetIds == null || !user.SharedSnippetIds.Any())
             {
                 return new List<Snippet>(); // No shared snippets
@@ -458,15 +447,28 @@ namespace Snipster.Services
             return sharedCollections;
         }
 
-        public async Task<List<Collection>> GetLast5CollectionsForUserAsync(string email)
+        public async Task<List<Collection>> GetLast5CollectionsForUserAsync(Users user, List<Collection> collections)
         {
-            var collections = await _collectionsCollection
-                .Find(Builders<Collection>.Filter.Eq(c => c.CreatedBy, email))
-                .Sort(Builders<Collection>.Sort.Descending(c => c.LastModifiedDate))
-                .Limit(5)
-                .ToListAsync();
 
-            return collections;
+            if (user == null || user.MyCollectionIds == null || !user.MyCollectionIds.Any())
+                return new List<Collection>();
+
+            //var filter = Builders<Collection>.Filter.In(c => c.Id, user.MyCollectionIds);
+
+            //var collections = await _collectionsCollection
+            //    .Find(filter)
+            //    .SortByDescending(c => c.LastModifiedDate)
+            //    .Limit(5)
+            //    .ToListAsync();
+
+            //return collections;
+
+
+            return collections
+                .Where(c => user.MyCollectionIds.Contains(c.Id))
+                .OrderByDescending(c => c.LastModifiedDate)
+                .Take(5)
+                .ToList();
         }
 
         public async Task AddCollectionAsync(Collection collection)
@@ -479,18 +481,20 @@ namespace Snipster.Services
             await _collectionsCollection.DeleteOneAsync(c => c.Id == id);
         }
 
-        public async Task<List<Collection>> SearchCollectionAsync(string keyword, string email)
+        public async Task<List<Collection>> SearchCollectionAsync(string keyword, string email, List<Collection> userCollections)
         {
-            var keywordFilter = Builders<Collection>.Filter.Or(
-                Builders<Collection>.Filter.Regex(c => c.Id, new BsonRegularExpression(keyword, "i")),
-                Builders<Collection>.Filter.Regex(c => c.Title, new BsonRegularExpression(keyword, "i"))
-            );
+            if (string.IsNullOrWhiteSpace(keyword))
+            {
+                // No keyword: return all user-created collections
+                return userCollections
+                    .Where(c => c.CreatedBy == email)
+                    .ToList();
+            }
 
-            var emailFilter = Builders<Collection>.Filter.Eq(c => c.CreatedBy, email);
-
-            var filter = Builders<Collection>.Filter.And(keywordFilter, emailFilter);
-
-            return await _collectionsCollection.Find(filter).ToListAsync();
+            // Keyword filter (case-insensitive)
+            return userCollections
+                .Where(c => c.Title.Contains(keyword, StringComparison.OrdinalIgnoreCase))
+                .ToList();
         }
 
         //public async Task CreateListAsync(Lists list)
