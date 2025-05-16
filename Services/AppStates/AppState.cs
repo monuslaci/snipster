@@ -20,6 +20,7 @@ using static Snipster.Data.CommonClasses;
 using static Snipster.Helpers.GeneralHelpers;
 using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage;
 
+
 namespace Snipster.Services.AppStates
 {
     public class AppState : BaseAppState
@@ -32,6 +33,8 @@ namespace Snipster.Services.AppStates
         public ProtectedBrowserStorageResult<string> storedExpiration { get; set; }
         public List<Collection> collections = new List<Collection>();
         public List<Collection> sharedCollections = new List<Collection>();
+        public List<MemorySnippetList> loadedSnippets = new List<MemorySnippetList>();
+        public List<MemorySnippetList> loadedSharedSnippets = new List<MemorySnippetList>();
         private AuthenticationStateProvider _authStateProvider { get; set; }
         private MongoDbService _mongoDbService { get; set; }
         private ProtectedSessionStorage _sessionStorage { get; set; }
@@ -130,6 +133,7 @@ namespace Snipster.Services.AppStates
 
                 //get the user's collections
                 collections = await _mongoDbService.GetCollectionsForUserAsync(userEmail);
+                await LoadConnectingSnippets();
             }
             catch (Exception ex)
             {
@@ -149,6 +153,7 @@ namespace Snipster.Services.AppStates
             {
                 //get the collections that are shared with them
                 sharedCollections = await _mongoDbService.GetSharedCollectionsForUserAsync(userEmail);
+                await LoadSharedConnectingSnippets();
             }
             catch (Exception ex)
             {
@@ -159,6 +164,112 @@ namespace Snipster.Services.AppStates
                 }
                 catch { }
 
+            }
+        }
+
+        public async Task LoadConnectingSnippets()
+        {
+            try
+            {
+                foreach (var collection in collections)
+                {
+                    if (loadedSnippets.Where(x => x.collectionId == collection.Id).Count() == 0)
+                    {
+                        List<Snippet> snippets = await _mongoDbService.GetSnippetsByCollectionAsync(collection.Id);
+
+                        loadedSnippets.Add(new MemorySnippetList
+                        {
+                            collectionId = collection.Id,
+                            snippetList = snippets
+                        });
+                    }
+                }
+                foreach (var s in loadedSnippets)
+                {
+                    await AdUserNamesToSnippets(s.snippetList);
+                    s.snippetList = s.snippetList
+                        .OrderBy(snippet => snippet.Title)
+                        .ToList();
+                }
+
+               
+            }
+            catch (Exception ex)
+            {
+
+                try
+                {
+
+                }
+                catch { }
+
+            }
+        }
+
+        public async Task LoadSharedConnectingSnippets()
+        {
+            try
+            {
+                foreach (var collection in sharedCollections)
+                {
+                    MemorySnippetList memoryList = loadedSharedSnippets.FirstOrDefault(msl => msl.collectionId == collection.Id);
+
+                    foreach (var snippetId in collection.SnippetIds)
+                    {
+                        if (user.SharedSnippetIds.Contains(snippetId))
+                        {
+                            Snippet snippet = await _mongoDbService.GetSnippetByIdAsync(snippetId);
+
+                            if (memoryList != null)
+                            {
+                                //If the snippet isn't already in the list, add it
+                                if (!memoryList.snippetList.Any(s => s.Id == snippet.Id))
+                                {
+                                    memoryList.snippetList.Add(snippet);
+                                }
+                            }
+                            else
+                            {
+                                //Create a new MemorySnippetList and add the snippet
+                                loadedSharedSnippets.Add(new MemorySnippetList
+                                {
+                                    collectionId = collection.Id,
+                                    snippetList = new List<Snippet> { snippet }
+                                });
+                            }
+                        }
+                    }       
+                }
+                foreach (var ls in loadedSharedSnippets)
+                {
+                    await AdUserNamesToSnippets(ls.snippetList);
+                    ls.snippetList = ls.snippetList
+                        .OrderBy(snippet => snippet.Title)
+                        .ToList();
+                }
+                
+
+            }
+            catch (Exception ex)
+            {
+
+                try
+                {
+
+                }
+                catch { }
+
+            }
+        }
+
+        private async Task AdUserNamesToSnippets(List<Snippet> snippetList)
+        {
+            var allUsers = await _mongoDbService.GetAllUsers();
+            foreach (var s in snippetList)
+            {
+                var u = allUsers.Where(u => u.Id == s.CreatedBy).FirstOrDefault();
+                if (u != null)
+                    s.CreatedBy = $"{u.FirstName} {u.LastName}";
             }
         }
 

@@ -20,6 +20,7 @@ using SendGrid;
 using SendGrid.Helpers.Mail;
 using static Snipster.Helpers.GeneralHelpers;
 using Snipster.Services.AppStates;
+using Snipster.Helpers;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -137,7 +138,7 @@ try
 
     //builder.Services.AddScoped<Blazored.Toast.Services.IToastService, Blazored.Toast.Services.ToastService>();
     builder.Services.AddScoped<IEmailService, EmailService>();
-
+    builder.Services.AddScoped<IGeneralHelpers, GeneralHelpers>();
 
 
     //builder.Services.AddSingleton<IMongoDbService, MongoDbService>();

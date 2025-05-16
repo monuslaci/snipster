@@ -104,8 +104,12 @@ else
 
 
     </div>
-}
 
+
+}
+<Modal @ref="spinnerModal">
+
+</Modal>
 
 
 @code {
@@ -117,6 +121,7 @@ else
     private string? userEmail { get; set; }
     private string? userName { get; set; }
     private bool isAuthenticated = false;
+    private Users? currentUser { get; set; }
 
     private void NavigateToCollections()
     {
@@ -131,22 +136,42 @@ else
         // Get the user from the authentication state
         var user = authState.User;
 
-        if (user != null && user.Identity!= null && user.Identity.IsAuthenticated)
+        if (user != null && user.Identity != null && user.Identity.IsAuthenticated)
         {
             //Navigation.NavigateTo("/login");
             isAuthenticated = true;
 
             userEmail = user.Identity?.Name;
 
+            currentUser = _appState.user;
+            userName = currentUser != null ? currentUser.FirstName + " " + currentUser.LastName : "";
+
+        }
+
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+
+            spinnerModal.IsSpinner = true;
+            spinnerModal.ShowModal();
+
             if (!_appState.collections.Any())
                 await _appState.LoadCollections();
             var allCollections = _appState.collections;
 
-            collections = await _mongoDbService.GetLast5CollectionsForUserAsync(_appState.user, allCollections);
-            userName = user.Identity?.Name;
-        }         
-    }
+            // if (!_appState.sharedCollections.Any())
+            //     await _appState.LoadSharedCollections();
 
+            collections = await _mongoDbService.GetLast5CollectionsForUserAsync(_appState.user, allCollections);
+
+            StateHasChanged();
+
+            spinnerModal.CloseModal();
+    }
+    }
 
     private void NavigateToCollection(string collectionId)
     {

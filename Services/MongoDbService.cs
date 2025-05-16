@@ -476,26 +476,43 @@ namespace Snipster.Services
             await _collectionsCollection.InsertOneAsync(collection);
         }
 
-        public async Task DeleteCollectionAsync(string id)
+        public async Task DeleteCollectionAsync(string collectionId)
         {
-            await _collectionsCollection.DeleteOneAsync(c => c.Id == id);
-        }
+            // Step 1: Load the collection to get its snippet IDs
+            var collection = await _collectionsCollection
+                .Find(c => c.Id == collectionId)
+                .FirstOrDefaultAsync();
 
-        public async Task<List<Collection>> SearchCollectionAsync(string keyword, string email, List<Collection> userCollections)
-        {
-            if (string.IsNullOrWhiteSpace(keyword))
-            {
-                // No keyword: return all user-created collections
-                return userCollections
-                    .Where(c => c.CreatedBy == email)
-                    .ToList();
-            }
+            if (collection == null)
+                return;
 
-            // Keyword filter (case-insensitive)
-            return userCollections
-                .Where(c => c.Title.Contains(keyword, StringComparison.OrdinalIgnoreCase))
+            var snippetIds = collection.SnippetIds;
+
+            // Step 2: Delete the collection itself
+            await _collectionsCollection.DeleteOneAsync(c => c.Id == collectionId);
+
+            // Step 3: Find other collections that might still reference the same snippets
+            var otherCollections = await _collectionsCollection
+                .Find(Builders<Collection>.Filter.Ne(c => c.Id, collectionId))
+                .ToListAsync();
+
+            var stillReferencedSnippetIds = otherCollections
+                .SelectMany(c => c.SnippetIds)
+                .ToHashSet();
+
+            // Step 4: Identify orphaned snippets (not referenced by any other collection)
+            var orphanedSnippetIds = snippetIds
+                .Where(id => !stillReferencedSnippetIds.Contains(id))
                 .ToList();
+
+            if (orphanedSnippetIds.Any())
+            {
+                var snippetDeleteFilter = Builders<Snippet>.Filter.In(s => s.Id, orphanedSnippetIds);
+                await _snippetsCollection.DeleteManyAsync(snippetDeleteFilter);
+            }
         }
+
+
 
         //public async Task CreateListAsync(Lists list)
         //{

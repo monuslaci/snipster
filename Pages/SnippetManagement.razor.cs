@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Snipster.Components;
+using Snipster.Helpers;
 using Snipster.Services;
 using Snipster.Services.AppStates;
 using System.Collections.Generic;
@@ -17,13 +18,11 @@ namespace Snipster.Pages
         [Inject] NavigationManager Navigation { get; set; }
         [Inject] private AuthenticationStateProvider AuthStateProvider { get; set; }
         [Inject] private AppState _appState { get; set; }
+        [Inject] private IGeneralHelpers _helper { get; set; }
         private bool IncludeSharedSnippets { get; set; } = false;
         private string searchQuery { get; set; }
         private List<Snippet> filteredSnippets = new List<Snippet>();
         private Dictionary<string, IEnumerable<string>> relatedCollections = new Dictionary<string, IEnumerable<string>>();
-        private Snippet newSnippet = new Snippet();
-        private Modal createSnippetModal { get; set; }
-        private Modal editSnippetModal { get; set; }
         private List<Collection> allCollections = new List<Collection>(); // List of all available collections for user
         private List<string> selectedCollectionIds = new List<string>(); // Stores selected collection IDs
         private string searchSnippetQuery { get; set; }
@@ -62,37 +61,40 @@ namespace Snipster.Pages
         }
         private async Task LoadSnippets()
         {
-            //load own colletions
+            //load own colletions to appstate
             if (!_appState.collections.Any())
                 await _appState.LoadCollections();
 
+            //load collections shared with user to appstate
+            if (!_appState.sharedCollections.Any())
+                await _appState.LoadSharedCollections();
+
             //load own snippets
-            filteredSnippets = await MongoDbService.GetSnippetsByUserAsync(_appState.user, _appState.collections);
+            //filteredSnippets = await MongoDbService.GetSnippetsByUserAsync(_appState.user, _appState.collections);
+            foreach (var ls in _appState.loadedSnippets)
+            {
+                filteredSnippets.AddRange(ls.snippetList);
+
+            }
+            //foreach (var lss in _appState.loadedSharedSnippets)
+            //{
+            //    snippets.AddRange(lss.snippetList);
+            //}
 
             if (IncludeSharedSnippets)
             {
-                //load collections shared with user
-                if (!_appState.sharedCollections.Any())
-                    await _appState.LoadSharedCollections();
-
+                List<Snippet> filteredSharedSnippets = new List<Snippet>();
                 //load shared snippets
-                var filteredSharedSnippets = await MongoDbService.GetSharedSnippetsByUserAsync(_appState.user);
+                foreach (var ls in _appState.loadedSnippets)
+                {
+                    filteredSharedSnippets.AddRange(ls.snippetList);
+
+                }
+                //List<Snippet> filteredSharedSnippets = await MongoDbService.GetSharedSnippetsByUserAsync(_appState.user);
                 filteredSnippets.AddRange(filteredSharedSnippets);
             }
-            await AdUserNamesToSnippets(filteredSnippets);
 
             await LoadRelatedCollections();
-        }
-
-        private async Task AdUserNamesToSnippets(List<Snippet> snippetList)
-        {
-            var allUsers = await MongoDbService.GetAllUsers();
-            foreach (var s in snippetList)
-            {
-                var u = allUsers.Where(u => u.Id == s.CreatedBy).FirstOrDefault();
-                if (u != null)
-                    s.CreatedBy = $"{u.FirstName} {u.LastName}";
-            }
         }
 
         private async Task OpenSnippet(string snippetId)
@@ -127,6 +129,7 @@ namespace Snipster.Pages
         private async Task SearchFavouriteSnippets()
         {
             IsFavouriteSearch = !IsFavouriteSearch;
+            //currentPage = 1;
             await OnSearchSnippet();
         }
 
@@ -140,21 +143,25 @@ namespace Snipster.Pages
         {
             spinnerModal.ShowModal();
 
+            filteredSnippets.Clear();
+
             // Instead of clearing first, directly assign the new filtered list
             //search in the own collections
-            var results = await MongoDbService.SearchSnippetAsync(searchSnippetQuery, _appState.user, _appState.collections, IsFavouriteSearch);
+            //var results = await MongoDbService.SearchSnippetAsync(searchSnippetQuery, _appState.user, _appState.collections, IsFavouriteSearch);
+            var results = _helper.SearchSnippetFromMemory(searchSnippetQuery, _appState.user, _appState.collections, IsFavouriteSearch);
 
             //search in the shared snippets
             if (IncludeSharedSnippets)
             {
-                List<Snippet> sharedResults = await MongoDbService.SearchSharedSnippetAsync(searchSnippetQuery, userEmail, IsFavouriteSearch, _appState.user);
+                List<Snippet> sharedResults = _helper.SearchSharedSnippetFromMemory(searchSnippetQuery, _appState.user, IsFavouriteSearch);
                 results.AddRange(sharedResults);
             }
 
             // Assign new results directly
-            filteredSnippets = results;
+            filteredSnippets.AddRange(results);
 
-            await AdUserNamesToSnippets(filteredSnippets);
+            if (Math.Ceiling((double) filteredSnippets.Count() / 10) < currentPage)
+                currentPage = 1;
 
             StateHasChanged();
             spinnerModal.CloseModal();

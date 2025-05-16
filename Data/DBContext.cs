@@ -238,6 +238,15 @@ namespace Snipster.Data
             public string Token { get; set; }
 
         }
+
+        public class MemorySnippetList
+        {
+            public string collectionId { get; set; }
+
+            public List<Snippet> snippetList { get; set; }
+
+
+        }
     }
 
     public class MongoDbContext : Snipster.Data.IMongoDbContext, MongoDbGenericRepository.IMongoDbContext
