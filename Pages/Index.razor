@@ -4,10 +4,13 @@
 @using System.Security.Claims;
 @using static Snipster.Data.DBContext;
 @using Snipster.Services.AppStates;
+@using Snipster.Helpers;
+
 @inject IJSRuntime JSRuntime
 @inject MongoDbService _mongoDbService
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject AppState _appState 
+@inject IGeneralHelpers _helper
 
 @page "/"
 @* @attribute [Authorize] *@
@@ -165,7 +168,7 @@ else
             // if (!_appState.sharedCollections.Any())
             //     await _appState.LoadSharedCollections();
 
-            collections = await _mongoDbService.GetLast5CollectionsForUserAsync(_appState.user, allCollections);
+            collections = await _helper.GetLast5CollectionsForUserFromMemory(_appState.user, allCollections);
 
             StateHasChanged();
 

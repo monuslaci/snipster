@@ -447,28 +447,20 @@ namespace Snipster.Services
             return sharedCollections;
         }
 
-        public async Task<List<Collection>> GetLast5CollectionsForUserAsync(Users user, List<Collection> collections)
+        public async Task<List<Collection>> GetLast5CollectionsForUserAsync(Users user)
         {
-
             if (user == null || user.MyCollectionIds == null || !user.MyCollectionIds.Any())
                 return new List<Collection>();
 
-            //var filter = Builders<Collection>.Filter.In(c => c.Id, user.MyCollectionIds);
+            var filter = Builders<Collection>.Filter.In(c => c.Id, user.MyCollectionIds);
 
-            //var collections = await _collectionsCollection
-            //    .Find(filter)
-            //    .SortByDescending(c => c.LastModifiedDate)
-            //    .Limit(5)
-            //    .ToListAsync();
+            var collections = await _collectionsCollection
+                .Find(filter)
+                .SortByDescending(c => c.LastModifiedDate)
+                .Limit(5)
+                .ToListAsync();
 
-            //return collections;
-
-
-            return collections
-                .Where(c => user.MyCollectionIds.Contains(c.Id))
-                .OrderByDescending(c => c.LastModifiedDate)
-                .Take(5)
-                .ToList();
+            return collections;
         }
 
         public async Task AddCollectionAsync(Collection collection)

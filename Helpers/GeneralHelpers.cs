@@ -32,6 +32,7 @@ namespace Snipster.Helpers
         Task UpdateSnippetInMemory(string selectedCollectionId, Snippet selectedSnippet);
         Task AddNewSnippetInMemory(string selectedCollectionIdCreate, Snippet newSnippet, string snippetId);
         Task DeleteSnippetFromMemory(string snippetId);
+        Task<List<Collection>> GetLast5CollectionsForUserFromMemory(Users user, List<Collection> collections);
     }
 
     public class GeneralHelpers : IGeneralHelpers
@@ -211,6 +212,19 @@ namespace Snipster.Helpers
                     break; 
                 }
             }
+        }
+
+        public async Task<List<Collection>> GetLast5CollectionsForUserFromMemory(Users user, List<Collection> collections)
+        {
+
+            if (user == null || user.MyCollectionIds == null || !user.MyCollectionIds.Any())
+                return new List<Collection>();
+
+            return collections
+                .Where(c => user.MyCollectionIds.Contains(c.Id))
+                .OrderByDescending(c => c.LastModifiedDate)
+                .Take(5)
+                .ToList();
         }
 
         public class EmailSendingClass

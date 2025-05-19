@@ -104,7 +104,7 @@ namespace Snipster.Services.AppStates
             }
         }
 
-        public async Task GetUserFfromSessionStorage()
+        public async Task GetUserFromSessionStorage()
         {
             try
             {

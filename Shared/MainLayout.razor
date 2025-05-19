@@ -8,6 +8,7 @@
 @inject ProtectedLocalStorage ProtectedLocalStorage
 @inject AppState _appState 
 
+
 @inherits LayoutComponentBase
 
 
@@ -71,7 +72,7 @@
     protected override async Task OnInitializedAsync()
     {
         if (_appState.user == null)
-            await _appState.GetUserFfromSessionStorage();
+            await _appState.GetUserFromSessionStorage();
 
     }
     protected override async Task OnAfterRenderAsync(bool firstRender)
