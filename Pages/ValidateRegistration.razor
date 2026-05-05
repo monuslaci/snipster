@@ -9,25 +9,32 @@
 @inject NavigationManager Navigation
 
 
-<div class="reset-container">
+<div class="validation-page">
+    <div class="validation-card">
 
     @if (isProcessing)
     {
-        <div class="login-container">
-            <h1>Registration is being validated, please do not refresh page!</h1>
+        <div class="validation-state">
+            <div class="status-spinner"></div>
+            <h1>Registration is being validated</h1>
+            <p>Please wait while we confirm your account.</p>
         </div>
     }
     @if (isSuccess && !isProcessing)
     {
-        <div class="login-container">
-            <h1>Registration is confirmed, you are now redirected to the login page..</h1>
+        <div class="validation-state">
+            <div class="status-icon success">✓</div>
+            <h1>Registration is confirmed</h1>
+            <p>You are being redirected to the login page.</p>
         </div>
     }
 
     @if (!isSuccess && !isProcessing)
     {
-        <div class="login-container">
-            <h1>Token is not valid, confirmation is not successful!</h1>
+        <div class="validation-state">
+            <div class="status-icon error">!</div>
+            <h1>Confirmation link is not valid</h1>
+            <p>Enter your email address and we will send a new activation link.</p>
     
                 <EditForm Model="resetEmailModel" OnValidSubmit="HandleResetEmail">
                     <DataAnnotationsValidator />
@@ -44,37 +51,153 @@
                         <a href="/login">Back to Login</a>
                     </div>
                 </EditForm>
-        
+                
         </div>
     }
 
 
 
+    </div>
 </div>
-
-<Modal @ref="spinnerModal">
-
-</Modal>
-
-
-@code {
+		@code {
 
 
 }
-<style>
+	<style>
 
-    .login-container {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        width: 100%;
-    }
+        .validation-page {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 24px;
+            background: #f0f2f5;
+        }
 
+        .validation-card {
+            width: 100%;
+            max-width: 440px;
+            padding: 32px;
+            border-radius: 16px;
+            background: linear-gradient(135deg, #091E5D 0%, #0A3D91 100%);
+            box-shadow: 0px 8px 24px rgba(0, 0, 0, 0.2);
+            color: #F0F2EA;
+            text-align: center;
+        }
 
-    .error {
-        color: red;
-        text-align: center;
-        margin-top: 10px;
-    }
-</style>
+        .validation-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .validation-state h1 {
+            margin: 0;
+            font-size: 1.45rem;
+            font-weight: 700;
+            line-height: 1.25;
+        }
+
+        .validation-state p {
+            max-width: 320px;
+            margin: 0;
+            color: rgba(240, 242, 234, 0.85);
+            line-height: 1.45;
+        }
+
+        .status-spinner {
+            width: 48px;
+            height: 48px;
+            border: 4px solid rgba(255, 255, 255, 0.25);
+            border-top-color: #28a745;
+            border-radius: 50%;
+            animation: spin 0.9s linear infinite;
+        }
+
+        .status-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 52px;
+            height: 52px;
+            border-radius: 50%;
+            font-size: 1.7rem;
+            font-weight: 700;
+        }
+
+        .status-icon.success {
+            background: #28a745;
+            color: #ffffff;
+        }
+
+        .status-icon.error {
+            background: #dc3545;
+            color: #ffffff;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            margin-top: 8px;
+            margin-bottom: 16px;
+        }
+
+        .form-group label {
+            width: 100%;
+            max-width: 320px;
+            margin-bottom: 6px;
+            text-align: left;
+            color: #F0F2EA;
+        }
+
+        .input-short {
+            width: 100%;
+            max-width: 320px;
+            padding: 12px 16px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.95);
+            color: #333;
+            font-size: 1rem;
+        }
+
+        .btn-primary {
+            width: 100%;
+            max-width: 240px;
+            display: block;
+            margin: 18px auto 0;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: #ffffff;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .back-to-login {
+            margin-top: 16px;
+            text-align: center;
+        }
+
+        .back-to-login a {
+            color: #ffc107;
+            font-weight: 600;
+            text-decoration: none;
+        }
+
+        .back-to-login a:hover {
+            color: #ffda6a;
+            text-decoration: underline;
+        }
+
+        @@keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+	</style>

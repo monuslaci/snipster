@@ -63,15 +63,16 @@ namespace Snipster.Pages
             EmailSendingClass emailDetails = new EmailSendingClass();
 
             var resetUrl = "";
+            var encodedToken = Uri.EscapeDataString(token);
             if (Environment.GetEnvironmentVariable("Environment") == "Development")
-                resetUrl = $"https://localhost:7225/pw-reset?token={token}";
+                resetUrl = $"https://localhost:7225/pw-reset?token={encodedToken}";
             else if (Environment.GetEnvironmentVariable("Environment") == "Production")
-                resetUrl = $"https://snipster.co/pw-reset?token={token}";
+                resetUrl = $"https://snipster.co/pw-reset?token={encodedToken}";
 
-            ResetEmailTemplate = Regex.Replace(ResetEmailTemplate, "<resetUrl>", resetUrl);
-            ResetEmailTemplate = Regex.Replace(ResetEmailTemplate, "<Name>", name);
+            var htmlContent = Regex.Replace(ResetEmailTemplate, "<resetUrl>", resetUrl);
+            htmlContent = Regex.Replace(htmlContent, "<Name>", name);
 
-            emailDetails.htmlContent = ResetEmailTemplate;
+            emailDetails.htmlContent = htmlContent;
             emailDetails.To = email;
             emailDetails.Subject = "Reset Your Password in Snipster.com"; 
 
@@ -82,7 +83,7 @@ namespace Snipster.Pages
                 <body>
                 <div><p>Dear <Name>, </p> <p> <o:p>&nbsp;</o:p></p>
                 <p>You received this email because you requested a password reset.</p> <p><o:p>&nbsp;</o:p></p>
-                <p>Click <a href='<resetUrl>' here</a> to reset your password.</p> <p><o:p>&nbsp;</o:p></p>
+                <p>Click <a href='<resetUrl>'>here</a> to reset your password.</p> <p><o:p>&nbsp;</o:p></p>
                 <p>If you didn’t request this, please ignore this email. This link will expire in 24 hours.</p> <p><o:p>&nbsp;</o:p></p>
 
                 <p>Best regards,</p> 

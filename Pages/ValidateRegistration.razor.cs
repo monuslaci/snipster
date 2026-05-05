@@ -18,6 +18,7 @@ using static Snipster.Helpers.GeneralHelpers;
 using System.Text.RegularExpressions;
 using Amazon.Runtime.Internal.Endpoints.StandardLibrary;
 using Snipster.Services.AppStates;
+using Microsoft.AspNetCore.WebUtilities;
 
 namespace Snipster.Pages
 {
@@ -30,58 +31,48 @@ namespace Snipster.Pages
         [Inject] EmailService EmailService { get; set; }
         [Inject] private AppState _appState { get; set; }
         private ResetModel resetEmailModel = new ResetModel();
-        private bool isProcessing = false;
+        private bool isProcessing = true;
         private bool isSuccess = false;
-        private string? userEmail { get; set; }
-        private Modal spinnerModal { get; set; }
-        private Users user { get; set; }
+        private bool redirectStarted = false;
 
         protected override async Task OnInitializedAsync()
         {
-            // Extract token from URL
-            Token = Navigation.ToAbsoluteUri(Navigation.Uri).Query.Split("token=")[1];
+            var query = QueryHelpers.ParseQuery(Navigation.ToAbsoluteUri(Navigation.Uri).Query);
+            Token = query.TryGetValue("token", out var token) ? token.ToString() : "";
 
-
-        }
-        protected override async Task OnAfterRenderAsync(bool firstRender)
-        {
-            if (firstRender)
+            if (string.IsNullOrWhiteSpace(Token))
             {
-                spinnerModal.ShowModal();
-
-                userEmail = _appState.userEmail;
-                user = _appState.user;
-
-                isProcessing = true;
-                bool success = await _mongoDbService.ValidateGeneratedRegisterTokenAsync(Token);
-
-                if (success)
-                {
-                    isSuccess = true;
-           
-                    user.RegistrationConfirmed = true;
-                    await _mongoDbService.UpdateUser(user);
-                    isProcessing = false;
-                    //ToastService.ShowSuccess($"Registration is confirmed, you are now redirected to the login page..");
-
-                    await Task.Delay(3000);
-                    Navigation.NavigateTo("/login"); 
-                }
-                else
-                {
-                    ToastService.ShowError($"Invalid token");
-                }
-                
-
-                spinnerModal.CloseModal();
+                isProcessing = false;
+                ToastService.ShowError($"Invalid token");
+                return;
             }
 
+            isSuccess = await _mongoDbService.ValidateGeneratedRegisterTokenAsync(Token);
+            isProcessing = false;
+
+            if (!isSuccess)
+            {
+                ToastService.ShowError($"Invalid token");
+            }
         }
+
+        protected override async Task OnAfterRenderAsync(bool firstRender)
+        {
+            if (isSuccess && !isProcessing && !redirectStarted)
+            {
+                redirectStarted = true;
+                await Task.Delay(3000);
+                Navigation.NavigateTo("/login");
+            }
+        }
+
         private async Task HandleResetEmail()
         {
+            var user = await _mongoDbService.GetUser(resetEmailModel.Email);
+
             if (user != null)
             {
-                string token = await _mongoDbService.GenerateResetTokenAsync(user.Email);
+                string token = await _mongoDbService.GenerateRegisterTokenAsync(user.Email);
 
                 await EmailService.SendEmailNotification(CreateResetEmailTemplate(user.Email, $"{user.FirstName} {user.LastName}", token));
 
@@ -102,15 +93,16 @@ namespace Snipster.Pages
             EmailSendingClass emailDetails = new EmailSendingClass();
 
             var url = "";
+            var encodedToken = Uri.EscapeDataString(token);
             if (Environment.GetEnvironmentVariable("Environment") == "Development")
-                url = $"https://localhost:7225/validate-registration?token={token}";
+                url = $"https://localhost:7225/validate-registration?token={encodedToken}";
             else if (Environment.GetEnvironmentVariable("Environment") == "Production")
-                url = $"https://yourapp.com/pvalidate-registration?token={token}";
+                url = $"https://snipster.co/validate-registration?token={encodedToken}";
 
-            RegistrationEmailTemplate = Regex.Replace(RegistrationEmailTemplate, "<url>", url);
-            RegistrationEmailTemplate = Regex.Replace(RegistrationEmailTemplate, "<Name>", name);
+            var htmlContent = Regex.Replace(RegistrationEmailTemplate, "<url>", url);
+            htmlContent = Regex.Replace(htmlContent, "<Name>", name);
 
-            emailDetails.htmlContent = RegistrationEmailTemplate;
+            emailDetails.htmlContent = htmlContent;
             emailDetails.To = email;
             emailDetails.Subject = "Confirm your registration on Snipster.com";
 
@@ -121,7 +113,7 @@ namespace Snipster.Pages
                 <!DOCTYPE html> <html> <head> <style> p { margin: 0;} OL { list-style-type: decimal; } OL OL  {list-style-type: upper-roman;} UL  {list-style-type: disc;} UL UL  {list-style-type: square;} .cal {font: 15px Calibri;} </style> </head><body>
                 <body>
                 <div><p>Dear <Name>, </p> <p> <o:p>&nbsp;</o:p></p>
-                <p>To confirm your registration on Snipster.com, please click on this <a href='<resetUrl>'>link</a> </p> <p><o:p>&nbsp;</o:p></p>
+                <p>To confirm your registration on Snipster.com, please click on this <a href='<url>'>link</a> </p> <p><o:p>&nbsp;</o:p></p>
 
                 <p>If you didn’t request this, please ignore this email.</p> <p><o:p>&nbsp;</o:p></p>
 

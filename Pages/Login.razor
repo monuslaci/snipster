@@ -37,6 +37,13 @@
 
             <button type="submit" class="btn btn-primary">Login</button>
 
+            @if (showResendRegistrationConfirmation)
+            {
+                <button type="button" class="btn btn-secondary resend-confirmation" @onclick="HandleResendRegistrationConfirmation" disabled="@isResendingRegistrationConfirmation">
+                    @(isResendingRegistrationConfirmation ? "Sending..." : "Resend activation email")
+                </button>
+            }
+
             <div class="forgot-email">
                 <a href="/reset-email">Forgot Password?</a>
             </div>

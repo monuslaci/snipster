@@ -14,6 +14,7 @@ using System.Security.Claims;
 using static Snipster.Data.CommonClasses;
 using Blazored.Toast.Services;
 using AspNetCore.Identity.MongoDbCore.Models;
+using Microsoft.AspNetCore.WebUtilities;
 
 namespace Snipster.Pages
 {
@@ -29,8 +30,8 @@ namespace Snipster.Pages
 
         protected override void OnInitialized()
         {
-            // Extract token from URL
-            Token = Navigation.ToAbsoluteUri(Navigation.Uri).Query.Split("token=")[1];
+            var query = QueryHelpers.ParseQuery(Navigation.ToAbsoluteUri(Navigation.Uri).Query);
+            Token = query.TryGetValue("token", out var token) ? token.ToString() : "";
         }
 
         private async Task HandlePasswordReset()

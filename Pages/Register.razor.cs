@@ -49,7 +49,7 @@ namespace Snipster.Pages
                 Message = "Registration successful! Redirecting to login...";
                 ToastService.ShowSuccess("Registration successful, please confirm your registration by clicking on the link in the email sent to your email address! Redirecting to login...");
 
-                string token = await MongoDbService.GenerateResetTokenAsync(user.Email);
+                string token = await MongoDbService.GenerateRegisterTokenAsync(user.Email);
                 await EmailService.SendEmailNotification(CreateRegisterEmailTemplate(user.Email, $"{user.FirstName} {user.LastName}", token));
 
                 await Task.Delay(2000);
@@ -68,15 +68,16 @@ namespace Snipster.Pages
             EmailSendingClass emailDetails = new EmailSendingClass();
 
             var url = "";
+            var encodedToken = Uri.EscapeDataString(token);
             if (Environment.GetEnvironmentVariable("Environment") == "Development")
-                url = $"https://localhost:7225/validate-registration?token={token}";
+                url = $"https://localhost:7225/validate-registration?token={encodedToken}";
             else if (Environment.GetEnvironmentVariable("Environment") == "Production")
-                url = $"https://snipster.co/validate-registration?token={token}";
+                url = $"https://snipster.co/validate-registration?token={encodedToken}";
 
-            RegistrationEmailTemplate = Regex.Replace(RegistrationEmailTemplate, "<url>", url);
-            RegistrationEmailTemplate = Regex.Replace(RegistrationEmailTemplate, "<Name>", name);
+            var htmlContent = Regex.Replace(RegistrationEmailTemplate, "<url>", url);
+            htmlContent = Regex.Replace(htmlContent, "<Name>", name);
 
-            emailDetails.htmlContent = RegistrationEmailTemplate;
+            emailDetails.htmlContent = htmlContent;
             emailDetails.To = email;
             emailDetails.Subject = "Confirm your registration on Snipster.com";
 
@@ -87,7 +88,7 @@ namespace Snipster.Pages
                 <!DOCTYPE html> <html> <head> <style> p { margin: 0;} OL { list-style-type: decimal; } OL OL  {list-style-type: upper-roman;} UL  {list-style-type: disc;} UL UL  {list-style-type: square;} .cal {font: 15px Calibri;} </style> </head><body>
                 <body>
                 <div><p>Dear <Name>, </p> <p> <o:p>&nbsp;</o:p></p>
-                <p>To confirm your registration on Snipster.com, please click on this <a href='<resetUrl>'>link</a> </p> <p><o:p>&nbsp;</o:p></p>
+                <p>To confirm your registration on Snipster.com, please click on this <a href='<url>'>link</a> </p> <p><o:p>&nbsp;</o:p></p>
 
                 <p>If you didn’t request this, please ignore this email.</p> <p><o:p>&nbsp;</o:p></p>
 

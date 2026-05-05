@@ -554,6 +554,11 @@ namespace Snipster.Services
                 returnValue.Result = false;
                 returnValue.Description = "Email and password does not match";
             }
+            else if (!user.RegistrationConfirmed)
+            {
+                returnValue.Result = false;
+                returnValue.Description = "Please confirm your registration before logging in.";
+            }
             else
             {
                 returnValue.Result = true;
@@ -660,6 +665,9 @@ namespace Snipster.Services
 
             if (tokenRecord == null)
                 return false; // Invalid token
+
+            var update = Builders<Users>.Update.Set(u => u.RegistrationConfirmed, true);
+            await _usersCollection.UpdateOneAsync(u => u.Email == tokenRecord.Email, update);
 
             // Remove the used token
             await _registrationTokensCollection.DeleteOneAsync(t => t.Token == token);
