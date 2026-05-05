@@ -153,8 +153,7 @@ catch (Exception ex)
 }
 var app = builder.Build();
 
-
-// Configure the HTTP request pipeline.
+// Ensure static web assets work in production (for scoped CSS like Snipster.styles.css)
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Error");
