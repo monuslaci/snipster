@@ -35,11 +35,23 @@
 
         <div class="modal-footer">
             <button class="save-btn" type="submit">Save</button>
-            <button class="save-btn" @onclick="Cancel">Cancel</button>
+            <button class="save-btn" type="button" @onclick="Cancel">Cancel</button>
+            <button class="delete-account-btn" type="button" @onclick="ShowDeleteAccountModal">Delete Account</button>
         </div>
 
     </div>
 </EditForm>
+
+<Modal @ref="deleteAccountModal" Title="Delete Account">
+    <div class="delete-warning">
+        <p>This will permanently delete your account and all collections and snippets you created.</p>
+        <p>This action cannot be undone.</p>
+    </div>
+    <div class="delete-actions">
+        <button class="delete-confirm-btn" type="button" @onclick="HandleDeleteAccount">Delete Account</button>
+        <button class="delete-cancel-btn" type="button" @onclick="CloseDeleteAccountModal">Keep Account</button>
+    </div>
+</Modal>
 
 <Modal @ref="spinnerModal">
 
@@ -127,6 +139,54 @@
     .save-btn:hover,
     .btn-submit:hover {
         background-color: #0056b3;
+    }
+
+    .delete-account-btn {
+        background-color: #dc3545;
+        color: white;
+        border: none;
+        padding: 10px 18px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 600;
+        transition: background-color 0.2s ease-in-out;
+    }
+
+    .delete-account-btn:hover,
+    .delete-confirm-btn:hover {
+        background-color: #b02a37;
+    }
+
+    .delete-warning {
+        color: #333;
+        line-height: 1.45;
+    }
+
+    .delete-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 12px;
+        margin-top: 20px;
+    }
+
+    .delete-confirm-btn {
+        background-color: #dc3545;
+        color: white;
+        border: none;
+        padding: 10px 18px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 600;
+    }
+
+    .delete-cancel-btn {
+        background-color: #6c757d;
+        color: white;
+        border: none;
+        padding: 10px 18px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 600;
     }
 
 

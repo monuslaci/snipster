@@ -106,7 +106,36 @@ window.monacoEditor = {
             });
             
             self.editors[containerId] = editor;
+            self.fitEditorHeight(containerId);
+
+            editor.onDidContentSizeChange(function() {
+                self.fitEditorHeight(containerId);
+            });
+
+            window.addEventListener('resize', function() {
+                self.fitEditorHeight(containerId);
+            });
         });
+    },
+
+    fitEditorHeight: function(containerId) {
+        var container = document.getElementById(containerId);
+        var editor = this.editors[containerId];
+
+        if (!container || !editor) {
+            return;
+        }
+
+        var panel = container.closest('.editor-panel');
+        var codeGroup = container.closest('.code-editor-container');
+
+        if (!panel || !codeGroup) {
+            editor.layout();
+            return;
+        }
+
+        container.style.height = '';
+        editor.layout();
     },
     
     // Get the current value from an editor

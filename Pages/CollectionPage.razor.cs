@@ -58,6 +58,7 @@ namespace Snipster.Pages
         private bool IsFavouriteSearch { get; set; }
         private bool selectedCollectionIsOwn { get; set; }
         private string isDisabled { get; set; } = "";
+        private Dictionary<string, string> collectionOwnerNames = new(StringComparer.OrdinalIgnoreCase);
 
         // Pagination for collections
         private int collectionsCurrentPage = 1;
@@ -123,6 +124,8 @@ namespace Snipster.Pages
                 //get the collections that are shared with them
                 sharedCollections = _appState.sharedCollections;
 
+                await LoadCollectionOwnerNames();
+
                 // Only load snippets if a collection is pre-selected (from URL)
                 if (!string.IsNullOrEmpty(selectedCollectionId))
                     await LoadSnippets(selectedCollectionId);
@@ -181,6 +184,8 @@ namespace Snipster.Pages
             //get the collections that are shared with them
             sharedCollections = _appState.sharedCollections;
 
+            await LoadCollectionOwnerNames();
+
             //add collectionId to user's my collection IDs
             user.MyCollectionIds.Add(newCollection.Id);
             await _mongoDbService.UpdateUser(user);
@@ -218,7 +223,12 @@ namespace Snipster.Pages
 
             // Check if snippets are already loaded in memory
             bool foundInMemory = false;
-            foreach (var ls in _appState.loadedSnippets) 
+
+            var cachedSnippetLists = selectedCollectionIsOwn
+                ? _appState.loadedSnippets
+                : _appState.loadedSharedSnippets;
+
+            foreach (var ls in cachedSnippetLists) 
             {
                 if (ls.collectionId == selectedCollectionId)
                 {
@@ -226,23 +236,18 @@ namespace Snipster.Pages
                     foundInMemory = true;
                 }
             }
-            foreach (var lss in _appState.loadedSharedSnippets)
-            {
-                if (lss.collectionId == selectedCollectionId)
-                {
-                    snippets.AddRange(lss.snippetList);
-                    foundInMemory = true;
-                }
-            }
 
             // If not in memory, fetch from database (lazy loading)
             if (!foundInMemory)
             {
-                var dbSnippets = await _mongoDbService.GetSnippetsByCollectionAsync(selectedCollectionId);
+                var dbSnippets = selectedCollectionIsOwn
+                    ? await _mongoDbService.GetSnippetsByCollectionAsync(selectedCollectionId)
+                    : await _mongoDbService.GetSharedSnippetsByCollectionForUserAsync(selectedCollectionId, user);
+
                 snippets.AddRange(dbSnippets);
                 
                 // Cache for future use
-                _appState.loadedSnippets.Add(new MemorySnippetList
+                cachedSnippetLists.Add(new MemorySnippetList
                 {
                     collectionId = selectedCollectionId,
                     snippetList = dbSnippets
@@ -325,6 +330,8 @@ namespace Snipster.Pages
             collections = _appState.collections;
             //get the collections that are shared with them
             sharedCollections = _appState.sharedCollections;
+
+            await LoadCollectionOwnerNames();
 
             spinnerModal.CloseModal();
         }
@@ -545,6 +552,7 @@ namespace Snipster.Pages
                 
                 collections = await _helper.SearchCollectionAsync(searchCollectionQuery, userEmail, _appState.collections);
                 sharedCollections = await _helper.SearchCollectionAsync(searchCollectionQuery, userEmail, _appState.sharedCollections);
+                await LoadCollectionOwnerNames();
 
                 if (collections.Any())
                 {
@@ -572,7 +580,9 @@ namespace Snipster.Pages
                 snippetsCurrentPage = 1;
                 
                 //get the list of filtered snippets
-                List<Snippet> filteredSnippetlist = await _mongoDbService.SearchSnippetInSelectedCollectionAsync(searchSnippetQuery, selectedCollectionId, IsFavouriteSearch);
+                List<Snippet> filteredSnippetlist = selectedCollectionIsOwn
+                    ? await _mongoDbService.SearchSnippetInSelectedCollectionAsync(searchSnippetQuery, selectedCollectionId, IsFavouriteSearch)
+                    : await _mongoDbService.SearchSharedSnippetInSelectedCollectionAsync(searchSnippetQuery, selectedCollectionId, IsFavouriteSearch, user);
 
                 // Clear the current snippets list and populate it with the new ones
                 snippets.Clear();
@@ -608,6 +618,7 @@ namespace Snipster.Pages
 
             collections = _appState.collections;
             sharedCollections = _appState.sharedCollections;
+            await LoadCollectionOwnerNames();
 
             if (collections.Any())
             {
@@ -755,6 +766,54 @@ namespace Snipster.Pages
 
         private void SnippetsFirstPage() => snippetsCurrentPage = 1;
         private void SnippetsLastPage() => snippetsCurrentPage = SnippetsTotalPages;
+
+        private async Task LoadCollectionOwnerNames()
+        {
+            collectionOwnerNames.Clear();
+
+            var ownerEmails = collections
+                .Concat(sharedCollections)
+                .Select(c => c.CreatedBy)
+                .Where(email => !string.IsNullOrWhiteSpace(email))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToList();
+
+            foreach (var ownerEmail in ownerEmails)
+            {
+                var owner = await _mongoDbService.GetUser(ownerEmail);
+                collectionOwnerNames[ownerEmail] = GetUserDisplayName(owner, ownerEmail);
+            }
+        }
+
+        private string GetCollectionOwnerDisplay(Collection collection)
+        {
+            if (collection == null || string.IsNullOrWhiteSpace(collection.CreatedBy))
+                return "Unknown owner";
+
+            return collectionOwnerNames.TryGetValue(collection.CreatedBy, out var ownerName)
+                ? ownerName
+                : collection.CreatedBy;
+        }
+
+        private string GetSelectedCollectionOwnerDisplay()
+        {
+            var selectedCollection = collections
+                .Concat(sharedCollections)
+                .FirstOrDefault(c => c.Id == selectedCollectionId);
+
+            return selectedCollection == null
+                ? "Unknown owner"
+                : GetCollectionOwnerDisplay(selectedCollection);
+        }
+
+        private static string GetUserDisplayName(Users owner, string fallback)
+        {
+            if (owner == null)
+                return fallback;
+
+            var displayName = $"{owner.FirstName} {owner.LastName}".Trim();
+            return string.IsNullOrWhiteSpace(displayName) ? fallback : displayName;
+        }
     }
 
 }

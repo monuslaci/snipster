@@ -66,6 +66,7 @@
 .editor-panel {
     flex: 1;
     min-width: 400px;
+    min-height: 0;
     overflow-y: auto;
 }
 
@@ -323,6 +324,24 @@
     width: fit-content;
 }
 
+.item-meta {
+    font-size: 11px;
+    color: #666;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.item-meta i {
+    font-size: 10px;
+    color: #008080;
+    flex-shrink: 0;
+}
+
 .item-actions {
     display: flex;
     gap: 4px;
@@ -577,6 +596,24 @@
     flex-direction: column;
     gap: 16px;
     height: calc(100% - 60px);
+    min-height: 0;
+}
+
+.shared-owner-banner {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px;
+    border: 1px solid rgba(0, 128, 128, 0.25);
+    border-radius: 10px;
+    background: rgba(0, 128, 128, 0.08);
+    color: #006666;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.shared-owner-banner i {
+    font-size: 12px;
 }
 
 .form-row {
@@ -644,12 +681,13 @@
     flex: 1;
     display: flex;
     flex-direction: column;
-    min-height: 300px;
+    min-height: 50vh;
 }
 
 .monaco-editor-container {
     flex: 1;
-    min-height: 250px;
+    height: 100%;
+    min-height: 50vh;
     border: 2px solid #333;
     border-radius: 10px;
     overflow: hidden;

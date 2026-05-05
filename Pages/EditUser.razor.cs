@@ -28,8 +28,10 @@ namespace Snipster.Pages
         [Inject] NavigationManager Navigation { get; set; }
         [Inject] MongoDbService _mongoDbService { get; set; }
         [Inject] private AppState _appState { get; set; }
+        [Inject] private CustomAuthenticationStateProvider CustomAuthProvider { get; set; }
         private string? userEmail { get; set; }
         private Modal spinnerModal = new Modal();
+        private Modal deleteAccountModal = new Modal();
         private EditUserDTO editUser = new EditUserDTO();
         private Users user = new Users();
 
@@ -78,6 +80,50 @@ namespace Snipster.Pages
         private void Cancel()
         {
             Navigation.NavigateTo("/");
+        }
+
+        private void ShowDeleteAccountModal()
+        {
+            deleteAccountModal.ShowModal();
+        }
+
+        private void CloseDeleteAccountModal()
+        {
+            deleteAccountModal.CloseModal();
+        }
+
+        private async Task HandleDeleteAccount()
+        {
+            if (string.IsNullOrWhiteSpace(editUser.Email))
+            {
+                ToastService.ShowError("User email address is missing.");
+                return;
+            }
+
+            try
+            {
+                deleteAccountModal.CloseModal();
+                spinnerModal.IsSpinner = true;
+                spinnerModal.ShowModal();
+
+                await _mongoDbService.DeleteUserAccountAsync(editUser.Email);
+
+                _appState.user = null;
+                _appState.userEmail = null;
+                _appState.collections.Clear();
+                _appState.sharedCollections.Clear();
+                _appState.loadedSnippets.Clear();
+                _appState.loadedSharedSnippets.Clear();
+
+                await CustomAuthProvider.LogoutAsync();
+                ToastService.ShowSuccess("Your account has been deleted.");
+                Navigation.NavigateTo("/login", true);
+            }
+            catch
+            {
+                spinnerModal.CloseModal();
+                ToastService.ShowError("Deleting the account was unsuccessful.");
+            }
         }
 
     }

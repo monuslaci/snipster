@@ -111,7 +111,10 @@
                             <div class="item-card shared @(selectedCollectionId == sharedCollection.Id ? "active" : "")" @onclick="() => LoadSnippets(sharedCollection.Id)">
                                 <div class="item-content">
                                     <i class="fa fa-share-alt item-icon shared"></i>
-                                    <span class="item-title">@sharedCollection.Title</span>
+                                    <div class="item-info">
+                                        <span class="item-title">@sharedCollection.Title</span>
+                                        <span class="item-meta"><i class="fa fa-user"></i> @GetCollectionOwnerDisplay(sharedCollection)</span>
+                                    </div>
                                 </div>
                             </div>
                         }
@@ -320,6 +323,14 @@
             <EditForm Model="selectedSnippet" OnValidSubmit="HandleValidSubmitEdit" Context="formContext2" class="editor-form">
                 <DataAnnotationsValidator />
                 <ValidationSummary />
+
+                @if (!selectedCollectionIsOwn)
+                {
+                    <div class="shared-owner-banner">
+                        <i class="fa fa-user"></i>
+                        <span>Owner: @GetSelectedCollectionOwnerDisplay()</span>
+                    </div>
+                }
 
                 <div class="form-row">
                     <div class="form-group flex-2">
