@@ -72,22 +72,68 @@ else if (!isAuthenticated)
 }
 else
 {
-        <div class="homepage">
-
-        <header class="welcome-section">
-            <div class="logo-container">
-                <img src="/images/logo_small.png" alt="Logo" class="login-logo" />
+    <div class="dashboard">
+        <!-- Hero Section -->
+        <section class="hero-section">
+            <div class="hero-content">
+                <div class="hero-text">
+                    <h1>Welcome back, <span class="user-name">@userName</span>!</h1>
+                    <p class="hero-subtitle">Ready to organize your code? Let's dive in.</p>
+                </div>
+                <div class="hero-logo">
+                    <img src="/images/logo_small.png" alt="Snipster" />
+                </div>
             </div>
-            <h1>Welcome back, @userName!</h1>
-            <p>Your ultimate tool for organizing and managing code snippets effortlessly.</p>
-            <div class="action-buttons">
-                <button class="btn-primary" @onclick="NavigateToCollections">View All Collections</button>
-            </div>
-        </header>
+        </section>
 
+        <!-- Quick Actions -->
+        <section class="quick-actions">
+            <h2 class="section-title">Quick Actions</h2>
+            <div class="action-cards">
+                <div class="action-card" @onclick="NavigateToCollections">
+                    <div class="card-icon collections-icon">
+                        <i class="fa fa-folder-open"></i>
+                    </div>
+                    <h3>My Collections</h3>
+                    <p>Browse and manage your code collections</p>
+                </div>
+                <div class="action-card" @onclick="NavigateToSearch">
+                    <div class="card-icon search-icon">
+                        <i class="fa fa-search"></i>
+                    </div>
+                    <h3>Search Snippets</h3>
+                    <p>Find any snippet in seconds</p>
+                </div>
+                <div class="action-card" @onclick="NavigateToCollections">
+                    <div class="card-icon create-icon">
+                        <i class="fa fa-plus-circle"></i>
+                    </div>
+                    <h3>Create New</h3>
+                    <p>Add new snippets or collections</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Features Reminder -->
+        <section class="features-reminder">
+            <div class="feature-item">
+                <i class="fa fa-bolt"></i>
+                <span>Lightning Fast Search</span>
+            </div>
+            <div class="feature-item">
+                <i class="fa fa-code"></i>
+                <span>Syntax Highlighting</span>
+            </div>
+            <div class="feature-item">
+                <i class="fa fa-share-alt"></i>
+                <span>Easy Sharing</span>
+            </div>
+            <div class="feature-item">
+                <i class="fa fa-tags"></i>
+                <span>Tag Organization</span>
+            </div>
+        </section>
     </div>
-
-
 }
 
 @code {
@@ -103,6 +149,11 @@ else
     private void NavigateToCollections()
     {
         Navigation.NavigateTo("/collections");
+    }
+
+    private void NavigateToSearch()
+    {
+        Navigation.NavigateTo("/snippets");
     }
 
     protected override async Task OnInitializedAsync()

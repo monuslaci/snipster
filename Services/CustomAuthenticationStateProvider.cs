@@ -54,7 +54,7 @@ namespace Snipster.Services
 
             _currentUser = new ClaimsPrincipal(identity);
 
-            var expirationTime = DateTime.UtcNow.AddHours(48); 
+            var expirationTime = DateTime.UtcNow.AddHours(8); 
             await _sessionStorage.SetAsync("userEmail", email);
             await _sessionStorage.SetAsync("sessionExpiration", expirationTime.ToString("o")); // Store ISO 8601 format
 
