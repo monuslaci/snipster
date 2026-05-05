@@ -31,7 +31,6 @@ namespace Snipster.Data
             public string CreatedBy { get; set; }
             public DateTime LastModifiedDate { get; set; }
 
-            [Required(ErrorMessage = "Content  is required.")]
             public string Content { get; set; }
 
             [CustomValidation(typeof(Snippet), nameof(ValidateHashtags))]

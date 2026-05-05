@@ -91,7 +91,6 @@ namespace Snipster.Pages
                 //await EmailService.SendEmailNotification(CreateLoginEmailTemplate(user.Email, $"{user.FirstName} {user.LastName}"));
 
                 // Redirect to internal page after login
-                await Task.Delay(2000);
                 Navigation.NavigateTo("/");  // Redirect to the home page 
             }
             else

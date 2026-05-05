@@ -293,6 +293,10 @@
                 <div class="form-group code-editor-container">
                     <label><i class="fa fa-code"></i> Code</label>
                     <div id="createEditorContainer" class="monaco-editor-container"></div>
+                    @if (!string.IsNullOrEmpty(contentErrorMessage))
+                    {
+                        <div class="validation-message text-danger">@contentErrorMessage</div>
+                    }
                 </div>
 
                 <div class="form-actions">
@@ -368,6 +372,10 @@
                 <div class="form-group code-editor-container">
                     <label><i class="fa fa-code"></i> Code</label>
                     <div id="editEditorContainer" class="monaco-editor-container"></div>
+                    @if (!string.IsNullOrEmpty(contentErrorMessage))
+                    {
+                        <div class="validation-message text-danger">@contentErrorMessage</div>
+                    }
                 </div>
                 
                 @if (selectedCollectionIsOwn)

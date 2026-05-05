@@ -48,6 +48,7 @@ namespace Snipster.Pages
         private string HashtagsInput { get; set; }
         private List<string>? ValidHashtags = new List<string>();
         private string? userEmail { get; set; }
+        private string? contentErrorMessage { get; set; }
         private string? searchCollectionQuery { get; set; }
         private string? searchSnippetQuery { get; set; }
         private bool isFormValid { get; set; } = true;
@@ -112,16 +113,17 @@ namespace Snipster.Pages
                 user = _appState.user;
 
 
-                if (!_appState.collections.Any() )
-                    await _appState.LoadCollections();
+                if (!_appState.collections.Any())
+                    _appState.collections = await _mongoDbService.GetCollectionsForUserAsync(_appState.userEmail);
                 if (!_appState.sharedCollections.Any())
-                    await _appState.LoadSharedCollections();
+                    _appState.sharedCollections = await _mongoDbService.GetSharedCollectionsForUserAsync(_appState.userEmail);
 
                 //get the user's collections
                 collections = _appState.collections;
                 //get the collections that are shared with them
                 sharedCollections = _appState.sharedCollections;
 
+                // Only load snippets if a collection is pre-selected (from URL)
                 if (!string.IsNullOrEmpty(selectedCollectionId))
                     await LoadSnippets(selectedCollectionId);
 
@@ -214,16 +216,37 @@ namespace Snipster.Pages
             // Clear the current snippets list and populate it with the new ones
             snippets.Clear();
 
-
+            // Check if snippets are already loaded in memory
+            bool foundInMemory = false;
             foreach (var ls in _appState.loadedSnippets) 
             {
                 if (ls.collectionId == selectedCollectionId)
-                    snippets.AddRange(ls.snippetList); 
+                {
+                    snippets.AddRange(ls.snippetList);
+                    foundInMemory = true;
+                }
             }
             foreach (var lss in _appState.loadedSharedSnippets)
             {
                 if (lss.collectionId == selectedCollectionId)
+                {
                     snippets.AddRange(lss.snippetList);
+                    foundInMemory = true;
+                }
+            }
+
+            // If not in memory, fetch from database (lazy loading)
+            if (!foundInMemory)
+            {
+                var dbSnippets = await _mongoDbService.GetSnippetsByCollectionAsync(selectedCollectionId);
+                snippets.AddRange(dbSnippets);
+                
+                // Cache for future use
+                _appState.loadedSnippets.Add(new MemorySnippetList
+                {
+                    collectionId = selectedCollectionId,
+                    snippetList = dbSnippets
+                });
             }
 
             selectedCollectionIdCreate = selectedCollectionId;
@@ -239,6 +262,9 @@ namespace Snipster.Pages
   
         private async Task LoadSnippetDetails(string snippetId)
         {
+            // Clear any previous error message
+            contentErrorMessage = null;
+            
             // If no snippet ID provided, just clear the selection
             if (string.IsNullOrEmpty(snippetId))
             {
@@ -275,6 +301,7 @@ namespace Snipster.Pages
             newSnippet = new Snippet();
             selectedSnippet = null;
             isAddingSnippet = true;
+            contentErrorMessage = null;
             StateHasChanged();
             
             // Initialize Monaco editor for creating
@@ -334,10 +361,19 @@ namespace Snipster.Pages
         
         private async Task HandleValidSubmitNew() //new snippet
         {
-            spinnerModal.ShowModal();
-
-            // Get content from Monaco editor
+            // Get content from Monaco editor first
             newSnippet.Content = await GetCreateEditorContent();
+
+            // Validate content manually since Monaco editor is separate from form
+            if (string.IsNullOrWhiteSpace(newSnippet.Content))
+            {
+                contentErrorMessage = "Code content is required.";
+                StateHasChanged();
+                return;
+            }
+            contentErrorMessage = null;
+
+            spinnerModal.ShowModal();
 
             // Save the new snippet and get the generated snippet ID
             var snippetId = await _mongoDbService.AddSnippetAsync(newSnippet);
@@ -391,10 +427,19 @@ namespace Snipster.Pages
         }
         private async Task HandleValidSubmitEdit()
         {
-            spinnerModal.ShowModal();
-            
-            // Get content from Monaco editor
+            // Get content from Monaco editor first
             selectedSnippet.Content = await GetEditEditorContent();
+            
+            // Validate content manually since Monaco editor is separate from form
+            if (string.IsNullOrWhiteSpace(selectedSnippet.Content))
+            {
+                contentErrorMessage = "Code content is required.";
+                StateHasChanged();
+                return;
+            }
+            contentErrorMessage = null;
+
+            spinnerModal.ShowModal();
             
             var snippetId = selectedSnippet.Id;
 

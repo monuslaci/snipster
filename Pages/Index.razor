@@ -84,49 +84,15 @@ else
                 <button class="btn-primary" @onclick="NavigateToCollections">View All Collections</button>
             </div>
         </header>
-        <section class="overview-section">
-            <div class="centered-content">
-                <h2>Your latest collections at a glance</h2>
-                <p>See your most recently updated collections</p>
-
-                @if (collections != null && collections.Any())
-                {
-                    <div class="collections-grid">
-                        @foreach (var collection in collections)
-                        {
-                            <div class="collection-card">
-                                <h3>@collection.Title</h3>
-                                <p class="last-updated">Updated @collection.LastModifiedDate.ToString("MMM dd, yyyy")</p>
-                                <button class="btn-primary" @onclick="() => NavigateToCollection(collection.Id)">
-                                    Open
-                                </button>
-                            </div>
-                        }
-                    </div>
-                }
-                else
-                {
-                    <p>No collections created..</p>
-@*                     <button class="btn-secondary" @onclick="NavigateToCreateCollection">+ Create Your First Collection</button> *@
-                }
-            </div>
-        </section>
-
 
     </div>
 
 
 }
-<Modal @ref="spinnerModal">
-
-</Modal>
-
 
 @code {
     [Inject] NavigationManager Navigation { get; set; }
     [Inject] private AuthenticationStateProvider AuthStateProvider { get; set; }
-    private List<Collection> collections  = new List<Collection>();
-    private Modal spinnerModal { get; set; }
     private ClaimsPrincipal user { get; set; }
     private string? userEmail { get; set; }
     private string? userName { get; set; }
@@ -160,35 +126,6 @@ else
         }
 
         isLoading = false;
-    }
-
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (firstRender)
-        {
-
-            spinnerModal.IsSpinner = true;
-            spinnerModal.ShowModal();
-
-            if (!_appState.collections.Any())
-                await _appState.LoadCollections();
-            var allCollections = _appState.collections;
-
-            // if (!_appState.sharedCollections.Any())
-            //     await _appState.LoadSharedCollections();
-
-            collections = await _helper.GetLast5CollectionsForUserFromMemory(_appState.user, allCollections);
-
-            StateHasChanged();
-
-            spinnerModal.CloseModal();
-    }
-    }
-
-    private void NavigateToCollection(string collectionId)
-    {
-        
-        Navigation.NavigateTo($"/collections?selectedCollectionId={collectionId}");
     }
 }
 
