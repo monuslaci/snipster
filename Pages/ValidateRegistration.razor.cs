@@ -76,7 +76,7 @@ namespace Snipster.Pages
 
                 await EmailService.SendEmailNotification(CreateResetEmailTemplate(user.Email, $"{user.FirstName} {user.LastName}", token));
 
-                ToastService.ShowSuccess($"An email has been sent to your registered email address, please click on the link to confirm the registration");
+                ToastService.ShowSuccess($"An email has been sent to your registered email address. If you do not see it, check your spam or junk folder.");
 
                 await Task.Delay(2000);
                 Navigation.NavigateTo("/login");
@@ -103,6 +103,7 @@ namespace Snipster.Pages
             htmlContent = Regex.Replace(htmlContent, "<Name>", name);
 
             emailDetails.htmlContent = htmlContent;
+            emailDetails.PlainTextContent = $"Dear {name}, confirm your registration on Snipster.com by opening this link: {url}. If you did not request this, please ignore this email.";
             emailDetails.To = email;
             emailDetails.Subject = "Confirm your registration on Snipster.com";
 
@@ -114,6 +115,8 @@ namespace Snipster.Pages
                 <body>
                 <div><p>Dear <Name>, </p> <p> <o:p>&nbsp;</o:p></p>
                 <p>To confirm your registration on Snipster.com, please click on this <a href='<url>'>link</a> </p> <p><o:p>&nbsp;</o:p></p>
+
+                <p>If you cannot find this email later, please check your spam or junk folder.</p> <p><o:p>&nbsp;</o:p></p>
 
                 <p>If you didn’t request this, please ignore this email.</p> <p><o:p>&nbsp;</o:p></p>
 

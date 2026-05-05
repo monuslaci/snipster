@@ -232,6 +232,7 @@ namespace Snipster.Helpers
             public string To { get; set; }
             public string Subject { get; set; }
             public string htmlContent { get; set; }
+            public string PlainTextContent { get; set; }
         }
 
     }

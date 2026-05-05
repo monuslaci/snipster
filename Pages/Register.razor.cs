@@ -47,7 +47,7 @@ namespace Snipster.Pages
             if (result)
             {
                 Message = "Registration successful! Redirecting to login...";
-                ToastService.ShowSuccess("Registration successful, please confirm your registration by clicking on the link in the email sent to your email address! Redirecting to login...");
+                ToastService.ShowSuccess("Registration successful. Please confirm your account from the email we sent. If you do not see it, check your spam or junk folder.");
 
                 string token = await MongoDbService.GenerateRegisterTokenAsync(user.Email);
                 await EmailService.SendEmailNotification(CreateRegisterEmailTemplate(user.Email, $"{user.FirstName} {user.LastName}", token));
@@ -78,6 +78,7 @@ namespace Snipster.Pages
             htmlContent = Regex.Replace(htmlContent, "<Name>", name);
 
             emailDetails.htmlContent = htmlContent;
+            emailDetails.PlainTextContent = $"Dear {name}, confirm your registration on Snipster.com by opening this link: {url}. If you did not request this, please ignore this email.";
             emailDetails.To = email;
             emailDetails.Subject = "Confirm your registration on Snipster.com";
 
@@ -89,6 +90,8 @@ namespace Snipster.Pages
                 <body>
                 <div><p>Dear <Name>, </p> <p> <o:p>&nbsp;</o:p></p>
                 <p>To confirm your registration on Snipster.com, please click on this <a href='<url>'>link</a> </p> <p><o:p>&nbsp;</o:p></p>
+
+                <p>If you cannot find this email later, please check your spam or junk folder.</p> <p><o:p>&nbsp;</o:p></p>
 
                 <p>If you didn’t request this, please ignore this email.</p> <p><o:p>&nbsp;</o:p></p>
 

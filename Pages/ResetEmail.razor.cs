@@ -46,7 +46,7 @@ namespace Snipster.Pages
               
                 await EmailService.SendEmailNotification(CreateResetEmailTemplate(user.Email, $"{user.FirstName} {user.LastName}", token));
 
-                ToastService.ShowSuccess($"An email has been sent to your registered email address");
+                ToastService.ShowSuccess($"An email has been sent to your registered email address. If you do not see it, check your spam or junk folder.");
                 await Task.Delay(2000);
                 Navigation.NavigateTo("/login");
 
@@ -73,6 +73,7 @@ namespace Snipster.Pages
             htmlContent = Regex.Replace(htmlContent, "<Name>", name);
 
             emailDetails.htmlContent = htmlContent;
+            emailDetails.PlainTextContent = $"Dear {name}, reset your Snipster.com password by opening this link: {resetUrl}. If you did not request this, please ignore this email. This link expires in 1 hour.";
             emailDetails.To = email;
             emailDetails.Subject = "Reset Your Password in Snipster.com"; 
 
@@ -84,7 +85,8 @@ namespace Snipster.Pages
                 <div><p>Dear <Name>, </p> <p> <o:p>&nbsp;</o:p></p>
                 <p>You received this email because you requested a password reset.</p> <p><o:p>&nbsp;</o:p></p>
                 <p>Click <a href='<resetUrl>'>here</a> to reset your password.</p> <p><o:p>&nbsp;</o:p></p>
-                <p>If you didn’t request this, please ignore this email. This link will expire in 24 hours.</p> <p><o:p>&nbsp;</o:p></p>
+                <p>If you cannot find this email later, please check your spam or junk folder.</p> <p><o:p>&nbsp;</o:p></p>
+                <p>If you didn’t request this, please ignore this email. This link will expire in 1 hour.</p> <p><o:p>&nbsp;</o:p></p>
 
                 <p>Best regards,</p> 
                 <p>Snipster Team</p><p><o:p>&nbsp;</o:p></p>

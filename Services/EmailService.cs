@@ -8,6 +8,7 @@ using SendGrid.Helpers.Mail;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.Configuration;
 using static Snipster.Helpers.GeneralHelpers;
+using System.Text.RegularExpressions;
 
 namespace Snipster.Services
 {
@@ -28,7 +29,10 @@ namespace Snipster.Services
 
         public async Task SendEmailNotification(EmailSendingClass emailDetails)
         {
-            var from = new EmailAddress("laszlo.monus@gmail.com", "Snipster team");
+            var fromEmail = Environment.GetEnvironmentVariable("SENDGRID_FROM_EMAIL") ?? "noreply@snipster.co";
+            var fromName = Environment.GetEnvironmentVariable("SENDGRID_FROM_NAME") ?? "Snipster team";
+
+            var from = new EmailAddress(fromEmail, fromName);
             var subject = emailDetails.Subject;
             var to = new EmailAddress(emailDetails.To);
 
@@ -38,7 +42,11 @@ namespace Snipster.Services
             //var plainTextContent = $"Click the link to reset your password: {resetUrl}";
 
 
-            var msg = MailHelper.CreateSingleEmail(from, to, subject, "", emailDetails.htmlContent);
+            var plainTextContent = string.IsNullOrWhiteSpace(emailDetails.PlainTextContent)
+                ? Regex.Replace(emailDetails.htmlContent ?? "", "<.*?>", " ")
+                : emailDetails.PlainTextContent;
+
+            var msg = MailHelper.CreateSingleEmail(from, to, subject, plainTextContent, emailDetails.htmlContent);
             var response = await _sendGridClient.SendEmailAsync(msg);
             var res = await response.Body.ReadAsStringAsync();
         }
