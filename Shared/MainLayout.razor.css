@@ -9,16 +9,18 @@ main {
 }
 
 .sidebar {
-    background-image: linear-gradient(180deg, #052767 50%, #052767 80%);
+    background-image: linear-gradient(180deg, #052767 0%, #091E5D 50%, #0A3D91 100%);
+    box-shadow: 2px 0 12px rgba(0, 0, 0, 0.15);
 }
 
 .top-row {
-    background-color: #f7f7f7;
-    border-bottom: 1px solid #d6d5d5;
+    background-color: #ffffff;
+    border-bottom: 1px solid #e0e0e0;
     justify-content: flex-end;
     height: 3.5rem;
     display: flex;
     align-items: center;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
 .top-row ::deep a, .top-row .btn-link {

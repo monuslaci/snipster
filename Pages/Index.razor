@@ -18,7 +18,14 @@
 
 <PageTitle>Snipster</PageTitle>
 
-@if (!isAuthenticated)
+@if (isLoading)
+{
+    <div class="loading-container">
+        <div class="loading-spinner"></div>
+        <p class="loading-text">Loading...</p>
+    </div>
+}
+else if (!isAuthenticated)
 {
     <div class="public-homepage">
 
@@ -124,6 +131,7 @@ else
     private string? userEmail { get; set; }
     private string? userName { get; set; }
     private bool isAuthenticated = false;
+    private bool isLoading = true;
     private Users? currentUser { get; set; }
 
     private void NavigateToCollections()
@@ -151,6 +159,7 @@ else
 
         }
 
+        isLoading = false;
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
