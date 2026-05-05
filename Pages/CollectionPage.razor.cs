@@ -58,6 +58,30 @@ namespace Snipster.Pages
         private bool selectedCollectionIsOwn { get; set; }
         private string isDisabled { get; set; } = "";
 
+        // Pagination for collections
+        private int collectionsCurrentPage = 1;
+        private int collectionsPageSize = 10;
+        private string activeCollectionTab = "own";
+        private IEnumerable<Collection> PagedCollections => collections
+            .Skip((collectionsCurrentPage - 1) * collectionsPageSize)
+            .Take(collectionsPageSize);
+        private int CollectionsTotalPages => Math.Max(1, (int)Math.Ceiling((double)(collections?.Count ?? 0) / collectionsPageSize));
+
+        // Pagination for shared collections
+        private int sharedCollectionsCurrentPage = 1;
+        private IEnumerable<Collection> PagedSharedCollections => sharedCollections
+            .Skip((sharedCollectionsCurrentPage - 1) * collectionsPageSize)
+            .Take(collectionsPageSize);
+        private int SharedCollectionsTotalPages => Math.Max(1, (int)Math.Ceiling((double)(sharedCollections?.Count ?? 0) / collectionsPageSize));
+
+        // Pagination for snippets
+        private int snippetsCurrentPage = 1;
+        private int snippetsPageSize = 10;
+        private IEnumerable<Snippet> PagedSnippets => snippets
+            .Skip((snippetsCurrentPage - 1) * snippetsPageSize)
+            .Take(snippetsPageSize);
+        private int SnippetsTotalPages => Math.Max(1, (int)Math.Ceiling((double)(snippets?.Count ?? 0) / snippetsPageSize));
+
         protected override async Task OnInitializedAsync()
         {
 
@@ -108,9 +132,11 @@ namespace Snipster.Pages
 
                 // Remove query parameter from the URL using JavaScript
                 await JSRuntime.InvokeVoidAsync("updateUrlWithoutQueryParam", "/collections");
-                StateHasChanged();
                 spinnerModal.CloseModal();
+                StateHasChanged();
+                return; // Let the next render cycle handle editor initialization
             }
+            
             if (adjustHeightNeeded)
             {
                 adjustHeightNeeded = false; 
@@ -164,10 +190,14 @@ namespace Snipster.Pages
         }
         #endregion
 
-        private async Task LoadSnippets(string collectionId)
+        private async Task LoadSnippets(string collectionId, string? snippetIdToSelect = null)
         {        
             spinnerModal.ShowModal();
             selectedCollectionId = collectionId;
+            
+            // Reset to first page when selecting a new collection (only if no specific snippet requested)
+            if (snippetIdToSelect == null)
+                snippetsCurrentPage = 1;
 
             if (sharedCollections != null && sharedCollections.Where(c => c.Id == selectedCollectionId).Count() == 0)
             {
@@ -197,8 +227,10 @@ namespace Snipster.Pages
             }
 
             selectedCollectionIdCreate = selectedCollectionId;
-            string firstSnippetId = snippets != null && snippets.Count > 0 ? snippets.FirstOrDefault().Id : "";
-            await LoadSnippetDetails(firstSnippetId);
+            
+            // If a specific snippet was requested, use it; otherwise use first snippet
+            string snippetToLoad = snippetIdToSelect ?? (snippets != null && snippets.Count > 0 ? snippets.FirstOrDefault()?.Id : "");
+            await LoadSnippetDetails(snippetToLoad ?? "");
 
 
             StateHasChanged();
@@ -207,21 +239,35 @@ namespace Snipster.Pages
   
         private async Task LoadSnippetDetails(string snippetId)
         {
+            // If no snippet ID provided, just clear the selection
+            if (string.IsNullOrEmpty(snippetId))
+            {
+                selectedSnippet = null;
+                isAddingSnippet = false;
+                StateHasChanged();
+                return;
+            }
+
             spinnerModal.ShowModal();
             isAddingSnippet = false;
-            //selectedSnippet = await _mongoDbService.GetSnippetByIdAsync(snippetId);
-            selectedSnippet = snippets == null ? new Snippet() : snippets.Where(s => s.Id == snippetId).FirstOrDefault();
-
+            
+            // First try to find in local list, then fetch from DB if not found
+            selectedSnippet = snippets?.Where(s => s.Id == snippetId).FirstOrDefault();
+            
+            if (selectedSnippet == null)
+            {
+                // Fetch from database if not in local list
+                selectedSnippet = await _mongoDbService.GetSnippetByIdAsync(snippetId);
+            }
 
             if (selectedSnippet != null) 
                 selectedSnippetOriginalSharedWith = selectedSnippet.SharedWith;
 
-
-            adjustHeightNeeded = true;
             spinnerModal.CloseModal();
-
-            // Initialize Monaco editor after snippet loads
-            await InitializeEditEditor();
+            
+            // Flag to initialize editor on next render cycle (when DOM exists)
+            adjustHeightNeeded = true;
+            StateHasChanged();
         }
         private async Task ShowSnippetFields()
         {
@@ -402,8 +448,9 @@ namespace Snipster.Pages
             isAddingSnippet = false;
 
             await _helper.UpdateSnippetInMemory(selectedCollectionId, selectedSnippet);
-                        
-            await LoadSnippets(selectedCollectionId);
+            
+            // Reload snippets but stay on the same snippet
+            await LoadSnippets(selectedCollectionId, selectedSnippet.Id);
             spinnerModal.CloseModal();
         }
 
@@ -447,6 +494,10 @@ namespace Snipster.Pages
         {
             if (!string.IsNullOrEmpty(searchCollectionQuery))
             {
+                // Reset to first page on search
+                collectionsCurrentPage = 1;
+                sharedCollectionsCurrentPage = 1;
+                
                 collections = await _helper.SearchCollectionAsync(searchCollectionQuery, userEmail, _appState.collections);
                 sharedCollections = await _helper.SearchCollectionAsync(searchCollectionQuery, userEmail, _appState.sharedCollections);
 
@@ -471,6 +522,10 @@ namespace Snipster.Pages
             if (!string.IsNullOrEmpty(searchSnippetQuery))
             {
                 spinnerModal.ShowModal();
+                
+                // Reset to first page on search
+                snippetsCurrentPage = 1;
+                
                 //get the list of filtered snippets
                 List<Snippet> filteredSnippetlist = await _mongoDbService.SearchSnippetInSelectedCollectionAsync(searchSnippetQuery, selectedCollectionId, IsFavouriteSearch);
 
@@ -501,6 +556,10 @@ namespace Snipster.Pages
         private async Task CancelSearchCollection()
         {
             spinnerModal.ShowModal();
+
+            // Reset pagination
+            collectionsCurrentPage = 1;
+            sharedCollectionsCurrentPage = 1;
 
             collections = _appState.collections;
             sharedCollections = _appState.sharedCollections;
@@ -543,7 +602,10 @@ namespace Snipster.Pages
 
         private async Task InitializeEditEditor()
         {
-            await Task.Delay(100); // Wait for DOM to be ready
+            if (selectedSnippet == null) return;
+            
+            // Wait for DOM to be ready after StateHasChanged
+            await Task.Delay(200);
             await JSRuntime.InvokeVoidAsync("monacoEditor.createEditor", 
                 "editEditorContainer", 
                 selectedSnippet?.Language ?? "plaintext", 
@@ -591,6 +653,63 @@ namespace Snipster.Pages
             int middleWidth = isMiddlePanelOpen ? 30 : 5;
             rightPanelWidth = $"{totalWidth - (leftWidth + middleWidth)}%";
         }
+
+        // Pagination methods for collections
+        private void CollectionsNextPage()
+        {
+            if (collectionsCurrentPage < CollectionsTotalPages)
+                collectionsCurrentPage++;
+        }
+
+        private void CollectionsPreviousPage()
+        {
+            if (collectionsCurrentPage > 1)
+                collectionsCurrentPage--;
+        }
+
+        private void CollectionsFirstPage() => collectionsCurrentPage = 1;
+        private void CollectionsLastPage() => collectionsCurrentPage = CollectionsTotalPages;
+
+        private void SwitchCollectionTab(string tab)
+        {
+            activeCollectionTab = tab;
+            if (tab == "own")
+                collectionsCurrentPage = 1;
+            else
+                sharedCollectionsCurrentPage = 1;
+        }
+
+        // Pagination methods for shared collections
+        private void SharedCollectionsNextPage()
+        {
+            if (sharedCollectionsCurrentPage < SharedCollectionsTotalPages)
+                sharedCollectionsCurrentPage++;
+        }
+
+        private void SharedCollectionsPreviousPage()
+        {
+            if (sharedCollectionsCurrentPage > 1)
+                sharedCollectionsCurrentPage--;
+        }
+
+        private void SharedCollectionsFirstPage() => sharedCollectionsCurrentPage = 1;
+        private void SharedCollectionsLastPage() => sharedCollectionsCurrentPage = SharedCollectionsTotalPages;
+
+        // Pagination methods for snippets
+        private void SnippetsNextPage()
+        {
+            if (snippetsCurrentPage < SnippetsTotalPages)
+                snippetsCurrentPage++;
+        }
+
+        private void SnippetsPreviousPage()
+        {
+            if (snippetsCurrentPage > 1)
+                snippetsCurrentPage--;
+        }
+
+        private void SnippetsFirstPage() => snippetsCurrentPage = 1;
+        private void SnippetsLastPage() => snippetsCurrentPage = SnippetsTotalPages;
     }
 
 }

@@ -1,7 +1,9 @@
 ﻿using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage;
+using Microsoft.AspNetCore.Components.Web;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using Microsoft.JSInterop;
 using Snipster.Components;
 using Snipster.Helpers;
 using Snipster.Services;
@@ -19,6 +21,7 @@ namespace Snipster.Pages
         [Inject] private AuthenticationStateProvider AuthStateProvider { get; set; }
         [Inject] private AppState _appState { get; set; }
         [Inject] private IGeneralHelpers _helper { get; set; }
+        [Inject] private IJSRuntime JSRuntime { get; set; }
         private bool IncludeSharedSnippets { get; set; } = false;
         private string searchQuery { get; set; }
         private List<Snippet> filteredSnippets = new List<Snippet>();
@@ -31,7 +34,7 @@ namespace Snipster.Pages
         private string userEmail { get; set; }
         private bool IsFavouriteSearch { get; set; }
         private int currentPage = 1;
-        private int pageSize = 10;
+        private int pageSize = 20;
         private IEnumerable<Snippet> PagedSnippets => filteredSnippets
                                                         .Skip((currentPage - 1) * pageSize)
                                                         .Take(pageSize);
@@ -139,6 +142,14 @@ namespace Snipster.Pages
             await OnSearchSnippet();
         }
 
+        private async Task HandleSearchKeyUp(KeyboardEventArgs e)
+        {
+            if (e.Key == "Enter")
+            {
+                await OnSearchSnippet();
+            }
+        }
+
         private async Task OnSearchSnippet()
         {
             spinnerModal.ShowModal();
@@ -160,7 +171,7 @@ namespace Snipster.Pages
             // Assign new results directly
             filteredSnippets.AddRange(results);
 
-            if (Math.Ceiling((double) filteredSnippets.Count() / 10) < currentPage)
+            if (Math.Ceiling((double) filteredSnippets.Count() / pageSize) < currentPage)
                 currentPage = 1;
 
             StateHasChanged();
@@ -190,5 +201,17 @@ namespace Snipster.Pages
 
         private void NextPage() => GoToPage(currentPage + 1);
         private void PreviousPage() => GoToPage(currentPage - 1);
+        private void FirstPage() => GoToPage(1);
+        private void LastPage() => GoToPage(TotalPages);
+
+        private async Task ScrollToTop()
+        {
+            await JSRuntime.InvokeVoidAsync("scrollToTop");
+        }
+
+        private async Task ScrollToBottom()
+        {
+            await JSRuntime.InvokeVoidAsync("scrollToBottom");
+        }
     }
 }

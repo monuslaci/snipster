@@ -10,291 +10,386 @@
 
 <div class="page-layout">
     <!-- Left Section: Collection List -->
-    <div class="panel collection-list" style="width: @(isLeftPanelOpen ? "20%" : "5%")">
-
-        <button class="toggle-btn left" @onclick="ToggleLeftPanel">⇆</button>
-        <h4 class="collections-heading">Collections</h4>
-        <div class="search-bar-coll">
-            <input class="searchbar" type="text" @bind="searchCollectionQuery" placeholder="Search collections..." />
-            <div class="search-buttons">
-                <button class="create-collection-btn search" @onclick="OnSearchCollection">Search</button>
-                <button class="create-collection-btn cancel" @onclick="CancelSearchCollection">Clear</button>
+    <div class="panel collection-panel @(isLeftPanelOpen ? "" : "collapsed")">
+        <button class="toggle-btn" @onclick="ToggleLeftPanel">
+            <i class="fa @(isLeftPanelOpen ? "fa-chevron-left" : "fa-chevron-right")"></i>
+        </button>
+        
+        @if (isLeftPanelOpen)
+        {
+            <div class="panel-header">
+                <h3><i class="fa fa-folder-open"></i> Collections</h3>
             </div>
-        </div>
-        <button class="create-collection-btn" @onclick="ShowCreateCollectionModal">+</button>
-
-        <div class="snippet-scroll-container">
-            @if (collections != null && collections.Any())
-            {
-                <ul>
-                    @foreach (var collection in collections)
+            
+            <!-- Tab buttons -->
+            <div class="tab-buttons">
+                <button class="tab-btn @(activeCollectionTab == "own" ? "active" : "")" @onclick="@(() => SwitchCollectionTab("own"))">
+                    <i class="fa fa-folder"></i> Mine
+                    @if (collections != null)
                     {
-                        <li class="collection-item @(selectedCollectionId != null && selectedCollectionId == collection.Id ? "active" : "")">
-                            <span @onclick="() => LoadSnippets(collection.Id)">
-                                @collection.Title
-                            </span>
-                            <button class="icon-btn edit-btn" @onclick="() => EditCollection(collection)">
-                                <i class="fa fa-edit"></i>
-                            </button>
-                            <button class="icon-btn delete-btn" @onclick="() => DeleteCollection(collection.Id)">
-                                <i class="fa fa-trash"></i>
-                            </button>
-                        </li>
+                        <span class="tab-count">@collections.Count</span>
                     }
-                </ul>
-            }
-            else
-            {
-                <p class="no-snippets">No own collections found.</p>
-            }
-
-
-            @if (sharedCollections != null && sharedCollections.Any())
-            {
-                <hr class="divider" />
-                <h5 class="shared-collections-heading">Shared Collections</h5>
-
-                <ul>
-                    @foreach (var sharedCollection in sharedCollections)
+                </button>
+                <button class="tab-btn @(activeCollectionTab == "shared" ? "active" : "")" @onclick="@(() => SwitchCollectionTab("shared"))">
+                    <i class="fa fa-share-alt"></i> Shared
+                    @if (sharedCollections != null)
                     {
-                        <li class="collection-item shared @(selectedCollectionId != null && selectedCollectionId == sharedCollection.Id ? "active" : "")">
-                            <span @onclick="() => LoadSnippets(sharedCollection.Id)">
-                                @sharedCollection.Title
-                            </span>
-                        </li>
+                        <span class="tab-count">@sharedCollections.Count</span>
                     }
-                </ul>
+                </button>
+            </div>
+            
+            <div class="search-card-mini">
+                <div class="search-input-wrapper">
+                    <i class="fa fa-search search-icon"></i>
+                    <input class="search-input" type="text" @bind="searchCollectionQuery" placeholder="Search..." />
+                </div>
+                <div class="search-actions-mini">
+                    <button class="btn-search-mini" @onclick="OnSearchCollection">
+                        <i class="fa fa-search"></i>
+                    </button>
+                    <button class="btn-clear-mini" @onclick="CancelSearchCollection">
+                        <i class="fa fa-times"></i>
+                    </button>
+                </div>
+            </div>
+            
+            @if (activeCollectionTab == "own")
+            {
+                <button class="btn-add-new" @onclick="ShowCreateCollectionModal">
+                    <i class="fa fa-plus"></i> New Collection
+                </button>
             }
-        </div>
 
+            <div class="items-container">
+                @if (activeCollectionTab == "own")
+                {
+                    @if (collections != null && collections.Any())
+                    {
+                        @foreach (var collection in PagedCollections)
+                        {
+                            <div class="item-card @(selectedCollectionId == collection.Id ? "active" : "")" @onclick="() => LoadSnippets(collection.Id)">
+                                <div class="item-content">
+                                    <i class="fa fa-folder item-icon"></i>
+                                    <span class="item-title">@collection.Title</span>
+                                </div>
+                                <div class="item-actions">
+                                    <button class="action-btn edit" @onclick:stopPropagation="true" @onclick="() => EditCollection(collection)" title="Edit">
+                                        <i class="fa fa-edit"></i>
+                                    </button>
+                                    <button class="action-btn delete" @onclick:stopPropagation="true" @onclick="() => DeleteCollection(collection.Id)" title="Delete">
+                                        <i class="fa fa-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        }
+                        @if (CollectionsTotalPages > 1)
+                        {
+                            <div class="pagination-mini">
+                                <button class="page-btn" @onclick="CollectionsFirstPage" disabled="@(collectionsCurrentPage == 1)">««</button>
+                                <button class="page-btn" @onclick="CollectionsPreviousPage" disabled="@(collectionsCurrentPage == 1)">«</button>
+                                <span>@collectionsCurrentPage/@CollectionsTotalPages</span>
+                                <button class="page-btn" @onclick="CollectionsNextPage" disabled="@(collectionsCurrentPage == CollectionsTotalPages)">»</button>
+                                <button class="page-btn" @onclick="CollectionsLastPage" disabled="@(collectionsCurrentPage == CollectionsTotalPages)">»»</button>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="empty-state-mini">
+                            <i class="fa fa-folder-open"></i>
+                            <p>No collections yet</p>
+                        </div>
+                    }
+                }
+                else
+                {
+                    @if (sharedCollections != null && sharedCollections.Any())
+                    {
+                        @foreach (var sharedCollection in PagedSharedCollections)
+                        {
+                            <div class="item-card shared @(selectedCollectionId == sharedCollection.Id ? "active" : "")" @onclick="() => LoadSnippets(sharedCollection.Id)">
+                                <div class="item-content">
+                                    <i class="fa fa-share-alt item-icon shared"></i>
+                                    <span class="item-title">@sharedCollection.Title</span>
+                                </div>
+                            </div>
+                        }
+                        @if (SharedCollectionsTotalPages > 1)
+                        {
+                            <div class="pagination-mini">
+                                <button class="page-btn" @onclick="SharedCollectionsFirstPage" disabled="@(sharedCollectionsCurrentPage == 1)">««</button>
+                                <button class="page-btn" @onclick="SharedCollectionsPreviousPage" disabled="@(sharedCollectionsCurrentPage == 1)">«</button>
+                                <span>@sharedCollectionsCurrentPage/@SharedCollectionsTotalPages</span>
+                                <button class="page-btn" @onclick="SharedCollectionsNextPage" disabled="@(sharedCollectionsCurrentPage == SharedCollectionsTotalPages)">»</button>
+                                <button class="page-btn" @onclick="SharedCollectionsLastPage" disabled="@(sharedCollectionsCurrentPage == SharedCollectionsTotalPages)">»»</button>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="empty-state-mini">
+                            <i class="fa fa-share-alt"></i>
+                            <p>No shared collections</p>
+                        </div>
+                    }
+                }
+            </div>
+        }
     </div>
 
     <!-- Middle Section: Snippet List -->
-    <div class="panel snippet-list" style="width: @(isMiddlePanelOpen ? "30%" : "5%")">
-        <button class="toggle-btn middle" @onclick="ToggleMiddlePanel">⇆</button>
-        <h4 class="snippets-heading">Snippets</h4>
-        <div class="search-bar">
-            <div class="search-top-row">
-                <input class="searchbar" type="text" @bind="searchSnippetQuery" placeholder="Search snippets in selected collection..." />
-                <button class="icon-btn favourite-btn" @onclick="() => SearchFavouriteSnippets()">
-                    <i class="fa fa-star @(IsFavouriteSearch ? "yellow" : "white")"></i>
-                </button>
+    <div class="panel snippet-panel @(isMiddlePanelOpen ? "" : "collapsed")">
+        <button class="toggle-btn" @onclick="ToggleMiddlePanel">
+            <i class="fa @(isMiddlePanelOpen ? "fa-chevron-left" : "fa-chevron-right")"></i>
+        </button>
+        
+        @if (isMiddlePanelOpen)
+        {
+            <div class="panel-header">
+                <h3><i class="fa fa-code"></i> Snippets</h3>
             </div>
-
-            <div class="search-buttons">
-                <button class="create-collection-btn search" @onclick="OnSearchSnippet">Search</button>
-                <button class="create-collection-btn cancel" @onclick="CancelSearchSnippet">Clear</button>
+            
+            <div class="search-card-mini">
+                <div class="search-input-wrapper">
+                    <i class="fa fa-search search-icon"></i>
+                    <input class="search-input" type="text" @bind="searchSnippetQuery" placeholder="Search snippets..." />
+                    <button class="filter-btn-mini @(IsFavouriteSearch ? "active" : "")" @onclick="() => SearchFavouriteSnippets()" title="Favorites only">
+                        <i class="fa fa-star"></i>
+                    </button>
+                </div>
+                <div class="search-actions-mini">
+                    <button class="btn-search-mini" @onclick="OnSearchSnippet">
+                        <i class="fa fa-search"></i>
+                    </button>
+                    <button class="btn-clear-mini" @onclick="CancelSearchSnippet">
+                        <i class="fa fa-times"></i>
+                    </button>
+                </div>
             </div>
-        </div>
-        <button class="create-snippet-btn" @onclick="ShowSnippetFields">+</button>
+            
+            <button class="btn-add-new" @onclick="ShowSnippetFields">
+                <i class="fa fa-plus"></i> New Snippet
+            </button>
 
-        <div class="snippet-scroll-container">
-            <ul>
+            <div class="items-container">
                 @if (snippets != null && snippets.Any())
                 {
-                    @foreach (var snippet in snippets)
+                    @foreach (var snippet in PagedSnippets)
                     {
-                        <li class="snippet-item @(selectedSnippet != null && selectedSnippet.Id == snippet.Id ? "active" : "")">
-                            <span @onclick="() => LoadSnippetDetails(snippet.Id)">
-                                @snippet.Title
-                            </span>
-
+                        <div class="item-card @(selectedSnippet?.Id == snippet.Id ? "active" : "")" @onclick="() => LoadSnippetDetails(snippet.Id)">
+                            <div class="item-content">
+                                <i class="fa fa-file-code item-icon"></i>
+                                <div class="item-info">
+                                    <span class="item-title">@snippet.Title</span>
+                                    @if (!string.IsNullOrEmpty(snippet.Language))
+                                    {
+                                        <span class="language-tag">@snippet.Language</span>
+                                    }
+                                </div>
+                            </div>
                             @if (selectedCollectionIsOwn)
                             {
-                                <!-- Favourite button with star icon -->
-                                <button class="icon-btn favourite-btn" @onclick="() => EditSnippetFavourite(snippet)">
-                                    <i class="fa fa-star @(snippet.IsFavourite ? "yellow" : "white")"></i>
-                                </button>                          
+                                <button class="action-btn favorite @(snippet.IsFavourite ? "active" : "")" @onclick:stopPropagation="true" @onclick="() => EditSnippetFavourite(snippet)" title="@(snippet.IsFavourite ? "Remove from favorites" : "Add to favorites")">
+                                    <i class="fa fa-star"></i>
+                                </button>
                             }
-                        </li>
+                        </div>
+                    }
+                    @if (SnippetsTotalPages > 1)
+                    {
+                        <div class="pagination-mini">
+                            <button class="page-btn" @onclick="SnippetsFirstPage" disabled="@(snippetsCurrentPage == 1)">««</button>
+                            <button class="page-btn" @onclick="SnippetsPreviousPage" disabled="@(snippetsCurrentPage == 1)">«</button>
+                            <span>@snippetsCurrentPage/@SnippetsTotalPages</span>
+                            <button class="page-btn" @onclick="SnippetsNextPage" disabled="@(snippetsCurrentPage == SnippetsTotalPages)">»</button>
+                            <button class="page-btn" @onclick="SnippetsLastPage" disabled="@(snippetsCurrentPage == SnippetsTotalPages)">»»</button>
+                        </div>
                     }
                 }
                 else
                 {
-                    <li>No snippets available</li>
+                    <div class="empty-state-mini">
+                        <i class="fa fa-code"></i>
+                        <p>No snippets</p>
+                    </div>
                 }
-        </ul>
-        </div>
+            </div>
+        }
     </div>
 
     <!-- Right Section: Snippet Details/Editor -->
-    <div class="panel snippet-details" style="width: @(rightPanelWidth)">
+    <div class="panel editor-panel" style="flex: 1;">
         @if (isAddingSnippet)
         {
-            <!-- Fields for creating a new snippet -->
-            <h4>Create New Snippet</h4>
-            <EditForm Model="newSnippet" OnValidSubmit="HandleValidSubmitNew" >
+            <div class="editor-header">
+                <h3><i class="fa fa-plus-circle"></i> Create New Snippet</h3>
+            </div>
+            
+            <EditForm Model="newSnippet" OnValidSubmit="HandleValidSubmitNew" class="editor-form">
                 <DataAnnotationsValidator />
                 <ValidationSummary />
-                <div class="form-group">
-                    <input type="text" id="title" class="input-element" @bind="newSnippet.Title" placeholder="Title" />
-@*                     <ValidationMessage For="@(() => newSnippet.Title)" /> *@
+                
+                <div class="form-row">
+                    <div class="form-group flex-2">
+                        <label><i class="fa fa-heading"></i> Title</label>
+                        <input type="text" id="title" class="form-input" @bind="newSnippet.Title" placeholder="Snippet title" />
+                    </div>
+                    <div class="form-group flex-1">
+                        <label><i class="fa fa-folder"></i> Collection</label>
+                        <select id="collections" class="form-select" @bind="selectedCollectionIdCreate">
+                            @foreach (var collection in collections)
+                            {
+                                <option value="@collection.Id">@collection.Title</option>
+                            }
+                        </select>
+                    </div>
                 </div>
 
-                <div class="form-group">
-                    <input type="text" id="hashtags" class="input-element" @bind="@newSnippet.HashtagsInput" placeholder="Enter hashtags separated by spaces" />
+                <div class="form-row">
+                    <div class="form-group flex-1">
+                        <label><i class="fa fa-code"></i> Language</label>
+                        <select id="language" class="form-select" @bind="newSnippet.Language" @bind:after="OnNewLanguageChanged">
+                            <option value="">Select Language</option>
+                            <option value="javascript">JavaScript</option>
+                            <option value="typescript">TypeScript</option>
+                            <option value="python">Python</option>
+                            <option value="csharp">C#</option>
+                            <option value="java">Java</option>
+                            <option value="cpp">C++</option>
+                            <option value="c">C</option>
+                            <option value="html">HTML</option>
+                            <option value="css">CSS</option>
+                            <option value="sql">SQL</option>
+                            <option value="json">JSON</option>
+                            <option value="xml">XML</option>
+                            <option value="bash">Bash/Shell</option>
+                            <option value="powershell">PowerShell</option>
+                            <option value="ruby">Ruby</option>
+                            <option value="php">PHP</option>
+                            <option value="go">Go</option>
+                            <option value="rust">Rust</option>
+                            <option value="swift">Swift</option>
+                            <option value="kotlin">Kotlin</option>
+                            <option value="yaml">YAML</option>
+                            <option value="markdown">Markdown</option>
+                            <option value="razor">Razor</option>
+                            <option value="plaintext">Plain Text</option>
+                        </select>
+                    </div>
                 </div>
 
-                <div class="form-group">
-                    <input type="text"
-                           id="sharedemailadresses"
-                           class="input-element"
-                    @bind="newSnippet.SharedWithInput"
-                           placeholder="Enter email addresses separated by semicolons" />
-                    <ValidationMessage For="@(() => newSnippet.SharedWithInput)" />
-                </div>
-
-                <div class="form-group">
-                    <select id="collections" class="dropdown" @bind="selectedCollectionIdCreate">
-                        @foreach (var collection in collections)
-                        {
-                            <option value="@collection.Id">@collection.Title</option>
-                        }
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label for="language">Language</label>
-                    <select id="language" class="dropdown" @bind="newSnippet.Language" @bind:after="OnNewLanguageChanged">
-                        <option value="">Select Language</option>
-                        <option value="javascript">JavaScript</option>
-                        <option value="typescript">TypeScript</option>
-                        <option value="python">Python</option>
-                        <option value="csharp">C#</option>
-                        <option value="java">Java</option>
-                        <option value="cpp">C++</option>
-                        <option value="c">C</option>
-                        <option value="html">HTML</option>
-                        <option value="css">CSS</option>
-                        <option value="sql">SQL</option>
-                        <option value="json">JSON</option>
-                        <option value="xml">XML</option>
-                        <option value="bash">Bash/Shell</option>
-                        <option value="powershell">PowerShell</option>
-                        <option value="ruby">Ruby</option>
-                        <option value="php">PHP</option>
-                        <option value="go">Go</option>
-                        <option value="rust">Rust</option>
-                        <option value="swift">Swift</option>
-                        <option value="kotlin">Kotlin</option>
-                        <option value="yaml">YAML</option>
-                        <option value="markdown">Markdown</option>
-                        <option value="razor">Razor</option>
-                        <option value="plaintext">Plain Text</option>
-                    </select>
+                <div class="form-row">
+                    <div class="form-group flex-1">
+                        <label><i class="fa fa-hashtag"></i> Hashtags</label>
+                        <input type="text" id="hashtags" class="form-input" @bind="@newSnippet.HashtagsInput" placeholder="#tag1 #tag2 #tag3" />
+                    </div>
+                    <div class="form-group flex-1">
+                        <label><i class="fa fa-share-alt"></i> Share with</label>
+                        <input type="text" id="sharedemailadresses" class="form-input" @bind="newSnippet.SharedWithInput" placeholder="email1@example.com; email2@example.com" />
+                    </div>
                 </div>
 
                 <div class="form-group code-editor-container">
-                    <label>Code</label>
+                    <label><i class="fa fa-code"></i> Code</label>
                     <div id="createEditorContainer" class="monaco-editor-container"></div>
                 </div>
 
-                @if (isFormValid)
-                {
-                    <button type="submit" class="btn-submit">Add Snippet </button>
-                }
-                else
-                {
-                    <button type="submit" class="btn-submit" disabled>Add Snippet </button>
-                }
+                <div class="form-actions">
+                    <button type="submit" class="btn-primary" disabled="@(!isFormValid)">
+                        <i class="fa fa-plus"></i> Add Snippet
+                    </button>
+                </div>
 
             </EditForm>
         }
         else if (selectedSnippet != null)
         {
-            <!-- Editable form for an existing snippet -->
-            <h4>Edit Snippet</h4>
-            <EditForm Model="selectedSnippet" OnValidSubmit="HandleValidSubmitEdit" Context="formContext2">
+            <div class="editor-header">
+                <h3><i class="fa fa-edit"></i> Edit Snippet</h3>
+                @if (!string.IsNullOrEmpty(selectedSnippet.Language))
+                {
+                    <span class="language-badge">@selectedSnippet.Language</span>
+                }
+            </div>
+            
+            <EditForm Model="selectedSnippet" OnValidSubmit="HandleValidSubmitEdit" Context="formContext2" class="editor-form">
                 <DataAnnotationsValidator />
                 <ValidationSummary />
 
-                <div class="form-group">
-                    <input type="text" id="title" class="input-element" @bind="selectedSnippet.Title" placeholder="Title" disabled="@(!selectedCollectionIsOwn ? "disabled" : null)" />
+                <div class="form-row">
+                    <div class="form-group flex-2">
+                        <label><i class="fa fa-heading"></i> Title</label>
+                        <input type="text" id="title" class="form-input" @bind="selectedSnippet.Title" placeholder="Snippet title" disabled="@(!selectedCollectionIsOwn)" />
+                    </div>
+                    <div class="form-group flex-1">
+                        <label><i class="fa fa-code"></i> Language</label>
+                        <select id="editLanguage" class="form-select" @bind="selectedSnippet.Language" @bind:after="OnEditLanguageChanged" disabled="@(!selectedCollectionIsOwn)">
+                            <option value="">Select...</option>
+                            <option value="javascript">JavaScript</option>
+                            <option value="typescript">TypeScript</option>
+                            <option value="python">Python</option>
+                            <option value="csharp">C#</option>
+                            <option value="java">Java</option>
+                            <option value="cpp">C++</option>
+                            <option value="c">C</option>
+                            <option value="html">HTML</option>
+                            <option value="css">CSS</option>
+                            <option value="sql">SQL</option>
+                            <option value="json">JSON</option>
+                            <option value="xml">XML</option>
+                            <option value="bash">Bash/Shell</option>
+                            <option value="powershell">PowerShell</option>
+                            <option value="ruby">Ruby</option>
+                            <option value="php">PHP</option>
+                            <option value="go">Go</option>
+                            <option value="rust">Rust</option>
+                            <option value="swift">Swift</option>
+                            <option value="kotlin">Kotlin</option>
+                            <option value="yaml">YAML</option>
+                            <option value="markdown">Markdown</option>
+                            <option value="razor">Razor</option>
+                            <option value="plaintext">Plain Text</option>
+                        </select>
+                    </div>
                 </div>
 
-                <div class="form-group">
-                    <input type="text" id="hashtags" class="input-element" @bind="@selectedSnippet.HashtagsInput" placeholder="Enter hashtags separated by spaces" disabled="@(!selectedCollectionIsOwn ? "disabled" : null)" />
-
-                    @if (HashtagsInput != null && ValidHashtags.Count != HashtagsInput.Split(' ').Length)
-                    {
-                        <p class="error-message">Some hashtags are invalid. Ensure they start with `#` and contain no spaces.</p>
-                    }
-                </div>
-
-                <div class="form-group">
-                    <input type="text"
-                           id="sharedemailadresses"
-                           class="input-element"
-                    @bind="selectedSnippet.SharedWithInput"
-                           placeholder="Enter email addresses separated by semicolons"
-                           disabled="@(!selectedCollectionIsOwn ? "disabled" : null)" />
-                    <ValidationMessage For="@(() => newSnippet.SharedWithInput)" />
-                </div>
-
-@*                 <div class="form-group">
-                    <select id="collections" class="dropdown" @bind="selectedCollectionId">
-                        @foreach (var collection in collections)
-                        {
-                            <option value="@collection.Id">@collection.Title</option>
-                        }
-                    </select>
-                </div> *@
-
-                <div class="form-group">
-                    <label for="editLanguage">Language</label>
-                    <select id="editLanguage" class="dropdown" @bind="selectedSnippet.Language" @bind:after="OnEditLanguageChanged" disabled="@(!selectedCollectionIsOwn ? "disabled" : null)">
-                        <option value="">Select Language</option>
-                        <option value="javascript">JavaScript</option>
-                        <option value="typescript">TypeScript</option>
-                        <option value="python">Python</option>
-                        <option value="csharp">C#</option>
-                        <option value="java">Java</option>
-                        <option value="cpp">C++</option>
-                        <option value="c">C</option>
-                        <option value="html">HTML</option>
-                        <option value="css">CSS</option>
-                        <option value="sql">SQL</option>
-                        <option value="json">JSON</option>
-                        <option value="xml">XML</option>
-                        <option value="bash">Bash/Shell</option>
-                        <option value="powershell">PowerShell</option>
-                        <option value="ruby">Ruby</option>
-                        <option value="php">PHP</option>
-                        <option value="go">Go</option>
-                        <option value="rust">Rust</option>
-                        <option value="swift">Swift</option>
-                        <option value="kotlin">Kotlin</option>
-                        <option value="yaml">YAML</option>
-                        <option value="markdown">Markdown</option>
-                        <option value="razor">Razor</option>
-                        <option value="plaintext">Plain Text</option>
-                    </select>
+                <div class="form-row">
+                    <div class="form-group flex-1">
+                        <label><i class="fa fa-hashtag"></i> Hashtags</label>
+                        <input type="text" id="hashtags" class="form-input" @bind="@selectedSnippet.HashtagsInput" placeholder="#tag1 #tag2 #tag3" disabled="@(!selectedCollectionIsOwn)" />
+                    </div>
+                    <div class="form-group flex-1">
+                        <label><i class="fa fa-share-alt"></i> Share with</label>
+                        <input type="text" id="sharedemailadresses" class="form-input" @bind="selectedSnippet.SharedWithInput" placeholder="email1@example.com; email2@example.com" disabled="@(!selectedCollectionIsOwn)" />
+                    </div>
                 </div>
 
                 <div class="form-group code-editor-container">
-                    <label>Code</label>
+                    <label><i class="fa fa-code"></i> Code</label>
                     <div id="editEditorContainer" class="monaco-editor-container"></div>
                 </div>
-                <div class="button-row">
-                    @if (selectedCollectionIsOwn)
-                    {
-                        @if (isFormValid)
-                        {
-                            <button type="submit" class="btn-submit">Save</button>
-                        }
-                        else
-                        {
-                            <button type="submit" class="btn-submit" disabled>Save</button>
-                        }                                  
-
-                    <button type="button" class="btn-delete" @onclick="() => DeleteSnippet(selectedSnippet.Id)">Delete</button>
-                    }
-                </div>
+                
+                @if (selectedCollectionIsOwn)
+                {
+                    <div class="form-actions">
+                        <button type="submit" class="btn-primary" disabled="@(!isFormValid)">
+                            <i class="fa fa-save"></i> Save Changes
+                        </button>
+                        <button type="button" class="btn-danger" @onclick="() => DeleteSnippet(selectedSnippet.Id)">
+                            <i class="fa fa-trash"></i> Delete
+                        </button>
+                    </div>
+                }
             </EditForm>
         }
         else
         {
-            <p>Select a snippet to view details.</p>
+            <div class="empty-state-editor">
+                <i class="fa fa-code"></i>
+                <h3>No snippet selected</h3>
+                <p>Select a snippet from the list or create a new one</p>
+            </div>
         }
     </div>
 </div>

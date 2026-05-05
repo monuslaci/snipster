@@ -8,77 +8,128 @@
 
 
 <div class="page-container">
-@* <h2>Search Snippets</h2> *@
+    <div class="page-header">
+        <h1><i class="fa fa-search"></i> Search Snippets</h1>
+        <p class="subtitle">Find and explore your code snippets</p>
+    </div>
 
-@* <button class="create-snippet-btn" @onclick="ShowCreateSnippetModal">Create New Snippet</button> *@
-
-    <div class="search-bar">
-        <div class="search-input-row">
-            <input class="searchbar" type="text" @bind="searchSnippetQuery" placeholder="Search snippets..." />
-
-            <button class="icon-btn favourite-btn" @onclick="() => SearchFavouriteSnippets()">
-                <i class="fa fa-star @(IsFavouriteSearch ? "yellow" : "white")"></i>
-                <span class="tooltip">Search for Favorite Snippets</span>
+    <div class="search-card">
+        <div class="search-input-wrapper">
+            <i class="fa fa-search search-icon"></i>
+            <input class="search-input" type="text" @bind="searchSnippetQuery" @bind:event="oninput" @onkeyup="HandleSearchKeyUp" placeholder="Search by title, content, or hashtags..." />
+        </div>
+        
+        <div class="filter-buttons">
+            <button class="filter-btn @(IsFavouriteSearch ? "active" : "")" @onclick="() => SearchFavouriteSnippets()">
+                <i class="fa fa-star"></i>
+                <span>Favorites</span>
             </button>
-
-            <button class="icon-btn favourite-btn" @onclick="ToggleSharedSnippets">
-                <i class="fa fa-share-alt @(IncludeSharedSnippets ? "green" : "white")"></i>
-                <span class="tooltip">Show Shared Snippets</span>
+            <button class="filter-btn @(IncludeSharedSnippets ? "active" : "")" @onclick="ToggleSharedSnippets">
+                <i class="fa fa-share-alt"></i>
+                <span>Shared</span>
             </button>
         </div>
 
-        <div class="search-buttons">
-            <button class="create-collection-btn search" @onclick="OnSearchSnippet">Search</button>
-            <button class="create-collection-btn cancel" @onclick="CancelSearchSnippet">Clear</button>
+        <div class="search-actions">
+            <button class="btn-search" @onclick="OnSearchSnippet">
+                <i class="fa fa-search"></i> Search
+            </button>
+            <button class="btn-clear" @onclick="CancelSearchSnippet">
+                <i class="fa fa-times"></i> Clear
+            </button>
         </div>
     </div>
 
-@if (filteredSnippets!= null &&  filteredSnippets.Any())
+@if (filteredSnippets != null && filteredSnippets.Any())
 {
-    <div class="snippet-container">
+    <div class="results-header">
+        <span class="results-count"><i class="fa fa-code"></i> @filteredSnippets.Count() snippet@(filteredSnippets.Count() != 1 ? "s" : "") found</span>
+    </div>
+    
+    <div class="snippet-grid">
         @foreach (var snippet in PagedSnippets)
         {
-            <div class="snippet-card">
-                <div class="snippet-header">
-                    <h3>@snippet.Title</h3>
-                </div>
-                <div class="snippet-content">
-                    <p>@snippet.Content</p>
-                </div>
-                <div class="snippet-collections">
-                    <strong>Collections: </strong>
-                    @if (relatedCollections.ContainsKey(snippet.Id))
+            <div class="snippet-card" @onclick="() => OpenSnippet(snippet.Id)">
+                <div class="card-header">
+                    <h3 class="snippet-title">@snippet.Title</h3>
+                    @if (!string.IsNullOrEmpty(snippet.Language))
                     {
-                        <span>@string.Join(", ", relatedCollections[snippet.Id])</span>
-                    }
-                    else
-                    {
-                        <span>Not added to collection yet..</span>
+                        <span class="language-badge">@snippet.Language</span>
                     }
                 </div>
-                    <div class="snippet-collections">
-                        <strong>Owner:</strong>
-                            <span>@snippet.CreatedBy</span>
+                
+                <div class="snippet-preview">
+                    <pre><code>@(snippet.Content?.Length > 200 ? snippet.Content.Substring(0, 200) + "..." : snippet.Content)</code></pre>
+                </div>
+                
+                <div class="card-meta">
+                    <div class="meta-item">
+                        <i class="fa fa-folder"></i>
+                        @if (relatedCollections.ContainsKey(snippet.Id) && relatedCollections[snippet.Id].Any())
+                        {
+                            <span>@string.Join(", ", relatedCollections[snippet.Id].Take(2))@(relatedCollections[snippet.Id].Count() > 2 ? $" +{relatedCollections[snippet.Id].Count() - 2}" : "")</span>
+                        }
+                        else
+                        {
+                            <span class="muted">No collection</span>
+                        }
                     </div>
-                <div class="snippet-actions">
-@*                     <button class="edit-btn" @onclick="() => EditSnippet(snippet)">Edit</button>
-                    <button class="delete-btn" @onclick="() => DeleteSnippet(snippet.Id)">Delete</button> *@
-                        <button class="edit-btn" @onclick="() => OpenSnippet(snippet.Id)">Open</button>
+                    <div class="meta-item">
+                        <i class="fa fa-user"></i>
+                        <span>@snippet.CreatedBy</span>
+                    </div>
+                </div>
+                
+                <div class="card-footer">
+                    @{
+                        var hashtags = snippet.HashtagsInput?.Split(' ', StringSplitOptions.RemoveEmptyEntries) ?? Array.Empty<string>();
+                    }
+                    @if (hashtags.Any())
+                    {
+                        <div class="hashtags">
+                            @foreach (var tag in hashtags.Take(3))
+                            {
+                                <span class="hashtag">@tag</span>
+                            }
+                            @if (hashtags.Length > 3)
+                            {
+                                <span class="hashtag more">+@(hashtags.Length - 3)</span>
+                            }
+                        </div>
+                    }
+                    <button class="btn-open">
+                        <i class="fa fa-external-link"></i> Open
+                    </button>
                 </div>
             </div>
         }
-            <p class="result">@filteredSnippets.Count() results</p>
     </div>
 }
 else
 {
-    <p class="no-snippets">No snippets found..</p>
+    <div class="empty-state">
+        <i class="fa fa-search empty-icon"></i>
+        <h3>No snippets found</h3>
+        <p>Try adjusting your search or filters</p>
+    </div>
 }
 
-    <div class="pagination-controls">
-        <button @onclick="PreviousPage" disabled="@((currentPage == 1))">Previous</button>
+    <div class="pagination-controls" id="pagination-bottom">
+        <button @onclick="FirstPage" disabled="@(currentPage == 1)" title="First">««</button>
+        <button @onclick="PreviousPage" disabled="@(currentPage == 1)" title="Previous">«</button>
         <span>Page @currentPage of @TotalPages</span>
-        <button @onclick="NextPage" disabled="@((currentPage == TotalPages))">Next</button>
+        <button @onclick="NextPage" disabled="@(currentPage == TotalPages)" title="Next">»</button>
+        <button @onclick="LastPage" disabled="@(currentPage == TotalPages)" title="Last">»»</button>
+    </div>
+
+    <!-- Floating scroll buttons -->
+    <div class="scroll-buttons">
+        <button class="scroll-btn" @onclick="ScrollToTop" title="Scroll to top">
+            <i class="fa fa-chevron-up"></i>
+        </button>
+        <button class="scroll-btn" @onclick="ScrollToBottom" title="Scroll to bottom">
+            <i class="fa fa-chevron-down"></i>
+        </button>
     </div>
 
 </div>

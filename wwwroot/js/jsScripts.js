@@ -20,6 +20,15 @@ function updateUrlWithoutQueryParam(url) {
     window.history.replaceState({}, document.title, url);
 }
 
+// Scroll functions
+window.scrollToTop = function() {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+};
+
+window.scrollToBottom = function() {
+    window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+};
+
 // Monaco Code Editor with Syntax Highlighting
 window.monacoEditor = {
     editors: {},
