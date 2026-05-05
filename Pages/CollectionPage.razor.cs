@@ -114,7 +114,11 @@ namespace Snipster.Pages
             if (adjustHeightNeeded)
             {
                 adjustHeightNeeded = false; 
-                await AdjustTextAreaHeightEdit();
+                // Re-initialize Monaco editor if needed
+                if (selectedSnippet != null && !isAddingSnippet)
+                {
+                    await InitializeEditEditor();
+                }
             }
         }
 
@@ -216,13 +220,19 @@ namespace Snipster.Pages
             adjustHeightNeeded = true;
             spinnerModal.CloseModal();
 
+            // Initialize Monaco editor after snippet loads
+            await InitializeEditEditor();
         }
-        private void ShowSnippetFields()
+        private async Task ShowSnippetFields()
         {
             // Reset the form model and show the new snippet fields
             newSnippet = new Snippet();
-            selectedSnippet = new Snippet();
+            selectedSnippet = null;
             isAddingSnippet = true;
+            StateHasChanged();
+            
+            // Initialize Monaco editor for creating
+            await InitializeCreateEditor();
         }
 
 
@@ -280,6 +290,9 @@ namespace Snipster.Pages
         {
             spinnerModal.ShowModal();
 
+            // Get content from Monaco editor
+            newSnippet.Content = await GetCreateEditorContent();
+
             // Save the new snippet and get the generated snippet ID
             var snippetId = await _mongoDbService.AddSnippetAsync(newSnippet);
             if (selectedCollectionIdCreate == null)
@@ -333,6 +346,10 @@ namespace Snipster.Pages
         private async Task HandleValidSubmitEdit()
         {
             spinnerModal.ShowModal();
+            
+            // Get content from Monaco editor
+            selectedSnippet.Content = await GetEditEditorContent();
+            
             var snippetId = selectedSnippet.Id;
 
             var selectedCollection = collections.FirstOrDefault(c => c.Id == selectedCollectionId);
@@ -513,13 +530,46 @@ namespace Snipster.Pages
             StateHasChanged();
         }
 
-        private async Task AdjustTextAreaHeight(ChangeEventArgs args)
+        // Monaco Editor methods
+        private async Task InitializeCreateEditor()
         {
-            await JSRuntime.InvokeVoidAsync("adjustTextAreaHeight", "createContentId");
+            await Task.Delay(100); // Wait for DOM to be ready
+            await JSRuntime.InvokeVoidAsync("monacoEditor.createEditor", 
+                "createEditorContainer", 
+                newSnippet?.Language ?? "plaintext", 
+                newSnippet?.Content ?? "", 
+                false);
         }
-        private async Task AdjustTextAreaHeightEdit()
+
+        private async Task InitializeEditEditor()
         {
-            await JSRuntime.InvokeVoidAsync("adjustTextAreaHeight", "editContentId");
+            await Task.Delay(100); // Wait for DOM to be ready
+            await JSRuntime.InvokeVoidAsync("monacoEditor.createEditor", 
+                "editEditorContainer", 
+                selectedSnippet?.Language ?? "plaintext", 
+                selectedSnippet?.Content ?? "", 
+                !selectedCollectionIsOwn);
+        }
+
+        private async Task<string> GetCreateEditorContent()
+        {
+            return await JSRuntime.InvokeAsync<string>("monacoEditor.getValue", "createEditorContainer");
+        }
+
+        private async Task<string> GetEditEditorContent()
+        {
+            return await JSRuntime.InvokeAsync<string>("monacoEditor.getValue", "editEditorContainer");
+        }
+
+        // Language change handlers for Monaco editor
+        private async Task OnNewLanguageChanged()
+        {
+            await JSRuntime.InvokeVoidAsync("monacoEditor.setLanguage", "createEditorContainer", newSnippet?.Language ?? "plaintext");
+        }
+
+        private async Task OnEditLanguageChanged()
+        {
+            await JSRuntime.InvokeVoidAsync("monacoEditor.setLanguage", "editEditorContainer", selectedSnippet?.Language ?? "plaintext");
         }
 
         private void ToggleLeftPanel()

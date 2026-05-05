@@ -154,8 +154,39 @@
                 </div>
 
                 <div class="form-group">
-                    <textarea id="createContentId" class="textarea" @bind="newSnippet.Content" placeholder="Enter Snippet" @oninput="AdjustTextAreaHeight"></textarea>
-     @*                <ValidationMessage For="@(() => newSnippet.Content)" /> *@
+                    <label for="language">Language</label>
+                    <select id="language" class="dropdown" @bind="newSnippet.Language" @bind:after="OnNewLanguageChanged">
+                        <option value="">Select Language</option>
+                        <option value="javascript">JavaScript</option>
+                        <option value="typescript">TypeScript</option>
+                        <option value="python">Python</option>
+                        <option value="csharp">C#</option>
+                        <option value="java">Java</option>
+                        <option value="cpp">C++</option>
+                        <option value="c">C</option>
+                        <option value="html">HTML</option>
+                        <option value="css">CSS</option>
+                        <option value="sql">SQL</option>
+                        <option value="json">JSON</option>
+                        <option value="xml">XML</option>
+                        <option value="bash">Bash/Shell</option>
+                        <option value="powershell">PowerShell</option>
+                        <option value="ruby">Ruby</option>
+                        <option value="php">PHP</option>
+                        <option value="go">Go</option>
+                        <option value="rust">Rust</option>
+                        <option value="swift">Swift</option>
+                        <option value="kotlin">Kotlin</option>
+                        <option value="yaml">YAML</option>
+                        <option value="markdown">Markdown</option>
+                        <option value="razor">Razor</option>
+                        <option value="plaintext">Plain Text</option>
+                    </select>
+                </div>
+
+                <div class="form-group code-editor-container">
+                    <label>Code</label>
+                    <div id="createEditorContainer" class="monaco-editor-container"></div>
                 </div>
 
                 @if (isFormValid)
@@ -210,7 +241,39 @@
                 </div> *@
 
                 <div class="form-group">
-                    <textarea id="editContentId" class="textarea" @bind="selectedSnippet.Content" placeholder="Enter Snippet" @oninput="AdjustTextAreaHeightEdit" disabled="@(!selectedCollectionIsOwn ? "disabled" : null)"></textarea>
+                    <label for="editLanguage">Language</label>
+                    <select id="editLanguage" class="dropdown" @bind="selectedSnippet.Language" @bind:after="OnEditLanguageChanged" disabled="@(!selectedCollectionIsOwn ? "disabled" : null)">
+                        <option value="">Select Language</option>
+                        <option value="javascript">JavaScript</option>
+                        <option value="typescript">TypeScript</option>
+                        <option value="python">Python</option>
+                        <option value="csharp">C#</option>
+                        <option value="java">Java</option>
+                        <option value="cpp">C++</option>
+                        <option value="c">C</option>
+                        <option value="html">HTML</option>
+                        <option value="css">CSS</option>
+                        <option value="sql">SQL</option>
+                        <option value="json">JSON</option>
+                        <option value="xml">XML</option>
+                        <option value="bash">Bash/Shell</option>
+                        <option value="powershell">PowerShell</option>
+                        <option value="ruby">Ruby</option>
+                        <option value="php">PHP</option>
+                        <option value="go">Go</option>
+                        <option value="rust">Rust</option>
+                        <option value="swift">Swift</option>
+                        <option value="kotlin">Kotlin</option>
+                        <option value="yaml">YAML</option>
+                        <option value="markdown">Markdown</option>
+                        <option value="razor">Razor</option>
+                        <option value="plaintext">Plain Text</option>
+                    </select>
+                </div>
+
+                <div class="form-group code-editor-container">
+                    <label>Code</label>
+                    <div id="editEditorContainer" class="monaco-editor-container"></div>
                 </div>
                 <div class="button-row">
                     @if (selectedCollectionIsOwn)

@@ -163,7 +163,8 @@ namespace Snipster.Services
                     .Set(s => s.SharedWithInput, snippet.SharedWithInput)
                     .Set(s => s.CreatedBy, snippet.CreatedBy)
                     .Set(s => s.CreatedDate, snippet.CreatedDate)
-                    .Set(s => s.CollectionId, snippet.CollectionId);
+                    .Set(s => s.CollectionId, snippet.CollectionId)
+                    .Set(s => s.Language, snippet.Language);
                 await _snippetsCollection.UpdateOneAsync(filter, update);  // Update if exists
             }
         }
@@ -179,7 +180,8 @@ namespace Snipster.Services
                 .Set(s => s.IsFavourite, snippet.IsFavourite)
                 .Set(s => s.SharedWithInput, snippet.SharedWithInput)
                 .Set(s => s.CollectionId, snippet.CollectionId)
-                .Set(s => s.CreatedDate, snippet.CreatedDate);
+                .Set(s => s.CreatedDate, snippet.CreatedDate)
+                .Set(s => s.Language, snippet.Language);
 
             await _snippetsCollection.UpdateOneAsync(filter, update);
         }
