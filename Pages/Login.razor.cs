@@ -61,7 +61,6 @@ namespace Snipster.Pages
 
                             StateHasChanged();
 
-                            await Task.Delay(2000);
                             Navigation.NavigateTo("/");  
                         }
                     }
