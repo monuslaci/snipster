@@ -2,11 +2,13 @@
 .page-layout {
     display: flex;
     width: 100%;
+    max-width: 100vw;
     height: 94vh;
     gap: 16px;
     padding: 16px;
     background: linear-gradient(135deg, #f5f7fa 0%, #e4e8ec 100%);
     box-sizing: border-box;
+    overflow-x: hidden;
 }
 
 /* Panel Base Styles */
@@ -15,10 +17,12 @@
     border-radius: 16px;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
     padding: 20px;
+    box-sizing: border-box;
     display: flex;
     flex-direction: column;
     position: relative;
     overflow: hidden;
+    min-width: 0;
     transition: all 0.3s ease;
 }
 
@@ -264,6 +268,7 @@
     justify-content: space-between;
     transition: all 0.2s ease;
     border: 2px solid transparent;
+    min-width: 0;
 }
 
 .item-card:hover {
@@ -304,6 +309,7 @@
     flex-direction: column;
     gap: 2px;
     min-width: 0;
+    flex: 1;
 }
 
 .item-title {
@@ -347,6 +353,7 @@
     gap: 4px;
     opacity: 0;
     transition: opacity 0.2s ease;
+    flex-shrink: 0;
 }
 
 .item-card:hover .item-actions {
@@ -597,6 +604,8 @@
     gap: 16px;
     height: calc(100% - 60px);
     min-height: 0;
+    min-width: 0;
+    width: 100%;
 }
 
 .shared-owner-banner {
@@ -682,12 +691,16 @@
     display: flex;
     flex-direction: column;
     min-height: 50vh;
+    min-width: 0;
+    width: 100%;
 }
 
 .monaco-editor-container {
     flex: 1;
     height: 100%;
     min-height: 50vh;
+    min-width: 0;
+    width: 100%;
     border: 2px solid #333;
     border-radius: 10px;
     overflow: hidden;
@@ -855,27 +868,87 @@
         flex-direction: column;
         height: auto;
         min-height: 100vh;
+        width: 100%;
+        max-width: 100vw;
+        gap: 12px;
+        padding: 10px;
+        overflow-x: hidden;
     }
     
     .panel {
         width: 100% !important;
-        min-width: 100% !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+        border-radius: 12px;
+        padding: 16px;
     }
     
     .collection-panel,
     .snippet-panel {
-        max-height: 300px;
+        max-height: min(58vh, 560px);
     }
     
     .editor-panel {
-        min-height: 500px;
+        min-height: 70vh;
+        overflow-x: hidden;
     }
     
     .panel.collapsed {
-        display: none;
+        display: flex;
+        min-height: 56px;
+        max-height: 56px;
+        padding: 14px 56px 14px 16px;
+        overflow: visible;
+    }
+
+    .collection-panel.collapsed::before,
+    .snippet-panel.collapsed::before {
+        color: white;
+        font-size: 15px;
+        font-weight: 600;
+        line-height: 28px;
+    }
+
+    .collection-panel.collapsed::before {
+        content: "Collections";
+    }
+
+    .snippet-panel.collapsed::before {
+        content: "Snippets";
+    }
+
+    .panel.collapsed .toggle-btn {
+        top: 12px;
+        right: 14px;
+    }
+
+    .items-container {
+        overflow-x: hidden;
+        padding-right: 0;
+    }
+
+    .item-card:hover {
+        transform: none;
+    }
+
+    .item-actions {
+        opacity: 1;
+    }
+
+    .form-input,
+    .form-select,
+    .search-input {
+        min-width: 0;
     }
     
     .form-row {
         flex-direction: column;
+    }
+
+    .code-editor-container,
+    .monaco-editor-container {
+        min-height: 58vh;
+        width: 100%;
+        max-width: 100%;
     }
 }

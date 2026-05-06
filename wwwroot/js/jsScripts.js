@@ -94,7 +94,7 @@ window.monacoEditor = {
                 scrollBeyondLastLine: false,
                 fontSize: 14,
                 lineNumbers: 'on',
-                wordWrap: 'on',
+                wordWrap: 'off',
                 readOnly: isReadOnly || false,
                 renderLineHighlight: 'all',
                 tabSize: 4,
