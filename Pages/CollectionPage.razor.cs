@@ -59,6 +59,7 @@ namespace Snipster.Pages
         private bool selectedCollectionIsOwn { get; set; }
         private string isDisabled { get; set; } = "";
         private Dictionary<string, string> collectionOwnerNames = new(StringComparer.OrdinalIgnoreCase);
+        private bool sharedCollectionsLoaded { get; set; }
 
         // Pagination for collections
         private int collectionsCurrentPage = 1;
@@ -116,13 +117,20 @@ namespace Snipster.Pages
 
                 if (!_appState.collections.Any())
                     _appState.collections = await _mongoDbService.GetCollectionsForUserAsync(_appState.userEmail);
-                if (!_appState.sharedCollections.Any())
-                    _appState.sharedCollections = await _mongoDbService.GetSharedCollectionsForUserAsync(_appState.userEmail);
 
                 //get the user's collections
                 collections = _appState.collections;
-                //get the collections that are shared with them
-                sharedCollections = _appState.sharedCollections;
+
+                if (_appState.sharedCollections.Any())
+                {
+                    sharedCollections = _appState.sharedCollections;
+                    sharedCollectionsLoaded = true;
+                }
+
+                if (!string.IsNullOrEmpty(selectedCollectionId) && !collections.Any(c => c.Id == selectedCollectionId))
+                {
+                    await EnsureSharedCollectionsLoadedAsync();
+                }
 
                 await LoadCollectionOwnerNames();
 
@@ -549,17 +557,25 @@ namespace Snipster.Pages
                 // Reset to first page on search
                 collectionsCurrentPage = 1;
                 sharedCollectionsCurrentPage = 1;
-                
-                collections = await _helper.SearchCollectionAsync(searchCollectionQuery, userEmail, _appState.collections);
-                sharedCollections = await _helper.SearchCollectionAsync(searchCollectionQuery, userEmail, _appState.sharedCollections);
+
+                if (activeCollectionTab == "shared")
+                {
+                    await EnsureSharedCollectionsLoadedAsync();
+                    sharedCollections = await _helper.SearchCollectionAsync(searchCollectionQuery, userEmail, _appState.sharedCollections);
+                }
+                else
+                {
+                    collections = await _helper.SearchCollectionAsync(searchCollectionQuery, userEmail, _appState.collections);
+                }
+
                 await LoadCollectionOwnerNames();
 
-                if (collections.Any())
+                if (activeCollectionTab == "own" && collections.Any())
                 {
                     selectedCollectionId = collections.FirstOrDefault().Id;
                     await LoadSnippets(selectedCollectionId);
                 }
-                else if (!collections.Any() && sharedCollections.Any())
+                else if (activeCollectionTab == "shared" && sharedCollections.Any())
                 {
                     selectedCollectionId = sharedCollections.FirstOrDefault().Id;
                     await LoadSnippets(selectedCollectionId);
@@ -616,16 +632,24 @@ namespace Snipster.Pages
             collectionsCurrentPage = 1;
             sharedCollectionsCurrentPage = 1;
 
-            collections = _appState.collections;
-            sharedCollections = _appState.sharedCollections;
+            if (activeCollectionTab == "shared")
+            {
+                await EnsureSharedCollectionsLoadedAsync();
+                sharedCollections = _appState.sharedCollections;
+            }
+            else
+            {
+                collections = _appState.collections;
+            }
+
             await LoadCollectionOwnerNames();
 
-            if (collections.Any())
+            if (activeCollectionTab == "own" && collections.Any())
             {
                 selectedCollectionId = collections.FirstOrDefault().Id;
                 await LoadSnippets(selectedCollectionId);
             }
-            else if (!collections.Any() && sharedCollections.Any())
+            else if (activeCollectionTab == "shared" && sharedCollections.Any())
             {
                 selectedCollectionId = sharedCollections.FirstOrDefault().Id;
                 await LoadSnippets(selectedCollectionId);
@@ -726,13 +750,40 @@ namespace Snipster.Pages
         private void CollectionsFirstPage() => collectionsCurrentPage = 1;
         private void CollectionsLastPage() => collectionsCurrentPage = CollectionsTotalPages;
 
-        private void SwitchCollectionTab(string tab)
+        private async Task SwitchCollectionTab(string tab)
         {
             activeCollectionTab = tab;
             if (tab == "own")
+            {
                 collectionsCurrentPage = 1;
+            }
             else
+            {
                 sharedCollectionsCurrentPage = 1;
+                await EnsureSharedCollectionsLoadedAsync();
+            }
+        }
+
+        private async Task EnsureSharedCollectionsLoadedAsync()
+        {
+            if (sharedCollectionsLoaded)
+                return;
+
+            spinnerModal.ShowModal();
+            _appState.sharedCollections = await _mongoDbService.GetSharedCollectionsForUserAsync(_appState.userEmail);
+            sharedCollections = _appState.sharedCollections;
+            sharedCollectionsLoaded = true;
+            await LoadCollectionOwnerNames();
+            spinnerModal.CloseModal();
+            StateHasChanged();
+        }
+
+        private async Task EnsureSharedCollectionsAvailableForActiveTabAsync()
+        {
+            if (activeCollectionTab == "shared")
+            {
+                await EnsureSharedCollectionsLoadedAsync();
+            }
         }
 
         // Pagination methods for shared collections
