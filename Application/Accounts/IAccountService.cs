@@ -10,4 +10,8 @@ public interface IAccountService
     Task<AccountActionResult> ResendRegistrationConfirmationAsync(string email);
     Task<bool> ConfirmRegistrationAsync(string token);
     Task<AccountActionResult> SendPasswordResetAsync(string email);
+    Task<bool> ResetPasswordAsync(string token, string newPassword);
+    Task UpdateUserAsync(Users user);
+    Task UpdateUserPasswordAsync(Users user, string password);
+    Task DeleteUserAccountAsync(string email);
 }

@@ -18,6 +18,7 @@ using static Snipster.Helpers.GeneralHelpers;
 using System.Text.RegularExpressions;
 using Amazon.Runtime.Internal.Endpoints.StandardLibrary;
 using BCrypt.Net;
+using Snipster.Application.Accounts;
 using Snipster.Services.AppStates;
 
 
@@ -28,7 +29,7 @@ namespace Snipster.Pages
         [Inject] Blazored.Toast.Services.IToastService ToastService { get; set; }
         [Inject] private AuthenticationStateProvider AuthStateProvider { get; set; }
         [Inject] NavigationManager Navigation { get; set; }
-        [Inject] MongoDbService _mongoDbService { get; set; }
+        [Inject] IAccountService AccountService { get; set; }
         [Inject] private AppState _appState { get; set; }
         private string? userEmail { get; set; }
         private Modal spinnerModal = new Modal();
@@ -79,7 +80,7 @@ namespace Snipster.Pages
 
             spinnerModal.ShowModal();
 
-            await _mongoDbService.UpdateUserWithPassword(user, editPassword.Password);
+            await AccountService.UpdateUserPasswordAsync(user, editPassword.Password);
 
             spinnerModal.CloseModal();
 

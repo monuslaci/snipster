@@ -37,12 +37,10 @@ namespace Snipster.Helpers
 
     public class GeneralHelpers : IGeneralHelpers
     {
-        private readonly MongoDbService _mongoDbService;
         private readonly AppState _appState;
 
-        public GeneralHelpers(MongoDbService mongoDbService, AppState appState)
+        public GeneralHelpers(AppState appState)
         {
-            _mongoDbService = mongoDbService;
             _appState = appState;
         }
 

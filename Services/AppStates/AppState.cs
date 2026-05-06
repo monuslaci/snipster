@@ -19,6 +19,7 @@ using MongoDB.Driver;
 using static Snipster.Data.CommonClasses;
 using static Snipster.Helpers.GeneralHelpers;
 using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage;
+using Snipster.Application.Workspace.Repositories;
 
 
 namespace Snipster.Services.AppStates
@@ -36,12 +37,21 @@ namespace Snipster.Services.AppStates
         public List<MemorySnippetList> loadedSnippets = new List<MemorySnippetList>();
         public List<MemorySnippetList> loadedSharedSnippets = new List<MemorySnippetList>();
         private AuthenticationStateProvider _authStateProvider { get; set; }
-        private MongoDbService _mongoDbService { get; set; }
+        private ICollectionRepository _collectionRepository { get; set; }
+        private ISnippetRepository _snippetRepository { get; set; }
+        private IUserRepository _userRepository { get; set; }
         private ProtectedSessionStorage _sessionStorage { get; set; }
-        public AppState(AuthenticationStateProvider _authStateProvider, MongoDbService _mongoDbService, ProtectedSessionStorage _sessionStorage)
+        public AppState(
+            AuthenticationStateProvider _authStateProvider,
+            ICollectionRepository _collectionRepository,
+            ISnippetRepository _snippetRepository,
+            IUserRepository _userRepository,
+            ProtectedSessionStorage _sessionStorage)
         {
             this._authStateProvider = _authStateProvider;
-            this._mongoDbService = _mongoDbService;
+            this._collectionRepository = _collectionRepository;
+            this._snippetRepository = _snippetRepository;
+            this._userRepository = _userRepository;
             this._sessionStorage = _sessionStorage;
 
         }
@@ -89,7 +99,7 @@ namespace Snipster.Services.AppStates
                 //var authState = await _authStateProvider.GetAuthenticationStateAsync();
                 //userEmail = authState.User.Identity?.Name;
 
-                user = await _mongoDbService.GetUser(email);
+                user = await _userRepository.GetByEmailAsync(email);
                 userEmail = user.Email;
             }
             catch (Exception ex)
@@ -111,7 +121,7 @@ namespace Snipster.Services.AppStates
                 var authState = await _authStateProvider.GetAuthenticationStateAsync();
                 userEmail = authState.User.Identity?.Name;
 
-                user = await _mongoDbService.GetUser(userEmail);
+                user = await _userRepository.GetByEmailAsync(userEmail);
                 //userEmail = user.Email;
             }
             catch (Exception ex)
@@ -132,7 +142,7 @@ namespace Snipster.Services.AppStates
             {
 
                 //get the user's collections
-                collections = await _mongoDbService.GetCollectionsForUserAsync(userEmail);
+                collections = await _collectionRepository.GetForUserAsync(userEmail);
                 await LoadConnectingSnippets();
             }
             catch (Exception ex)
@@ -152,7 +162,7 @@ namespace Snipster.Services.AppStates
             try
             {
                 //get the collections that are shared with them
-                sharedCollections = await _mongoDbService.GetSharedCollectionsForUserAsync(userEmail);
+                sharedCollections = await _collectionRepository.GetSharedForUserAsync(userEmail);
                 await LoadSharedConnectingSnippets();
             }
             catch (Exception ex)
@@ -175,7 +185,7 @@ namespace Snipster.Services.AppStates
                 {
                     if (loadedSnippets.Where(x => x.collectionId == collection.Id).Count() == 0)
                     {
-                        List<Snippet> snippets = await _mongoDbService.GetSnippetsByCollectionAsync(collection.Id);
+                        List<Snippet> snippets = await _snippetRepository.GetByCollectionAsync(collection.Id);
 
                         loadedSnippets.Add(new MemorySnippetList
                         {
@@ -218,7 +228,7 @@ namespace Snipster.Services.AppStates
                     {
                         if (user.SharedSnippetIds.Contains(snippetId))
                         {
-                            Snippet snippet = await _mongoDbService.GetSnippetByIdAsync(snippetId);
+                            Snippet snippet = await _snippetRepository.GetByIdAsync(snippetId);
 
                             if (memoryList != null)
                             {
@@ -264,7 +274,7 @@ namespace Snipster.Services.AppStates
 
         private async Task AdUserNamesToSnippets(List<Snippet> snippetList)
         {
-            var allUsers = await _mongoDbService.GetAllUsers();
+            var allUsers = await _userRepository.GetAllAsync();
             foreach (var s in snippetList)
             {
                 var u = allUsers.Where(u => u.Id == s.CreatedBy).FirstOrDefault();

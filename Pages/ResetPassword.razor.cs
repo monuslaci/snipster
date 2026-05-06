@@ -15,6 +15,7 @@ using static Snipster.Data.CommonClasses;
 using Blazored.Toast.Services;
 using AspNetCore.Identity.MongoDbCore.Models;
 using Microsoft.AspNetCore.WebUtilities;
+using Snipster.Application.Accounts;
 
 namespace Snipster.Pages
 {
@@ -24,6 +25,7 @@ namespace Snipster.Pages
         private NewPwModel loginModel = new NewPwModel();
         [Parameter] public string Token { get; set; } // Extract token from URL
         [Inject] Blazored.Toast.Services.IToastService ToastService { get; set; }
+        [Inject] IAccountService AccountService { get; set; }
 
         private bool isProcessing = false;
         private bool isSuccess = false;
@@ -38,7 +40,7 @@ namespace Snipster.Pages
         {
             isProcessing = true;
 
-            bool success = await _mongoDbService.ResetPasswordAsync(Token, loginModel.Password);
+            bool success = await AccountService.ResetPasswordAsync(Token, loginModel.Password);
 
             if (success)
             {

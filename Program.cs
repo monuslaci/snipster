@@ -22,6 +22,7 @@ using static Snipster.Helpers.GeneralHelpers;
 using Snipster.Services.AppStates;
 using Snipster.Helpers;
 using Snipster.Application.Accounts;
+using Snipster.Application.Accounts.Repositories;
 using Snipster.Application.Workspace;
 using Snipster.Application.Workspace.Repositories;
 using Snipster.Infrastructure.Repositories;
@@ -54,15 +55,6 @@ try
 
 
     builder.Services.AddScoped<AppState>();
-    // Register MongoDbService with IMongoDatabase and IPasswordHasher<Users>
-    builder.Services.AddSingleton<MongoDbService>(sp =>
-    {
-        var connectionString = Environment.GetEnvironmentVariable("MongoDb"); // Correct connection string key
-        var databaseName = Environment.GetEnvironmentVariable("DatabaseName"); // Read the database name from configuration
-        var passwordHasher = sp.GetRequiredService<IPasswordHasher<Users>>(); // Get the password hasher from DI container
-        return new MongoDbService(connectionString, databaseName, passwordHasher); // Create and return the MongoDbService instance
-    });
-
     // Register the PasswordHasher service (if not registered already)
     builder.Services.AddSingleton<IPasswordHasher<Users>, PasswordHasher<Users>>();
 
@@ -147,6 +139,8 @@ try
 
     //builder.Services.AddScoped<Blazored.Toast.Services.IToastService, Blazored.Toast.Services.ToastService>();
     builder.Services.AddScoped<IEmailService, EmailService>();
+    builder.Services.AddScoped<IAccountRepository, MongoAccountRepository>();
+    builder.Services.AddScoped<ITokenRepository, MongoTokenRepository>();
     builder.Services.AddScoped<IAccountService, AccountService>();
     builder.Services.AddScoped<ICollectionRepository, MongoCollectionRepository>();
     builder.Services.AddScoped<ISnippetRepository, MongoSnippetRepository>();
@@ -154,8 +148,6 @@ try
     builder.Services.AddScoped<IWorkspaceService, WorkspaceService>();
     builder.Services.AddScoped<IGeneralHelpers, GeneralHelpers>();
 
-
-    //builder.Services.AddSingleton<IMongoDbService, MongoDbService>();
     builder.Services.AddBlazoredToast();
 }
 catch (Exception ex)

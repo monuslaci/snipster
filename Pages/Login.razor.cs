@@ -90,7 +90,6 @@ namespace Snipster.Pages
 
                 await _appState.LoadCurrentUser(loginModel.Email);
                 var user = _appState.user;
-                //var user = await MongoDbService.GetUser(loginModel.Email);
                 //await EmailService.SendEmailNotification(CreateLoginEmailTemplate(user.Email, $"{user.FirstName} {user.LastName}"));
 
                 // Redirect to internal page after login

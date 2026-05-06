@@ -1,3 +1,4 @@
+using Snipster.Application.Accounts.Repositories;
 using Snipster.Services;
 using static Snipster.Data.DBContext;
 using static Snipster.Data.CommonClasses;
@@ -6,18 +7,23 @@ namespace Snipster.Application.Accounts;
 
 public class AccountService : IAccountService
 {
-    private readonly MongoDbService _mongoDbService;
+    private readonly IAccountRepository _accountRepository;
+    private readonly ITokenRepository _tokenRepository;
     private readonly IEmailService _emailService;
 
-    public AccountService(MongoDbService mongoDbService, IEmailService emailService)
+    public AccountService(
+        IAccountRepository accountRepository,
+        ITokenRepository tokenRepository,
+        IEmailService emailService)
     {
-        _mongoDbService = mongoDbService;
+        _accountRepository = accountRepository;
+        _tokenRepository = tokenRepository;
         _emailService = emailService;
     }
 
     public Task<LoginReturn> ValidateCredentialsAsync(string email, string password)
     {
-        return _mongoDbService.ValidateUserAsync(email, password);
+        return _accountRepository.ValidateUserAsync(email, password);
     }
 
     public async Task<AccountActionResult> RegisterAsync(RegisterUserDTO newUser)
@@ -43,7 +49,7 @@ public class AccountService : IAccountService
             EmailConfirmed = false
         };
 
-        var registered = await _mongoDbService.RegisterUserAsync(user, newUser.Password);
+        var registered = await _accountRepository.RegisterUserAsync(user, newUser.Password);
         if (!registered)
         {
             return new AccountActionResult
@@ -64,7 +70,7 @@ public class AccountService : IAccountService
 
     public async Task<AccountActionResult> ResendRegistrationConfirmationAsync(string email)
     {
-        var user = await _mongoDbService.GetUser(email);
+        var user = await _accountRepository.GetUserByEmailAsync(email);
         if (user == null)
         {
             return new AccountActionResult
@@ -103,12 +109,12 @@ public class AccountService : IAccountService
 
     public Task<bool> ConfirmRegistrationAsync(string token)
     {
-        return _mongoDbService.ValidateGeneratedRegisterTokenAsync(token);
+        return _tokenRepository.ValidateRegistrationTokenAsync(token);
     }
 
     public async Task<AccountActionResult> SendPasswordResetAsync(string email)
     {
-        var user = await _mongoDbService.GetUser(email);
+        var user = await _accountRepository.GetUserByEmailAsync(email);
         if (user == null)
         {
             return new AccountActionResult
@@ -118,7 +124,7 @@ public class AccountService : IAccountService
             };
         }
 
-        var token = await _mongoDbService.GenerateResetTokenAsync(user.Email);
+        var token = await _tokenRepository.GenerateResetTokenAsync(user.Email);
         await _emailService.SendEmailNotification(AccountEmailFactory.CreatePasswordResetEmail(
             user.Email,
             $"{user.FirstName} {user.LastName}",
@@ -131,9 +137,29 @@ public class AccountService : IAccountService
         };
     }
 
+    public Task<bool> ResetPasswordAsync(string token, string newPassword)
+    {
+        return _tokenRepository.ResetPasswordAsync(token, newPassword);
+    }
+
+    public Task UpdateUserAsync(Users user)
+    {
+        return _accountRepository.UpdateUserAsync(user);
+    }
+
+    public Task UpdateUserPasswordAsync(Users user, string password)
+    {
+        return _accountRepository.UpdateUserPasswordAsync(user, password);
+    }
+
+    public Task DeleteUserAccountAsync(string email)
+    {
+        return _accountRepository.DeleteUserAccountAsync(email);
+    }
+
     private async Task SendRegistrationConfirmationAsync(Users user)
     {
-        var token = await _mongoDbService.GenerateRegisterTokenAsync(user.Email);
+        var token = await _tokenRepository.GenerateRegistrationTokenAsync(user.Email);
         await _emailService.SendEmailNotification(AccountEmailFactory.CreateRegistrationEmail(
             user.Email,
             $"{user.FirstName} {user.LastName}",

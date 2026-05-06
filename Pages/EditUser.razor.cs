@@ -17,6 +17,7 @@ using AspNetCore.Identity.MongoDbCore.Models;
 using static Snipster.Helpers.GeneralHelpers;
 using System.Text.RegularExpressions;
 using Amazon.Runtime.Internal.Endpoints.StandardLibrary;
+using Snipster.Application.Accounts;
 using Snipster.Services.AppStates;
 
 namespace Snipster.Pages
@@ -26,7 +27,7 @@ namespace Snipster.Pages
         [Inject] Blazored.Toast.Services.IToastService ToastService { get; set; }
         [Inject] private AuthenticationStateProvider AuthStateProvider { get; set; }
         [Inject] NavigationManager Navigation { get; set; }
-        [Inject] MongoDbService _mongoDbService { get; set; }
+        [Inject] IAccountService AccountService { get; set; }
         [Inject] private AppState _appState { get; set; }
         [Inject] private CustomAuthenticationStateProvider CustomAuthProvider { get; set; }
         private string? userEmail { get; set; }
@@ -68,7 +69,7 @@ namespace Snipster.Pages
             user.FirstName = editUser.FirstName;
             user.LastName = editUser.LastName;
 
-            await _mongoDbService.UpdateUser(user);
+            await AccountService.UpdateUserAsync(user);
 
             spinnerModal.CloseModal();
 
@@ -106,7 +107,7 @@ namespace Snipster.Pages
                 spinnerModal.IsSpinner = true;
                 spinnerModal.ShowModal();
 
-                await _mongoDbService.DeleteUserAccountAsync(editUser.Email);
+                await AccountService.DeleteUserAccountAsync(editUser.Email);
 
                 _appState.user = null;
                 _appState.userEmail = null;
