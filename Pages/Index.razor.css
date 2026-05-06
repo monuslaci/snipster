@@ -506,9 +506,9 @@ footer .footer-links a:hover {
     max-width: 1200px;
     margin: 0 auto;
     display: flex;
-    justify-content: space-between;
+    justify-content: flex-start;
     align-items: center;
-    gap: 2rem;
+    gap: 1.5rem;
 }
 
 .hero-text h1 {
@@ -528,9 +528,13 @@ footer .footer-links a:hover {
 }
 
 .hero-logo img {
-    max-width: 150px;
+    max-width: 120px;
     height: auto;
     filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.2));
+}
+
+.dashboard-hero-logo {
+    transform: translateX(-4.5rem);
 }
 
 /* Quick Actions */
@@ -670,6 +674,11 @@ footer .footer-links a:hover {
 
     .hero-logo {
         order: -1;
+        margin-left: 0;
+    }
+
+    .dashboard-hero-logo {
+        transform: none;
     }
 
     .action-cards {
