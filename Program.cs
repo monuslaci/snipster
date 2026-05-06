@@ -21,6 +21,10 @@ using SendGrid.Helpers.Mail;
 using static Snipster.Helpers.GeneralHelpers;
 using Snipster.Services.AppStates;
 using Snipster.Helpers;
+using Snipster.Application.Accounts;
+using Snipster.Application.Workspace;
+using Snipster.Application.Workspace.Repositories;
+using Snipster.Infrastructure.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -143,6 +147,11 @@ try
 
     //builder.Services.AddScoped<Blazored.Toast.Services.IToastService, Blazored.Toast.Services.ToastService>();
     builder.Services.AddScoped<IEmailService, EmailService>();
+    builder.Services.AddScoped<IAccountService, AccountService>();
+    builder.Services.AddScoped<ICollectionRepository, MongoCollectionRepository>();
+    builder.Services.AddScoped<ISnippetRepository, MongoSnippetRepository>();
+    builder.Services.AddScoped<IUserRepository, MongoUserRepository>();
+    builder.Services.AddScoped<IWorkspaceService, WorkspaceService>();
     builder.Services.AddScoped<IGeneralHelpers, GeneralHelpers>();
 
 

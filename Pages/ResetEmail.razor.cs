@@ -19,15 +19,15 @@ using AspNetCore.Identity.MongoDbCore.Models;
 using System.Xml.Linq;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 using Snipster.Services.AppStates;
+using Snipster.Application.Accounts;
 
 namespace Snipster.Pages
 {
     public partial class ResetEmail
     {
         [Inject] Blazored.Toast.Services.IToastService ToastService { get; set; }
-        [Inject] MongoDbService MongoDbService { get; set; }
         [Inject] NavigationManager Navigation { get; set; }
-        [Inject] EmailService EmailService { get; set; }
+        [Inject] IAccountService AccountService { get; set; }
         [Inject] private AppState _appState { get; set; }
         private ResetModel resetEmailModel = new ResetModel();
         private bool emailSent { get; set; } = false;
@@ -35,63 +35,21 @@ namespace Snipster.Pages
 
         private async Task HandleResetEmail()
         {
-            // Fetch the user's email from the database (mocked here)
-            var user = _appState.user;
+            var result = await AccountService.SendPasswordResetAsync(resetEmailModel.Email);
 
-            if (user != null)
+            if (result.Success)
             {
-                string token = await MongoDbService.GenerateResetTokenAsync(user.Email);
-
-
-              
-                await EmailService.SendEmailNotification(CreateResetEmailTemplate(user.Email, $"{user.FirstName} {user.LastName}", token));
-
-                ToastService.ShowSuccess($"An email has been sent to your registered email address. If you do not see it, check your spam or junk folder.");
+                ToastService.ShowSuccess(result.Message);
                 await Task.Delay(2000);
                 Navigation.NavigateTo("/login");
 
             }
             else
             {
-                ToastService.ShowError($"User with this email address is not registered");
+                ToastService.ShowError(result.Message);
                 emailSent = false;
             }
         }
-
-        private EmailSendingClass CreateResetEmailTemplate(string email, string name, string token) 
-        {
-            EmailSendingClass emailDetails = new EmailSendingClass();
-
-            var resetUrl = "";
-            var encodedToken = Uri.EscapeDataString(token);
-            if (Environment.GetEnvironmentVariable("Environment") == "Development")
-                resetUrl = $"https://localhost:7225/pw-reset?token={encodedToken}";
-            else if (Environment.GetEnvironmentVariable("Environment") == "Production")
-                resetUrl = $"https://snipster.co/pw-reset?token={encodedToken}";
-
-            var htmlContent = Regex.Replace(ResetEmailTemplate, "<resetUrl>", resetUrl);
-            htmlContent = Regex.Replace(htmlContent, "<Name>", name);
-
-            emailDetails.htmlContent = htmlContent;
-            emailDetails.PlainTextContent = $"Dear {name}, reset your Snipster.com password by opening this link: {resetUrl}. If you did not request this, please ignore this email. This link expires in 1 hour.";
-            emailDetails.To = email;
-            emailDetails.Subject = "Reset Your Password in Snipster.com"; 
-
-            return emailDetails;
-        }
-        public string ResetEmailTemplate = @"
-                <!DOCTYPE html> <html> <head> <style> p { margin: 0;} OL { list-style-type: decimal; } OL OL  {list-style-type: upper-roman;} UL  {list-style-type: disc;} UL UL  {list-style-type: square;} .cal {font: 15px Calibri;} </style> </head><body>
-                <body>
-                <div><p>Dear <Name>, </p> <p> <o:p>&nbsp;</o:p></p>
-                <p>You received this email because you requested a password reset.</p> <p><o:p>&nbsp;</o:p></p>
-                <p>Click <a href='<resetUrl>'>here</a> to reset your password.</p> <p><o:p>&nbsp;</o:p></p>
-                <p>If you cannot find this email later, please check your spam or junk folder.</p> <p><o:p>&nbsp;</o:p></p>
-                <p>If you didn’t request this, please ignore this email. This link will expire in 1 hour.</p> <p><o:p>&nbsp;</o:p></p>
-
-                <p>Best regards,</p> 
-                <p>Snipster Team</p><p><o:p>&nbsp;</o:p></p>
-                </body>
-                ";
         }
 
 

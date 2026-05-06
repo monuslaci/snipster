@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.JSInterop;
 using Snipster.Components;
 using Snipster.Helpers;
+using Snipster.Application.Workspace;
 using Snipster.Services;
 using Snipster.Services.AppStates;
 using System.Collections.Generic;
@@ -16,7 +17,7 @@ namespace Snipster.Pages
 {
     public partial class SnippetManagement
     {
-        [Inject] MongoDbService MongoDbService { get; set; }
+        [Inject] IWorkspaceService WorkspaceService { get; set; }
         [Inject] NavigationManager Navigation { get; set; }
         [Inject] private AuthenticationStateProvider AuthStateProvider { get; set; }
         [Inject] private AppState _appState { get; set; }
@@ -58,9 +59,9 @@ namespace Snipster.Pages
                 // Only load collection metadata (not snippets) if not already loaded
                 // This is fast - just fetching collection names/IDs, no spinner needed
                 if (!_appState.collections.Any())
-                    _appState.collections = await MongoDbService.GetCollectionsForUserAsync(_appState.userEmail);
+                    _appState.collections = await WorkspaceService.GetUserCollectionsAsync(_appState.userEmail);
                 if (!_appState.sharedCollections.Any())
-                    _appState.sharedCollections = await MongoDbService.GetSharedCollectionsForUserAsync(_appState.userEmail);
+                    _appState.sharedCollections = await WorkspaceService.GetSharedCollectionsAsync(_appState.userEmail);
                 
                 StateHasChanged();
             }
@@ -70,11 +71,11 @@ namespace Snipster.Pages
         {
             // Load collection metadata only (not snippets) if not already loaded
             if (!_appState.collections.Any())
-                _appState.collections = await MongoDbService.GetCollectionsForUserAsync(_appState.userEmail);
+                _appState.collections = await WorkspaceService.GetUserCollectionsAsync(_appState.userEmail);
 
             // Load shared collection metadata only if not already loaded
             if (!_appState.sharedCollections.Any())
-                _appState.sharedCollections = await MongoDbService.GetSharedCollectionsForUserAsync(_appState.userEmail);
+                _appState.sharedCollections = await WorkspaceService.GetSharedCollectionsAsync(_appState.userEmail);
 
             // Check if all snippets are already loaded
             bool allSnippetsLoaded = _appState.collections.All(c => 
@@ -83,7 +84,7 @@ namespace Snipster.Pages
             if (!allSnippetsLoaded)
             {
                 // Load ALL user snippets in a SINGLE database call
-                var allSnippets = await MongoDbService.GetSnippetsByUserAsync(_appState.user, _appState.collections);
+                var allSnippets = await WorkspaceService.GetUserSnippetsAsync(_appState.user, _appState.collections);
 
                 // Distribute to memory cache by collection
                 foreach (var collection in _appState.collections)
@@ -117,7 +118,7 @@ namespace Snipster.Pages
 
                 if (!allSharedLoaded)
                 {
-                    var sharedSnippets = await MongoDbService.GetSharedSnippetsByUserAsync(_appState.user);
+                    var sharedSnippets = await WorkspaceService.GetSharedSnippetsAsync(_appState.user);
 
                     foreach (var collection in _appState.sharedCollections)
                     {
@@ -147,8 +148,8 @@ namespace Snipster.Pages
 
         private async Task OpenSnippet(string snippetId)
         {
-            selectedSnippet = await MongoDbService.GetSnippetByIdAsync(snippetId);
-            var collection = await MongoDbService.GetCollectionsBySnippetId(selectedSnippet.Id);
+            selectedSnippet = await WorkspaceService.GetSnippetAsync(snippetId);
+            var collection = await WorkspaceService.GetCollectionsBySnippetIdAsync(selectedSnippet.Id);
             var selectedCollectionId = collection != null && collection.Count()>0 ? collection.FirstOrDefault().Id : "";
             Navigation.NavigateTo($"/collections?selectedCollectionId={selectedCollectionId}&selectedSnippetId={selectedSnippet.Id}");
         }
@@ -205,7 +206,6 @@ namespace Snipster.Pages
 
             // Instead of clearing first, directly assign the new filtered list
             //search in the own collections
-            //var results = await MongoDbService.SearchSnippetAsync(searchSnippetQuery, _appState.user, _appState.collections, IsFavouriteSearch);
             var results = _helper.SearchSnippetFromMemory(searchSnippetQuery, _appState.user, _appState.collections, IsFavouriteSearch);
 
             //search in the shared snippets

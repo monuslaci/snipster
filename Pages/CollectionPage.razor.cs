@@ -7,6 +7,7 @@ using Microsoft.JSInterop;
 using static Snipster.Data.CommonClasses;
 using Snipster.Services.AppStates;
 using Snipster.Helpers;
+using Snipster.Application.Workspace;
 
 namespace Snipster.Pages
 {
@@ -16,7 +17,7 @@ namespace Snipster.Pages
 
         [Inject] NavigationManager Navigation { get; set; }
         [Inject] private AuthenticationStateProvider AuthStateProvider { get; set; }
-        [Inject] MongoDbService _mongoDbService { get; set; }
+        [Inject] IWorkspaceService WorkspaceService { get; set; }
         [Inject] private AppState _appState { get; set; }
         [Inject] private IGeneralHelpers _helper { get; set; }
 
@@ -117,7 +118,7 @@ namespace Snipster.Pages
 
 
                 if (!_appState.collections.Any())
-                    _appState.collections = await _mongoDbService.GetCollectionsForUserAsync(_appState.userEmail);
+                    _appState.collections = await WorkspaceService.GetUserCollectionsAsync(_appState.userEmail);
 
                 //get the user's collections
                 collections = _appState.collections;
@@ -178,8 +179,7 @@ namespace Snipster.Pages
             spinnerModal.ShowModal();
 
 
-            newCollection.LastModifiedDate = DateTime.Now;
-            await _mongoDbService.AddCollectionAsync(newCollection);
+            await WorkspaceService.CreateCollectionAsync(newCollection, user, userEmail);
 
             _appState.collections.Add(newCollection);
 
@@ -197,10 +197,6 @@ namespace Snipster.Pages
 
             await LoadCollectionOwnerNames();
 
-            //add collectionId to user's my collection IDs
-            user.MyCollectionIds.Add(newCollection.Id);
-            await _mongoDbService.UpdateUser(user);
-
             StateHasChanged();
 
             createCollectionModal.CloseModal();
@@ -210,9 +206,7 @@ namespace Snipster.Pages
         {
             ValidHashtags.Clear();
             spinnerModal.ShowModal();
-            editCollection.LastModifiedDate = DateTime.Now;
-            editCollection.CreatedBy = userEmail;
-            await _mongoDbService.UpdateCollectionAsync(editCollection);
+            await WorkspaceService.UpdateCollectionAsync(editCollection, userEmail);
             editCollectionModal.CloseModal();
 
             //update the collection in the appstate collection list
@@ -237,7 +231,7 @@ namespace Snipster.Pages
         private async Task DeleteCollection(string collectionId)
         {
             spinnerModal.ShowModal();
-            await _mongoDbService.DeleteCollectionAsync(collectionId);
+            await WorkspaceService.DeleteCollectionAsync(collectionId);
 
             await _helper.DeleteCollectionFromMemory(collectionId);
 
@@ -294,9 +288,7 @@ namespace Snipster.Pages
             // If not in memory, fetch from database (lazy loading)
             if (!foundInMemory)
             {
-                var dbSnippets = selectedCollectionIsOwn
-                    ? await _mongoDbService.GetSnippetsByCollectionAsync(selectedCollectionId)
-                    : await _mongoDbService.GetSharedSnippetsByCollectionForUserAsync(selectedCollectionId, user);
+                var dbSnippets = await WorkspaceService.GetCollectionSnippetsAsync(selectedCollectionId, selectedCollectionIsOwn, user);
 
                 snippets.AddRange(dbSnippets);
                 
@@ -342,11 +334,11 @@ namespace Snipster.Pages
             if (selectedSnippet == null)
             {
                 // Fetch from database if not in local list
-                selectedSnippet = await _mongoDbService.GetSnippetByIdAsync(snippetId);
+                selectedSnippet = await WorkspaceService.GetSnippetAsync(snippetId);
             }
 
             if (selectedSnippet != null) 
-                selectedSnippetOriginalSharedWith = selectedSnippet.SharedWith;
+                selectedSnippetOriginalSharedWith = selectedSnippet.SharedWith.ToList();
 
             spinnerModal.CloseModal();
             
@@ -374,7 +366,7 @@ namespace Snipster.Pages
         private async Task EditSnippetFavourite(Snippet snippet)
         {
             snippet.IsFavourite = !snippet.IsFavourite;
-            await _mongoDbService.SaveSnippetAsync(snippet);
+            await WorkspaceService.SaveSnippetFavouriteAsync(snippet);
         }
         private async Task SearchFavouriteSnippets()
         {
@@ -398,45 +390,9 @@ namespace Snipster.Pages
 
             spinnerModal.ShowModal();
 
-            // Save the new snippet and get the generated snippet ID
-            var snippetId = await _mongoDbService.AddSnippetAsync(newSnippet);
             if (selectedCollectionIdCreate == null)
                 selectedCollectionIdCreate = selectedCollectionId;
-            var selectedCollection = collections.FirstOrDefault(c => c.Id == selectedCollectionIdCreate);
-
-
-            //update collection
-            if (selectedCollection != null)
-            {
-                // Add the new snippet ID to the collection's SnippetIds list
-                selectedCollection.SnippetIds.Add(snippetId);
-                selectedCollection.LastModifiedDate = DateTime.Now;
-                await _mongoDbService.UpdateCollectionAsync(selectedCollection);
-            }
-
-            //update snippet
-            newSnippet.CreatedDate = DateTime.Now;
-            newSnippet.LastModifiedDate = DateTime.Now;
-            newSnippet.CollectionId = selectedCollectionId;
-            newSnippet.CreatedBy = user.Id;
-            await _mongoDbService.SaveSnippetAsync(newSnippet);
-
-
-
-            //add the snippet id to the users' SharedSnippetIds
-            if (newSnippet.SharedWith.Any())
-            {
-                foreach (var sharedEmail in newSnippet.SharedWith)
-                {
-                    var modifiedUser = await _mongoDbService.GetUser(sharedEmail);
-                    if (modifiedUser != null)
-                    {
-                        modifiedUser.SharedSnippetIds.Add(snippetId);
-                        await _mongoDbService.UpdateUser(user);
-                    }
-
-                }
-            }          
+            var snippetId = await WorkspaceService.CreateSnippetAsync(newSnippet, selectedCollectionIdCreate, user, collections);
 
             isAddingSnippet = false;
 
@@ -464,54 +420,7 @@ namespace Snipster.Pages
 
             spinnerModal.ShowModal();
             
-            var snippetId = selectedSnippet.Id;
-
-            var selectedCollection = collections.FirstOrDefault(c => c.Id == selectedCollectionId);
-            if (selectedCollection != null)
-            {
-                if (!selectedCollection.SnippetIds.Contains(selectedSnippet.Id))
-                {
-                    selectedCollection.SnippetIds.Add(snippetId);
-                    selectedCollection.LastModifiedDate = DateTime.Now;
-                    await _mongoDbService.UpdateCollectionAsync(selectedCollection);
-                }
-
-            }
-            selectedSnippet.LastModifiedDate = DateTime.Now;
-            await _mongoDbService.SaveSnippetAsync(selectedSnippet);
-
-            //add the snippet id to the users' SharedSnippetIds
-            if (selectedSnippet.SharedWith.Any())
-            {
-                foreach (var sharedEmail in selectedSnippet.SharedWith)
-                {
-                    var modifiedUser = await _mongoDbService.GetUser(sharedEmail);
-                    if (modifiedUser != null)
-                    {
-                        modifiedUser.SharedSnippetIds.Add(selectedSnippet.Id);
-                        await _mongoDbService.UpdateUser(modifiedUser);
-                    }
-
-                }
-            }
-
-            //remove if email address was removed from the shared text
-            if (selectedSnippetOriginalSharedWith.Any())
-            {
-                foreach (var sn in selectedSnippetOriginalSharedWith)
-                {
-                    if (!selectedSnippet.SharedWith.Contains(sn))
-                    {
-                        var modifiedUser = await _mongoDbService.GetUser(sn);
-                        if (modifiedUser != null)
-                        {
-                            modifiedUser.SharedSnippetIds.Remove(selectedSnippet.Id);
-                            await _mongoDbService.UpdateUser(modifiedUser);
-                        }
-                    }
-                }
-            }
-
+            await WorkspaceService.UpdateSnippetAsync(selectedSnippet, selectedCollectionId, collections, selectedSnippetOriginalSharedWith);
 
             isAddingSnippet = false;
 
@@ -527,22 +436,7 @@ namespace Snipster.Pages
             spinnerModal.ShowModal();
 
 
-            //delete the snippet id from the users' SharedSnippetIds
-            var snippet = await _mongoDbService.GetSnippetByIdAsync(id);
-            if (snippet != null && snippet.SharedWith.Any())
-            {
-                foreach (var sharedEmail in selectedSnippet.SharedWith)
-                {
-                    var modifiedUser = await _mongoDbService.GetUser(sharedEmail);
-                    if (modifiedUser != null)
-                    {
-                        modifiedUser.SharedSnippetIds.Remove(selectedSnippet.Id);
-                        await _mongoDbService.UpdateUser(user);
-                    }
-                }
-            }
-
-            await _mongoDbService.DeleteSnippetAsync(id);
+            await WorkspaceService.DeleteSnippetAsync(id);
 
             await _helper.DeleteSnippetFromMemory(id);
 
@@ -608,9 +502,7 @@ namespace Snipster.Pages
                 snippetsCurrentPage = 1;
                 
                 //get the list of filtered snippets
-                List<Snippet> filteredSnippetlist = selectedCollectionIsOwn
-                    ? await _mongoDbService.SearchSnippetInSelectedCollectionAsync(searchSnippetQuery, selectedCollectionId, IsFavouriteSearch)
-                    : await _mongoDbService.SearchSharedSnippetInSelectedCollectionAsync(searchSnippetQuery, selectedCollectionId, IsFavouriteSearch, user);
+                List<Snippet> filteredSnippetlist = await WorkspaceService.SearchCollectionSnippetsAsync(searchSnippetQuery, selectedCollectionId, IsFavouriteSearch, selectedCollectionIsOwn, user);
 
                 // Clear the current snippets list and populate it with the new ones
                 snippets.Clear();
@@ -794,7 +686,7 @@ namespace Snipster.Pages
                 return;
 
             spinnerModal.ShowModal();
-            _appState.sharedCollections = await _mongoDbService.GetSharedCollectionsForUserAsync(_appState.userEmail);
+            _appState.sharedCollections = await WorkspaceService.GetSharedCollectionsAsync(_appState.userEmail);
             sharedCollections = _appState.sharedCollections;
             sharedCollectionsLoaded = true;
             await LoadCollectionOwnerNames();
@@ -848,20 +740,7 @@ namespace Snipster.Pages
 
         private async Task LoadCollectionOwnerNames()
         {
-            collectionOwnerNames.Clear();
-
-            var ownerEmails = collections
-                .Concat(sharedCollections)
-                .Select(c => c.CreatedBy)
-                .Where(email => !string.IsNullOrWhiteSpace(email))
-                .Distinct(StringComparer.OrdinalIgnoreCase)
-                .ToList();
-
-            foreach (var ownerEmail in ownerEmails)
-            {
-                var owner = await _mongoDbService.GetUser(ownerEmail);
-                collectionOwnerNames[ownerEmail] = GetUserDisplayName(owner, ownerEmail);
-            }
+            collectionOwnerNames = await WorkspaceService.GetCollectionOwnerNamesAsync(collections.Concat(sharedCollections));
         }
 
         private string GetCollectionOwnerDisplay(Collection collection)
@@ -883,15 +762,6 @@ namespace Snipster.Pages
             return selectedCollection == null
                 ? "Unknown owner"
                 : GetCollectionOwnerDisplay(selectedCollection);
-        }
-
-        private static string GetUserDisplayName(Users owner, string fallback)
-        {
-            if (owner == null)
-                return fallback;
-
-            var displayName = $"{owner.FirstName} {owner.LastName}".Trim();
-            return string.IsNullOrWhiteSpace(displayName) ? fallback : displayName;
         }
 
         #endregion

@@ -19,6 +19,7 @@ using AspNetCore.Identity.MongoDbCore.Models;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage;
 using Snipster.Services.AppStates;
+using Snipster.Application.Accounts;
 
 namespace Snipster.Pages
 {
@@ -31,9 +32,8 @@ namespace Snipster.Pages
         private bool isResendingRegistrationConfirmation = false;
         [Inject] private AuthenticationStateProvider AuthStateProvider { get; set; }
         [Inject] Blazored.Toast.Services.IToastService ToastService { get; set; }
-        [Inject] MongoDbService MongoDbService { get; set; }
+        [Inject] IAccountService AccountService { get; set; }
         [Inject] NavigationManager Navigation { get; set; }
-        [Inject] EmailService EmailService { get; set; }
         [Inject] ProtectedSessionStorage SessionStorage { get; set; }
         [Inject] private AppState _appState { get; set; }
 
@@ -77,7 +77,7 @@ namespace Snipster.Pages
 
         private async Task HandleLogin()
         {
-            var loginResult = await MongoDbService.ValidateUserAsync(loginModel.Email, loginModel.Password);
+            var loginResult = await AccountService.ValidateCredentialsAsync(loginModel.Email, loginModel.Password);
             showResendRegistrationConfirmation = false;
 
             if (loginResult.Result)
@@ -109,104 +109,22 @@ namespace Snipster.Pages
 
             try
             {
-                var user = await MongoDbService.GetUser(loginModel.Email);
+                var result = await AccountService.ResendRegistrationConfirmationAsync(loginModel.Email);
 
-                if (user == null)
+                if (result.Success)
                 {
-                    ToastService.ShowError("Email address is not registered");
-                    return;
-                }
-
-                if (user.RegistrationConfirmed)
-                {
-                    ToastService.ShowSuccess("Registration is already confirmed. You can log in now.");
+                    ToastService.ShowSuccess(result.Message);
                     showResendRegistrationConfirmation = false;
                     return;
                 }
 
-                if (string.IsNullOrWhiteSpace(user.Email))
-                {
-                    ToastService.ShowError("User email address is missing.");
-                    return;
-                }
-
-                string token = await MongoDbService.GenerateRegisterTokenAsync(user.Email);
-                await EmailService.SendEmailNotification(CreateRegisterEmailTemplate(user.Email, $"{user.FirstName} {user.LastName}", token));
-
-                ToastService.ShowSuccess("Activation email has been sent again. If you do not see it, check your spam or junk folder.");
+                ToastService.ShowError(result.Message);
             }
             finally
             {
                 isResendingRegistrationConfirmation = false;
             }
         }
-
-        private EmailSendingClass CreateRegisterEmailTemplate(string email, string name, string token)
-        {
-            EmailSendingClass emailDetails = new EmailSendingClass();
-
-            var url = "";
-            var encodedToken = Uri.EscapeDataString(token);
-            if (Environment.GetEnvironmentVariable("Environment") == "Development")
-                url = $"https://localhost:7225/validate-registration?token={encodedToken}";
-            else if (Environment.GetEnvironmentVariable("Environment") == "Production")
-                url = $"https://snipster.co/validate-registration?token={encodedToken}";
-
-            var htmlContent = Regex.Replace(RegistrationEmailTemplate, "<url>", url);
-            htmlContent = Regex.Replace(htmlContent, "<Name>", name);
-
-            emailDetails.htmlContent = htmlContent;
-            emailDetails.PlainTextContent = $"Dear {name}, confirm your registration on Snipster.com by opening this link: {url}. If you did not request this, please ignore this email.";
-            emailDetails.To = email;
-            emailDetails.Subject = "Confirm your registration on Snipster.com";
-
-            return emailDetails;
-        }
-
-        private EmailSendingClass CreateLoginEmailTemplate(string email, string name)
-        {
-            EmailSendingClass emailDetails = new EmailSendingClass();
-
-            var url = "";
-            if (Environment.GetEnvironmentVariable("Environment") == "Development")
-                url = $"https://localhost:7225";
-            else if (Environment.GetEnvironmentVariable("Environment") == "Production")
-                url = $"https://snipster.co";
-
-            LoginEmailTemplate = Regex.Replace(LoginEmailTemplate, "<url>", url);
-            LoginEmailTemplate = Regex.Replace(LoginEmailTemplate, "<Name>", name);
-
-            emailDetails.htmlContent = LoginEmailTemplate;
-            //emailDetails.To = email;
-            emailDetails.To = "monuslaci@gmail.com";
-            emailDetails.Subject = "Test email at login from Snipster.com";
-
-            return emailDetails;
-        }
-        public string LoginEmailTemplate = @"
-                <!DOCTYPE html> <html> <head> <style> p { margin: 0;} OL { list-style-type: decimal; } OL OL  {list-style-type: upper-roman;} UL  {list-style-type: disc;} UL UL  {list-style-type: square;} .cal {font: 15px Calibri;} </style> </head><body>
-                <body>
-                <div><p>Dear <Name>, </p> <p> <o:p>&nbsp;</o:p></p>
-                <p>You received this email because you logged in from this URL: <url>.</p> <p><o:p>&nbsp;</o:p></p>
-
-                <p>Best regards,</p> 
-                <p>Snipster Team</p><p><o:p>&nbsp;</o:p></p>
-                </body>
-                ";
-        public string RegistrationEmailTemplate = @"
-                <!DOCTYPE html> <html> <head> <style> p { margin: 0;} OL { list-style-type: decimal; } OL OL  {list-style-type: upper-roman;} UL  {list-style-type: disc;} UL UL  {list-style-type: square;} .cal {font: 15px Calibri;} </style> </head><body>
-                <body>
-                <div><p>Dear <Name>, </p> <p> <o:p>&nbsp;</o:p></p>
-                <p>To confirm your registration on Snipster.com, please click on this <a href='<url>'>link</a> </p> <p><o:p>&nbsp;</o:p></p>
-
-                <p>If you cannot find this email later, please check your spam or junk folder.</p> <p><o:p>&nbsp;</o:p></p>
-
-                <p>If you didn’t request this, please ignore this email.</p> <p><o:p>&nbsp;</o:p></p>
-
-                <p>Best regards,</p> 
-                <p>Snipster Team</p><p><o:p>&nbsp;</o:p></p>
-                </body>
-                ";
          }
 
 }
