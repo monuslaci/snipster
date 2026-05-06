@@ -655,6 +655,45 @@ namespace Snipster.Services
             return user;
         }
 
+        public async Task<Users> CreateOrUpdateGoogleUserAsync(string email, string firstName, string lastName)
+        {
+            var normalizedEmail = email.Trim();
+            var user = await _usersCollection.Find(u => u.Email == normalizedEmail).FirstOrDefaultAsync();
+
+            if (user == null)
+            {
+                user = new Users
+                {
+                    Email = normalizedEmail,
+                    UserName = normalizedEmail,
+                    NormalizedEmail = normalizedEmail.ToUpperInvariant(),
+                    NormalizedUserName = normalizedEmail.ToUpperInvariant(),
+                    FirstName = string.IsNullOrWhiteSpace(firstName) ? "Google" : firstName,
+                    LastName = lastName ?? "",
+                    RegistrationConfirmed = true,
+                    EmailConfirmed = true,
+                    PasswordHash = BCrypt.Net.BCrypt.HashPassword(Guid.NewGuid().ToString("N"))
+                };
+
+                await _usersCollection.InsertOneAsync(user);
+                return user;
+            }
+
+            var update = Builders<Users>.Update
+                .Set(u => u.RegistrationConfirmed, true)
+                .Set(u => u.EmailConfirmed, true);
+
+            if (string.IsNullOrWhiteSpace(user.FirstName) && !string.IsNullOrWhiteSpace(firstName))
+                update = update.Set(u => u.FirstName, firstName);
+
+            if (string.IsNullOrWhiteSpace(user.LastName) && !string.IsNullOrWhiteSpace(lastName))
+                update = update.Set(u => u.LastName, lastName);
+
+            await _usersCollection.UpdateOneAsync(u => u.Email == normalizedEmail, update);
+
+            return await GetUser(normalizedEmail);
+        }
+
         public async Task<List<Users>> GetAllUsers()
         {
             return await _usersCollection.Find(_ => true).ToListAsync();

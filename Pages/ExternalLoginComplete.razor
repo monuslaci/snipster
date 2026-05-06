@@ -1,0 +1,78 @@
+@page "/external-login-complete"
+
+@using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
+@using Microsoft.AspNetCore.DataProtection
+@using Snipster.Services
+@using Snipster.Services.AppStates
+
+@inject AuthenticationStateProvider AuthStateProvider
+@inject IDataProtectionProvider DataProtectionProvider
+@inject NavigationManager Navigation
+@inject AppState AppState
+
+<div class="external-login-page">
+    <div class="external-login-card">
+        <div class="loading-spinner"></div>
+        <p>@message</p>
+    </div>
+</div>
+
+@code {
+    [SupplyParameterFromQuery]
+    public string? Token { get; set; }
+
+    private string message = "Signing you in...";
+    private bool handled;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender || handled)
+            return;
+
+        handled = true;
+
+        try
+        {
+            if (string.IsNullOrWhiteSpace(Token))
+            {
+                Navigation.NavigateTo("/login?googleLogin=missing-token", true);
+                return;
+            }
+
+            var protector = DataProtectionProvider.CreateProtector("Snipster.GoogleLogin");
+            var unprotectedToken = protector.Unprotect(Token);
+            var tokenParts = unprotectedToken.Split('|', 2);
+
+            if (tokenParts.Length != 2 || !long.TryParse(tokenParts[1], out var issuedUnixTime))
+            {
+                Navigation.NavigateTo("/login?googleLogin=invalid-token", true);
+                return;
+            }
+
+            var issuedAt = DateTimeOffset.FromUnixTimeSeconds(issuedUnixTime);
+            if (DateTimeOffset.UtcNow - issuedAt > TimeSpan.FromMinutes(5))
+            {
+                Navigation.NavigateTo("/login?googleLogin=expired-token", true);
+                return;
+            }
+
+            var email = tokenParts[0];
+
+            if (AuthStateProvider is CustomAuthenticationStateProvider customAuthStateProvider)
+            {
+                await customAuthStateProvider.MarkUserAsAuthenticated(email);
+            }
+
+            await AppState.LoadCurrentUser(email);
+            Navigation.NavigateTo("/", true);
+        }
+        catch
+        {
+            message = "Google login could not be completed.";
+            StateHasChanged();
+            await Task.Delay(1200);
+            Navigation.NavigateTo("/login?googleLogin=failed", true);
+        }
+    }
+}
+

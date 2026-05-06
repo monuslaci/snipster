@@ -10,6 +10,9 @@ using static Snipster.Data.DBContext;
 using MongoDB.Driver.Core.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Google;
+using Microsoft.AspNetCore.DataProtection;
 using AspNetCore.Identity.MongoDbCore.Extensions;
 using AspNetCore.Identity.MongoDbCore.Infrastructure;
 using AspNetCore.Identity.MongoDbCore.Models;
@@ -21,8 +24,18 @@ using SendGrid.Helpers.Mail;
 using static Snipster.Helpers.GeneralHelpers;
 using Snipster.Services.AppStates;
 using Snipster.Helpers;
+using System.Security.Claims;
 
 var builder = WebApplication.CreateBuilder(args);
+var googleClientId = Environment.GetEnvironmentVariable("ClientID")
+    ?? Environment.GetEnvironmentVariable("GoogleClientId")
+    ?? Environment.GetEnvironmentVariable("GOOGLE_CLIENT_ID");
+var googleClientSecret = Environment.GetEnvironmentVariable("ClientSecret")
+    ?? Environment.GetEnvironmentVariable("GoogleClientSecret")
+    ?? Environment.GetEnvironmentVariable("GOOGLE_CLIENT_SECRET");
+var googleAuthConfigured = !string.IsNullOrWhiteSpace(googleClientId)
+    && !string.IsNullOrWhiteSpace(googleClientSecret);
+const string GoogleExternalCookieScheme = "GoogleExternal";
 
 try
 {
@@ -64,12 +77,38 @@ try
 
     builder.Services.AddSingleton<IPasswordHasher<Users>, PasswordHasher<Users>>(); // Registers the built-in password hasher
 
-    builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+    var authenticationBuilder = builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
         .AddCookie(options =>
         {
             options.LoginPath = "/login";  // Specify login page path
             options.LogoutPath = "/logout"; // Specify logout page path
+        })
+        .AddCookie(GoogleExternalCookieScheme, options =>
+        {
+            options.Cookie.Name = "Snipster.GoogleExternal";
+            options.ExpireTimeSpan = TimeSpan.FromMinutes(5);
+            options.Cookie.SameSite = SameSiteMode.Lax;
+            options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
         });
+
+    if (googleAuthConfigured)
+    {
+        authenticationBuilder.AddGoogle(options =>
+        {
+            options.ClientId = googleClientId!;
+            options.ClientSecret = googleClientSecret!;
+            options.CallbackPath = "/signin-google";
+            options.SignInScheme = GoogleExternalCookieScheme;
+            options.SaveTokens = false;
+            options.Events.OnRedirectToAuthorizationEndpoint = context =>
+            {
+                var redirectUri = context.RedirectUri;
+                var separator = redirectUri.Contains('?') ? "&" : "?";
+                context.Response.Redirect($"{redirectUri}{separator}prompt=select_account");
+                return Task.CompletedTask;
+            };
+        });
+    }
 
 
     //var sendGridApiKey = builder.Configuration["SendGrid:ApiKey"];
@@ -171,6 +210,58 @@ app.UseRouting();
 
 app.UseAuthentication(); // Enable authentication middleware
 app.UseAuthorization();  // Enable authorization middleware
+
+app.MapGet("/login-google", async (HttpContext context) =>
+{
+    if (!googleAuthConfigured)
+        return Results.Redirect("/login?googleLogin=not-configured");
+
+    context.Response.Headers["Referrer-Policy"] = "no-referrer";
+
+    var properties = new AuthenticationProperties
+    {
+        RedirectUri = "/login-google-complete"
+    };
+
+    await context.ChallengeAsync(GoogleDefaults.AuthenticationScheme, properties);
+    return Results.Empty;
+});
+
+app.MapGet("/login-google-complete", async (
+    HttpContext context,
+    IDataProtectionProvider dataProtectionProvider,
+    MongoDbService mongoDbService) =>
+{
+    var authenticateResult = await context.AuthenticateAsync(GoogleExternalCookieScheme);
+    var principal = authenticateResult.Principal ?? context.User;
+
+    if (principal?.Identity?.IsAuthenticated != true)
+        return Results.Redirect("/login?googleLogin=failed");
+
+    var email = principal.FindFirstValue(ClaimTypes.Email);
+    if (string.IsNullOrWhiteSpace(email))
+        return Results.Redirect("/login?googleLogin=email-missing");
+
+    var firstName = principal.FindFirstValue(ClaimTypes.GivenName) ?? "";
+    var lastName = principal.FindFirstValue(ClaimTypes.Surname) ?? "";
+    var displayName = principal.FindFirstValue(ClaimTypes.Name) ?? "";
+
+    if (string.IsNullOrWhiteSpace(firstName) && string.IsNullOrWhiteSpace(lastName) && !string.IsNullOrWhiteSpace(displayName))
+    {
+        var nameParts = displayName.Split(' ', 2, StringSplitOptions.RemoveEmptyEntries);
+        firstName = nameParts.ElementAtOrDefault(0) ?? "";
+        lastName = nameParts.ElementAtOrDefault(1) ?? "";
+    }
+
+    await mongoDbService.CreateOrUpdateGoogleUserAsync(email, firstName, lastName);
+
+    var protector = dataProtectionProvider.CreateProtector("Snipster.GoogleLogin");
+    var loginToken = protector.Protect($"{email}|{DateTimeOffset.UtcNow.ToUnixTimeSeconds()}");
+
+    await context.SignOutAsync(GoogleExternalCookieScheme);
+
+    return Results.Redirect($"/external-login-complete?token={Uri.EscapeDataString(loginToken)}");
+});
 
 app.MapBlazorHub();
 app.MapRazorPages();

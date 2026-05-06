@@ -37,6 +37,11 @@
 
             <button type="submit" class="btn btn-primary">Login</button>
 
+            <a href="@Navigation.ToAbsoluteUri("/login-google")" class="google-login-button" target="_self" data-enhance-nav="false" referrerpolicy="no-referrer">
+                <i class="fab fa-google"></i>
+                Continue with Google
+            </a>
+
             @if (showResendRegistrationConfirmation)
             {
                 <button type="button" class="btn btn-secondary resend-confirmation" @onclick="HandleResendRegistrationConfirmation" disabled="@isResendingRegistrationConfirmation">
