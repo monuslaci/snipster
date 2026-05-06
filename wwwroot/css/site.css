@@ -230,3 +230,109 @@ a:not(.btn):hover {
 .fade-in {
     animation: fadeIn 0.3s ease forwards;
 }
+
+/* Mobile fallback for the collections workspace.
+   These duplicate the scoped CollectionPage/NavMenu fixes so production still
+   gets the mobile layout even if the scoped CSS bundle is cached upstream. */
+.navbar-toggler {
+    background-color: rgba(255, 255, 255, 0.14) !important;
+    border: 1px solid rgba(255, 255, 255, 0.28) !important;
+    border-radius: 8px !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18) !important;
+}
+
+.navbar-toggler:hover {
+    background-color: rgba(255, 255, 255, 0.22) !important;
+}
+
+@media (max-width: 992px) {
+    .page-layout {
+        width: 100% !important;
+        max-width: 100vw !important;
+        height: auto !important;
+        min-height: 100vh !important;
+        flex-direction: column !important;
+        gap: 12px !important;
+        padding: 10px !important;
+        overflow-x: hidden !important;
+        box-sizing: border-box !important;
+    }
+
+    .page-layout .panel {
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+        border-radius: 12px !important;
+        padding: 16px !important;
+    }
+
+    .page-layout .collection-panel,
+    .page-layout .snippet-panel {
+        max-height: min(58vh, 560px) !important;
+    }
+
+    .page-layout .editor-panel {
+        min-height: 70vh !important;
+        overflow-x: hidden !important;
+    }
+
+    .page-layout .panel.collapsed {
+        display: flex !important;
+        min-height: 56px !important;
+        max-height: 56px !important;
+        padding: 14px 56px 14px 16px !important;
+        overflow: visible !important;
+    }
+
+    .page-layout .collection-panel.collapsed::before,
+    .page-layout .snippet-panel.collapsed::before {
+        color: white !important;
+        font-size: 15px !important;
+        font-weight: 600 !important;
+        line-height: 28px !important;
+    }
+
+    .page-layout .collection-panel.collapsed::before {
+        content: "Collections" !important;
+    }
+
+    .page-layout .snippet-panel.collapsed::before {
+        content: "Snippets" !important;
+    }
+
+    .page-layout .panel.collapsed .toggle-btn {
+        top: 12px !important;
+        right: 14px !important;
+    }
+
+    .page-layout .items-container {
+        overflow-x: hidden !important;
+        padding-right: 0 !important;
+    }
+
+    .page-layout .item-card {
+        min-width: 0 !important;
+    }
+
+    .page-layout .item-card:hover {
+        transform: none !important;
+    }
+
+    .page-layout .item-actions {
+        opacity: 1 !important;
+    }
+
+    .page-layout .editor-form,
+    .page-layout .code-editor-container,
+    .page-layout .monaco-editor-container {
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+    }
+
+    .page-layout .code-editor-container,
+    .page-layout .monaco-editor-container {
+        min-height: 58vh !important;
+    }
+}

@@ -30,7 +30,12 @@ try
 
     // Add services to the container.
     builder.Services.AddRazorPages();
-    builder.Services.AddServerSideBlazor();
+    builder.Services.AddServerSideBlazor()
+        .AddCircuitOptions(options =>
+        {
+            options.DetailedErrors = builder.Environment.IsDevelopment()
+                || builder.Configuration.GetValue<bool>("DetailedErrors");
+        });
 
     var connectionString = Environment.GetEnvironmentVariable("MongoDb"); // Correct connection string key
     var databaseName = Environment.GetEnvironmentVariable("DatabaseName"); // Read the database name from configuration
@@ -143,9 +148,6 @@ try
 
     //builder.Services.AddSingleton<IMongoDbService, MongoDbService>();
     builder.Services.AddBlazoredToast();
-    //builder.Services.AddServerSideBlazor()
-    //.AddCircuitOptions(options => { options.DetailedErrors = true; });
-
 }
 catch (Exception ex)
 {
