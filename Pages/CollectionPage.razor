@@ -6,10 +6,9 @@
 @inject IJSRuntime JSRuntime
 @attribute [Authorize]
 
-
-
+@* Main collections workspace *@
 <div class="page-layout">
-    <!-- Left Section: Collection List -->
+    @* Left panel: collections *@
     <div class="panel collection-panel @(isLeftPanelOpen ? "" : "collapsed")">
         <button class="toggle-btn" @onclick="ToggleLeftPanel">
             <i class="fa @(isLeftPanelOpen ? "fa-chevron-left" : "fa-chevron-right")"></i>
@@ -21,16 +20,19 @@
                 <h3><i class="fa fa-folder-open"></i> Collections</h3>
             </div>
             
-            <!-- Tab buttons -->
+            @* Collection tabs *@
             <div class="tab-buttons">
-                <button class="tab-btn @(activeCollectionTab == "own" ? "active" : "")" @onclick="@(() => SwitchCollectionTab("own"))">
+                <button class="tab-btn @(activeCollectionTab == "own" ? "active" : "")"
+                        @onclick="@(() => SwitchCollectionTab("own"))">
                     <i class="fa fa-folder"></i> Mine
                     @if (collections != null)
                     {
                         <span class="tab-count">@collections.Count</span>
                     }
                 </button>
-                <button class="tab-btn @(activeCollectionTab == "shared" ? "active" : "")" @onclick="@(() => SwitchCollectionTab("shared"))">
+
+                <button class="tab-btn @(activeCollectionTab == "shared" ? "active" : "")"
+                        @onclick="@(() => SwitchCollectionTab("shared"))">
                     <i class="fa fa-share-alt"></i> Shared
                     @if (sharedCollectionsLoaded)
                     {
@@ -39,6 +41,7 @@
                 </button>
             </div>
             
+            @* Collection search *@
             <div class="search-card-mini">
                 <div class="search-input-wrapper">
                     <i class="fa fa-search search-icon"></i>
@@ -61,6 +64,7 @@
                 </button>
             }
 
+            @* Collection list *@
             <div class="items-container">
                 @if (activeCollectionTab == "own")
                 {
@@ -68,21 +72,30 @@
                     {
                         @foreach (var collection in PagedCollections)
                         {
-                            <div class="item-card @(selectedCollectionId == collection.Id ? "active" : "")" @onclick="() => LoadSnippets(collection.Id)">
+                            <div class="item-card @(selectedCollectionId == collection.Id ? "active" : "")"
+                                 @onclick="() => LoadSnippets(collection.Id)">
                                 <div class="item-content">
                                     <i class="fa fa-folder item-icon"></i>
                                     <span class="item-title">@collection.Title</span>
                                 </div>
+
                                 <div class="item-actions">
-                                    <button class="action-btn edit" @onclick:stopPropagation="true" @onclick="() => EditCollection(collection)" title="Edit">
+                                    <button class="action-btn edit"
+                                            @onclick:stopPropagation="true"
+                                            @onclick="() => EditCollection(collection)"
+                                            title="Edit">
                                         <i class="fa fa-edit"></i>
                                     </button>
-                                    <button class="action-btn delete" @onclick:stopPropagation="true" @onclick="() => DeleteCollection(collection.Id)" title="Delete">
+                                    <button class="action-btn delete"
+                                            @onclick:stopPropagation="true"
+                                            @onclick="() => DeleteCollection(collection.Id)"
+                                            title="Delete">
                                         <i class="fa fa-trash"></i>
                                     </button>
                                 </div>
                             </div>
                         }
+
                         @if (CollectionsTotalPages > 1)
                         {
                             <div class="pagination-mini">
@@ -108,7 +121,8 @@
                     {
                         @foreach (var sharedCollection in PagedSharedCollections)
                         {
-                            <div class="item-card shared @(selectedCollectionId == sharedCollection.Id ? "active" : "")" @onclick="() => LoadSnippets(sharedCollection.Id)">
+                            <div class="item-card shared @(selectedCollectionId == sharedCollection.Id ? "active" : "")"
+                                 @onclick="() => LoadSnippets(sharedCollection.Id)">
                                 <div class="item-content">
                                     <i class="fa fa-share-alt item-icon shared"></i>
                                     <div class="item-info">
@@ -118,6 +132,7 @@
                                 </div>
                             </div>
                         }
+
                         @if (SharedCollectionsTotalPages > 1)
                         {
                             <div class="pagination-mini">
@@ -141,7 +156,7 @@
         }
     </div>
 
-    <!-- Middle Section: Snippet List -->
+    @* Middle panel: snippets *@
     <div class="panel snippet-panel @(isMiddlePanelOpen ? "" : "collapsed")">
         <button class="toggle-btn" @onclick="ToggleMiddlePanel">
             <i class="fa @(isMiddlePanelOpen ? "fa-chevron-left" : "fa-chevron-right")"></i>
@@ -153,14 +168,18 @@
                 <h3><i class="fa fa-code"></i> Snippets</h3>
             </div>
             
+            @* Snippet search *@
             <div class="search-card-mini">
                 <div class="search-input-wrapper">
                     <i class="fa fa-search search-icon"></i>
                     <input class="search-input" type="text" @bind="searchSnippetQuery" placeholder="Search snippets..." />
-                    <button class="filter-btn-mini @(IsFavouriteSearch ? "active" : "")" @onclick="() => SearchFavouriteSnippets()" title="Favorites only">
+                    <button class="filter-btn-mini @(IsFavouriteSearch ? "active" : "")"
+                            @onclick="() => SearchFavouriteSnippets()"
+                            title="Favorites only">
                         <i class="fa fa-star"></i>
                     </button>
                 </div>
+
                 <div class="search-actions-mini">
                     <button class="btn-search-mini" @onclick="OnSearchSnippet">
                         <i class="fa fa-search"></i>
@@ -175,12 +194,14 @@
                 <i class="fa fa-plus"></i> New Snippet
             </button>
 
+            @* Snippet list *@
             <div class="items-container">
                 @if (snippets != null && snippets.Any())
                 {
                     @foreach (var snippet in PagedSnippets)
                     {
-                        <div class="item-card @(selectedSnippet?.Id == snippet.Id ? "active" : "")" @onclick="() => LoadSnippetDetails(snippet.Id)">
+                        <div class="item-card @(selectedSnippet?.Id == snippet.Id ? "active" : "")"
+                             @onclick="() => LoadSnippetDetails(snippet.Id)">
                             <div class="item-content">
                                 <i class="fa fa-file-code item-icon"></i>
                                 <div class="item-info">
@@ -193,12 +214,16 @@
                             </div>
                             @if (selectedCollectionIsOwn)
                             {
-                                <button class="action-btn favorite @(snippet.IsFavourite ? "active" : "")" @onclick:stopPropagation="true" @onclick="() => EditSnippetFavourite(snippet)" title="@(snippet.IsFavourite ? "Remove from favorites" : "Add to favorites")">
+                                <button class="action-btn favorite @(snippet.IsFavourite ? "active" : "")"
+                                        @onclick:stopPropagation="true"
+                                        @onclick="() => EditSnippetFavourite(snippet)"
+                                        title="@(snippet.IsFavourite ? "Remove from favorites" : "Add to favorites")">
                                     <i class="fa fa-star"></i>
                                 </button>
                             }
                         </div>
                     }
+
                     @if (SnippetsTotalPages > 1)
                     {
                         <div class="pagination-mini">
@@ -221,10 +246,11 @@
         }
     </div>
 
-    <!-- Right Section: Snippet Details/Editor -->
+    @* Right panel: snippet editor *@
     <div class="panel editor-panel" style="flex: 1;">
         @if (isAddingSnippet)
         {
+            @* Create snippet form *@
             <div class="editor-header">
                 <h3><i class="fa fa-plus-circle"></i> Create New Snippet</h3>
             </div>
@@ -312,6 +338,7 @@
         }
         else if (selectedSnippet != null)
         {
+            @* Edit snippet form *@
             <div class="editor-header">
                 <h3><i class="fa fa-edit"></i> Edit Snippet</h3>
                 @if (!string.IsNullOrEmpty(selectedSnippet.Language))
@@ -417,7 +444,9 @@
 
 
 
-<!-- Modal for creating a new collection -->
+@* Collection modals *@
+
+@* Create collection modal *@
 <Modal @ref="createCollectionModal" Title="Create New Collection">
     <EditForm Model="newCollection" OnValidSubmit="async () => await HandleCreateCollection()">
         <DataAnnotationsValidator />
@@ -428,7 +457,6 @@
                 <label>Title:</label>
                 <InputText class="form-input" @bind-Value="newCollection.Title" />
             </div>
-
 
             <div class="form-group">
                 <label class="inline">
@@ -445,7 +473,7 @@
     </EditForm>
 </Modal>
 
-<!-- Modal for editing a collection -->
+@* Edit collection modal *@
 <Modal @ref="editCollectionModal" Title="Edit Collection">
     <EditForm Model="editCollection" OnValidSubmit="async () => await HandleEditCollection()">
         <DataAnnotationsValidator />
@@ -471,19 +499,7 @@
     </EditForm>
 </Modal>
 
+@* Shared spinner modal *@
 <Modal @ref="spinnerModal">
 
 </Modal>
-
-
-
-@code {
-
-
-}
-
-<style>
-
-
-
-</style>

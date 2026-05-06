@@ -1,19 +1,9 @@
 ﻿using Microsoft.AspNetCore.Components;
 using Snipster.Services;
-using System;
-using System.Net.NetworkInformation;
-using System.Reflection;
 using Snipster.Components;
 using static Snipster.Data.DBContext;
-using Microsoft.JSInterop;
-using System.Linq;
-using Microsoft.AspNetCore.Components.Forms;
-using MongoDB.Driver;
 using Microsoft.AspNetCore.Components.Authorization;
-using static Microsoft.Extensions.Logging.EventSource.LoggingEventSource;
-using System.Collections.Generic;
-using static System.Runtime.InteropServices.JavaScript.JSType;
-using Microsoft.AspNetCore.Components.Web;
+using Microsoft.JSInterop;
 using static Snipster.Data.CommonClasses;
 using Snipster.Services.AppStates;
 using Snipster.Helpers;
@@ -22,11 +12,18 @@ namespace Snipster.Pages
 {
     public partial class CollectionPage
     {
+        #region Dependencies
+
         [Inject] NavigationManager Navigation { get; set; }
         [Inject] private AuthenticationStateProvider AuthStateProvider { get; set; }
         [Inject] MongoDbService _mongoDbService { get; set; }
         [Inject] private AppState _appState { get; set; }
         [Inject] private IGeneralHelpers _helper { get; set; }
+
+        #endregion
+
+        #region State
+
         private List<Collection> collections = new List<Collection>();
         private List<Collection> sharedCollections = new List<Collection>();
         private Collection newCollection = new Collection();
@@ -84,6 +81,10 @@ namespace Snipster.Pages
             .Skip((snippetsCurrentPage - 1) * snippetsPageSize)
             .Take(snippetsPageSize);
         private int SnippetsTotalPages => Math.Max(1, (int)Math.Ceiling((double)(snippets?.Count ?? 0) / snippetsPageSize));
+
+        #endregion
+
+        #region Lifecycle
 
         protected override async Task OnInitializedAsync()
         {
@@ -161,7 +162,9 @@ namespace Snipster.Pages
             }
         }
 
-        #region Create Collection
+        #endregion
+
+        #region Collection Actions
         private void ShowCreateCollectionModal()
         {
             newCollection = new Collection();
@@ -203,7 +206,50 @@ namespace Snipster.Pages
             createCollectionModal.CloseModal();
             spinnerModal.CloseModal();
         }
+        private async Task HandleEditCollection()
+        {
+            ValidHashtags.Clear();
+            spinnerModal.ShowModal();
+            editCollection.LastModifiedDate = DateTime.Now;
+            editCollection.CreatedBy = userEmail;
+            await _mongoDbService.UpdateCollectionAsync(editCollection);
+            editCollectionModal.CloseModal();
+
+            //update the collection in the appstate collection list
+            await _helper.UpdateCollectionInMemory(editCollection);
+
+            //get the user's collections
+            collections = _appState.collections;
+            //get the collections that are shared with them
+            sharedCollections = _appState.sharedCollections;
+
+            await LoadCollectionOwnerNames();
+
+            spinnerModal.CloseModal();
+        }
+
+        private async Task EditCollection(Collection collection)
+        {
+            editCollectionModal.ShowModal();
+            editCollection = collection;
+        }   
+
+        private async Task DeleteCollection(string collectionId)
+        {
+            spinnerModal.ShowModal();
+            await _mongoDbService.DeleteCollectionAsync(collectionId);
+
+            await _helper.DeleteCollectionFromMemory(collectionId);
+
+            //get the user's collections
+            collections = _appState.collections;
+
+            spinnerModal.CloseModal();
+        }
+
         #endregion
+
+        #region Snippet Loading
 
         private async Task LoadSnippets(string collectionId, string? snippetIdToSelect = null)
         {        
@@ -321,47 +367,9 @@ namespace Snipster.Pages
             await InitializeCreateEditor();
         }
 
+        #endregion
 
-        private async Task HandleEditCollection()
-        {
-            ValidHashtags.Clear();
-            spinnerModal.ShowModal();
-            editCollection.LastModifiedDate = DateTime.Now;
-            editCollection.CreatedBy = userEmail;
-            await _mongoDbService.UpdateCollectionAsync(editCollection);
-            editCollectionModal.CloseModal();
-
-            //update the collection in the appstate collection list
-            await _helper.UpdateCollectionInMemory(editCollection);
-
-            //get the user's collections
-            collections = _appState.collections;
-            //get the collections that are shared with them
-            sharedCollections = _appState.sharedCollections;
-
-            await LoadCollectionOwnerNames();
-
-            spinnerModal.CloseModal();
-        }
-
-        private async Task EditCollection(Collection collection)
-        {
-            editCollectionModal.ShowModal();
-            editCollection = collection;
-        }   
-
-        private async Task DeleteCollection(string collectionId)
-        {
-            spinnerModal.ShowModal();
-            await _mongoDbService.DeleteCollectionAsync(collectionId);
-
-            await _helper.DeleteCollectionFromMemory(collectionId);
-
-            //get the user's collections
-            collections = _appState.collections;
-
-            spinnerModal.CloseModal();
-        }
+        #region Snippet Actions
 
         private async Task EditSnippetFavourite(Snippet snippet)
         {
@@ -550,6 +558,10 @@ namespace Snipster.Pages
             spinnerModal.CloseModal();
         }
 
+        #endregion
+
+        #region Search
+
         private async Task OnSearchCollection()
         {
             if (!string.IsNullOrEmpty(searchCollectionQuery))
@@ -669,6 +681,10 @@ namespace Snipster.Pages
             StateHasChanged();
         }
 
+        #endregion
+
+        #region Monaco Editor
+
         // Monaco Editor methods
         private async Task InitializeCreateEditor()
         {
@@ -714,6 +730,10 @@ namespace Snipster.Pages
             await JSRuntime.InvokeVoidAsync("monacoEditor.setLanguage", "editEditorContainer", selectedSnippet?.Language ?? "plaintext");
         }
 
+        #endregion
+
+        #region Layout Toggles
+
         private void ToggleLeftPanel()
         {
             isLeftPanelOpen = !isLeftPanelOpen;
@@ -733,6 +753,10 @@ namespace Snipster.Pages
             int middleWidth = isMiddlePanelOpen ? 30 : 5;
             rightPanelWidth = $"{totalWidth - (leftWidth + middleWidth)}%";
         }
+
+        #endregion
+
+        #region Pagination And Tabs
 
         // Pagination methods for collections
         private void CollectionsNextPage()
@@ -818,6 +842,10 @@ namespace Snipster.Pages
         private void SnippetsFirstPage() => snippetsCurrentPage = 1;
         private void SnippetsLastPage() => snippetsCurrentPage = SnippetsTotalPages;
 
+        #endregion
+
+        #region Display Helpers
+
         private async Task LoadCollectionOwnerNames()
         {
             collectionOwnerNames.Clear();
@@ -865,6 +893,8 @@ namespace Snipster.Pages
             var displayName = $"{owner.FirstName} {owner.LastName}".Trim();
             return string.IsNullOrWhiteSpace(displayName) ? fallback : displayName;
         }
+
+        #endregion
     }
 
 }
